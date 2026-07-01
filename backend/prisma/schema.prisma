@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  STRIPE
+  IYZICO
+}
+
+enum TourCategory {
+  BALLOON
+  DAILY_TOUR
+  ADVENTURE
+  TRANSFER
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  phone     String?
+  password  String
+  role      Role      @default(USER)
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([email])
+}
+
+model Tour {
+  id            String         @id @default(uuid())
+  title         String
+  slug          String         @unique
+  description   String
+  shortDesc     String
+  category      TourCategory
+  basePrice     Float
+  currency      String         @default("USD")
+  duration      String
+  maxCapacity   Int
+  images        String[]
+  videoUrl      String?
+  highlights    String[]
+  includes      String[]
+  excludes      String[]
+  isActive      Boolean        @default(true)
+  sortOrder     Int            @default(0)
+  availabilities Availability[]
+  bookings      Booking[]
+  upsells       TourUpsell[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([slug])
+  @@index([category])
+  @@index([isActive])
+}
+
+model TourUpsell {
+  id          String   @id @default(uuid())
+  tourId      String
+  tour        Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  name        String
+  description String
+  price       Float
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tourId])
+}
+
+model Availability {
+  id             String   @id @default(uuid())
+  tourId         String
+  tour           Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  date           DateTime @db.Date
+  seatsAvailable Int
+  seatsTotal     Int
+  priceOverride  Float?
+  isBlocked      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([tourId, date])
+  @@index([tourId, date])
+  @@index([date])
+}
+
+model Booking {
+  id           String        @id @default(uuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  tourId       String
+  tour         Tour          @relation(fields: [tourId], references: [id])
+  date         DateTime      @db.Date
+  adults       Int           @default(1)
+  children     Int           @default(0)
+  isPrivate    Boolean       @default(false)
+  upsells      Json?
+  totalPrice   Float
+  currency     String        @default("USD")
+  status       BookingStatus @default(PENDING)
+  guestName    String?
+  guestEmail   String?
+  guestPhone   String?
+  notes        String?
+  payment      Payment?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([tourId])
+  @@index([date])
+  @@index([status])
+}
+
+model Payment {
+  id              String          @id @default(uuid())
+  bookingId       String          @unique
+  booking         Booking         @relation(fields: [bookingId], references: [id])
+  amount          Float
+  currency        String          @default("USD")
+  status          PaymentStatus   @default(PENDING)
+  provider        PaymentProvider
+  providerPaymentId String?
+  metadata        Json?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([bookingId])
+  @@index([providerPaymentId])
+}
