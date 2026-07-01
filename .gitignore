@@ -3,5 +3,8 @@
 node_modules
 dist
 .next
+backend/prisma/*.js
+backend/prisma/*.d.ts
+backend/prisma/*.map
 *.log
 .DS_Store
