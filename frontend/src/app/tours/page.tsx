@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { Tour } from '@/types';
 import { MapPin, Clock, Users, Star, Search, SlidersHorizontal } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { formatPrice } from '@/lib/utils';
 
 const categories = ['ALL', 'BALLOON', 'DAILY_TOUR', 'PRIVATE_TOUR', 'TRANSFER', 'ACTIVITY'];
 
@@ -25,72 +25,76 @@ const fallbackTours: Tour[] = [
     title: 'Cappadocia Hot Air Balloon Flight',
     slug: 'hot-air-balloon',
     description: 'Sunrise balloon flight over the fairy chimneys of Cappadocia.',
-    shortDescription: 'Unforgettable sunrise balloon flight over the fairy chimneys.',
+    shortDesc: 'Unforgettable sunrise balloon flight over the fairy chimneys.',
     category: 'BALLOON',
     basePrice: 250,
-    duration: 60,
+    currency: 'USD',
+    duration: '1 hour flight',
     maxCapacity: 16,
     images: [],
     highlights: ['Sunrise views', 'Champagne toast', 'Flight certificate'],
     includes: ['Hotel pickup', 'Breakfast', 'Insurance'],
-    meetingPoint: 'Hotel lobby',
+    excludes: [],
     isActive: true,
-    createdAt: '',
-    updatedAt: '',
+    sortOrder: 0,
+    upsells: [],
   },
   {
     id: '2',
     title: 'Red Valley & Göreme Daily Tour',
     slug: 'red-valley-tour',
     description: 'Full-day guided tour of Cappadocia\'s most iconic spots.',
-    shortDescription: 'Full-day guided tour of Cappadocia\'s most iconic spots.',
+    shortDesc: 'Full-day guided tour of Cappadocia\'s most iconic spots.',
     category: 'DAILY_TOUR',
     basePrice: 75,
-    duration: 480,
+    currency: 'USD',
+    duration: '8 hours',
     maxCapacity: 15,
     images: [],
     highlights: ['Red Valley', 'Göreme Open Air Museum', 'Underground City'],
     includes: ['Lunch', 'Entrance fees', 'Guide'],
-    meetingPoint: 'Hotel lobby',
+    excludes: [],
     isActive: true,
-    createdAt: '',
-    updatedAt: '',
+    sortOrder: 1,
+    upsells: [],
   },
   {
     id: '3',
     title: 'ATV Quad Safari Adventure',
     slug: 'atv-safari',
     description: 'Thrilling ATV ride through the valleys of Cappadocia.',
-    shortDescription: 'Thrilling ATV ride through the valleys.',
-    category: 'ACTIVITY',
+    shortDesc: 'Thrilling ATV ride through the valleys.',
+    category: 'ADVENTURE',
     basePrice: 60,
-    duration: 120,
+    currency: 'USD',
+    duration: '2 hours',
     maxCapacity: 20,
     images: [],
     highlights: ['Sunset ride', 'Valley trails', 'Photo stops'],
     includes: ['Helmet', 'Goggles', 'Insurance'],
-    meetingPoint: 'ATV Base',
+    excludes: [],
     isActive: true,
-    createdAt: '',
-    updatedAt: '',
+    sortOrder: 2,
+    upsells: [],
   },
   {
     id: '4',
     title: 'Airport Transfer Service',
     slug: 'airport-transfer',
     description: 'Comfortable private transfer from Kayseri or Nevşehir airport.',
-    shortDescription: 'Private transfer from Kayseri or Nevşehir airport.',
+    shortDesc: 'Private transfer from Kayseri or Nevşehir airport.',
     category: 'TRANSFER',
     basePrice: 40,
-    duration: 60,
+    currency: 'USD',
+    duration: '1 hour',
     maxCapacity: 4,
     images: [],
     highlights: ['Meet & greet', 'Comfortable vehicle', 'Flight tracking'],
     includes: ['Water', 'WiFi', 'Child seat on request'],
-    meetingPoint: 'Airport arrival gate',
+    excludes: [],
     isActive: true,
-    createdAt: '',
-    updatedAt: '',
+    sortOrder: 3,
+    upsells: [],
   },
 ];
 
@@ -125,7 +129,7 @@ export default function ToursPage() {
       result = result.filter(
         (t) =>
           t.title.toLowerCase().includes(q) ||
-          t.shortDescription.toLowerCase().includes(q)
+          t.shortDesc.toLowerCase().includes(q)
       );
     }
     setFiltered(result);
@@ -243,15 +247,13 @@ export default function ToursPage() {
                           {tour.title}
                         </h3>
                         <p className="text-gray-500 dark:text-white/50 text-sm mb-4 line-clamp-2">
-                          {tour.shortDescription}
+                          {tour.shortDesc}
                         </p>
 
                         <div className="flex items-center gap-4 text-gray-400 dark:text-white/40 text-sm mb-4">
                           <span className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
-                            {tour.duration >= 60
-                              ? `${Math.floor(tour.duration / 60)}h${tour.duration % 60 > 0 ? ` ${tour.duration % 60}m` : ''}`
-                              : `${tour.duration}m`}
+                            {tour.duration}
                           </span>
                           <span className="flex items-center gap-1">
                             <Users className="w-4 h-4" />
@@ -267,7 +269,7 @@ export default function ToursPage() {
                           <div>
                             <span className="text-gray-400 dark:text-white/40 text-xs">From</span>
                             <p className="text-2xl font-bold text-emerald-500 dark:text-emerald-400">
-                              {formatCurrency(tour.basePrice)}
+                              {formatPrice(tour.basePrice)}
                             </p>
                           </div>
                           <span className="btn-primary text-sm !py-2 !px-5">

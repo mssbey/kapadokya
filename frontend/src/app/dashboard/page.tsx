@@ -62,8 +62,8 @@ export default function DashboardPage() {
   }
 
   const now = new Date();
-  const upcoming = bookings.filter((b) => new Date(b.tourDate) >= now && b.status !== 'CANCELLED');
-  const past = bookings.filter((b) => new Date(b.tourDate) < now || b.status === 'CANCELLED');
+  const upcoming = bookings.filter((b) => new Date(b.date) >= now && b.status !== 'CANCELLED');
+  const past = bookings.filter((b) => new Date(b.date) < now || b.status === 'CANCELLED');
   const displayed = activeTab === 'upcoming' ? upcoming : past;
 
   function handleLogout() {
@@ -193,12 +193,12 @@ export default function DashboardPage() {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-400 dark:text-white/40 mt-1">
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5" />
-                        {formatDate(booking.tourDate)}
+                        {formatDate(booking.date)}
                       </span>
                       <span className="flex items-center gap-1">
                         <Users className="w-3.5 h-3.5" />
-                        {booking.adultCount} adult{booking.adultCount > 1 ? 's' : ''}
-                        {booking.childCount > 0 && `, ${booking.childCount} child`}
+                        {booking.adults} adult{booking.adults > 1 ? 's' : ''}
+                        {booking.children > 0 && `, ${booking.children} child`}
                       </span>
                     </div>
                   </div>
