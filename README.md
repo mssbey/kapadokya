@@ -80,9 +80,8 @@ The app will start at `http://localhost:3000`.
 
 ### Default Admin Account
 
-After seeding the database:
-- **Email:** admin@discovery.com
-- **Password:** admin123
+Seeding creates one admin account. See `prisma/seed.ts` for the credentials
+(change the password there before seeding a shared/production database).
 
 ## Features
 
