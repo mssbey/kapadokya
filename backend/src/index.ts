@@ -64,15 +64,18 @@ setupWebSocket(wss);
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
-  console.log(`🚀 Discovery Cappadocia API running on port ${PORT}`);
-});
+if (!process.env.VERCEL) {
+  server.listen(PORT, () => {
+    console.log(`🚀 Discovery Cappadocia API running on port ${PORT}`);
+  });
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received. Shutting down...');
-  await prisma.$disconnect();
-  server.close(() => process.exit(0));
-});
+  // Graceful shutdown
+  process.on('SIGTERM', async () => {
+    console.log('SIGTERM received. Shutting down...');
+    await prisma.$disconnect();
+    server.close(() => process.exit(0));
+  });
+}
 
 export { app, server, wss };
+export default app;
