@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { Tour } from '@/types';
-import { MapPin, Clock, Users, Star, Search, SlidersHorizontal } from 'lucide-react';
+import { Clock, Users, Star, Search, SlidersHorizontal } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 
 const categories = ['ALL', 'BALLOON', 'DAILY_TOUR', 'PRIVATE_TOUR', 'TRANSFER', 'ACTIVITY'];
@@ -17,6 +17,15 @@ const categoryLabels: Record<string, string> = {
   PRIVATE_TOUR: 'Private Tours',
   TRANSFER: 'Transfers',
   ACTIVITY: 'Activities',
+};
+
+const categoryImages: Record<string, string> = {
+  BALLOON: '/images/cappadocia-tours-hero.png',
+  DAILY_TOUR: '/images/cappadocia-routes-aerial.png',
+  PRIVATE_TOUR: '/images/cappadocia-blue-hour-section.png',
+  TRANSFER: '/images/cappadocia-sunrise-section.png',
+  ACTIVITY: '/images/cappadocia-rose-valley-section.png',
+  ADVENTURE: '/images/cappadocia-rose-valley-section.png',
 };
 
 const fallbackTours: Tour[] = [
@@ -136,18 +145,26 @@ export default function ToursPage() {
   }, [tours, activeCategory, search]);
 
   return (
-    <div className="min-h-screen pt-24 pb-20 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="relative min-h-screen pt-32 pb-24 px-4 overflow-hidden isolate">
+      <div
+        className="absolute inset-x-0 top-0 h-[760px] -z-30 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/images/cappadocia-tours-hero.png')" }}
+      />
+      <div className="absolute inset-x-0 top-0 h-[760px] -z-20 bg-gradient-to-b from-slate-950/65 via-slate-950/55 to-white dark:to-dark" />
+      <div className="absolute inset-x-0 top-[520px] bottom-0 -z-30 bg-gradient-to-b from-white via-stone-50 to-white dark:from-dark dark:via-dark-50 dark:to-dark" />
+      <div className="absolute top-40 left-1/2 -translate-x-1/2 w-[65rem] h-[30rem] -z-10 rounded-full bg-orange-300/10 blur-[140px]" />
+
+      <div className="relative max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Our <span className="text-emerald-500 dark:text-emerald-400">Experiences</span>
+          <h1 className="font-display text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-2xl">
+            Our <span className="text-emerald-300">Experiences</span>
           </h1>
-          <p className="text-gray-500 dark:text-white/50 text-lg max-w-2xl mx-auto">
+          <p className="text-white/75 text-lg max-w-2xl mx-auto drop-shadow-lg">
             Discover curated adventures across Cappadocia — from sunrise balloon flights to underground city explorations.
           </p>
         </motion.div>
@@ -157,7 +174,7 @@ export default function ToursPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-10 space-y-4"
+          className="mb-12 space-y-4 rounded-3xl border border-white/15 bg-black/25 backdrop-blur-2xl p-5 md:p-7 shadow-2xl max-w-4xl mx-auto"
         >
           {/* Search */}
           <div className="relative max-w-md mx-auto">
@@ -232,11 +249,15 @@ export default function ToursPage() {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Link href={`/booking?tour=${tour.id}`}>
-                    <div className="glass-card group cursor-pointer overflow-hidden hover:border-emerald-500/30 transition-all duration-300">
-                      {/* Image placeholder */}
+                    <div className="glass-card group cursor-pointer overflow-hidden hover:border-emerald-500/30 hover:-translate-y-2 hover:shadow-[0_30px_70px_-30px_rgba(6,78,59,0.5)] transition-all duration-500">
+                      {/* Tour image */}
                       <div className="relative h-52 bg-gradient-to-br from-emerald-500/10 to-emerald-700/10 flex items-center justify-center overflow-hidden">
+                        <img
+                          src={categoryImages[tour.category] || '/images/cappadocia-routes-aerial.png'}
+                          alt={tour.title}
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
                         <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-dark-100 to-transparent z-10" />
-                        <MapPin className="w-16 h-16 text-emerald-500/20 group-hover:scale-110 transition-transform duration-500" />
                         <div className="absolute top-3 right-3 z-20 bg-emerald-500/90 text-white text-xs font-semibold px-3 py-1 rounded-full">
                           {categoryLabels[tour.category] || tour.category}
                         </div>

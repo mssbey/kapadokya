@@ -17,8 +17,13 @@ export function MapSection() {
   const [activePoint, setActivePoint] = useState<number | null>(null);
 
   return (
-    <section id="map" className="py-24 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-white dark:from-dark to-gray-50 dark:to-dark-50" />
+    <section id="map" className="py-24 md:py-32 relative overflow-hidden isolate">
+      <div
+        className="absolute inset-0 -z-20 bg-cover bg-center"
+        style={{ backgroundImage: "url('/images/cappadocia-routes-aerial.png')" }}
+      />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/96 via-stone-50/88 to-white/96 dark:from-dark/96 dark:via-[#0b1411]/88 dark:to-dark-50/96" />
+      <div className="absolute left-[-10%] top-1/3 w-[40rem] h-[40rem] rounded-full bg-emerald-500/10 blur-[150px]" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -40,18 +45,18 @@ export function MapSection() {
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="glass-card overflow-hidden"
+          className="glass-card overflow-hidden shadow-[0_35px_90px_-35px_rgba(6,78,59,0.45)] ring-1 ring-white/30"
         >
           {/* Map Container */}
           <div className="relative h-[500px] bg-gray-100 dark:bg-dark-100">
             {/* Styled Map Placeholder — replace with Mapbox/Google Maps in production */}
             <div className="absolute inset-0 bg-gradient-to-br from-gray-100 dark:from-dark-50 to-gray-200 dark:to-dark-200">
               <img
-                src="https://images.unsplash.com/photo-1570939274717-7eda259b50ed?w=1400&q=80"
+                src="/images/cappadocia-routes-aerial.png"
                 alt="Cappadocia aerial view"
-                className="w-full h-full object-cover opacity-30"
+                className="w-full h-full object-cover opacity-70 scale-[1.02]"
               />
-              <div className="absolute inset-0 bg-white/40 dark:bg-dark/40" />
+              <div className="absolute inset-0 bg-gradient-to-r from-white/25 via-white/10 to-white/45 dark:from-dark/35 dark:via-dark/15 dark:to-dark/60" />
 
               {/* Tour Points */}
               <div className="absolute inset-0 flex items-center justify-center">

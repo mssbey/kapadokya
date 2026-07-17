@@ -81,10 +81,16 @@ export function ExperiencesSection() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   return (
-    <section id="experiences" className="py-24 md:py-32 relative">
+    <section id="experiences" className="py-24 md:py-32 relative overflow-hidden isolate">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white dark:from-dark via-gray-50/50 dark:via-dark-50/50 to-white dark:to-dark" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-[120px]" />
+      <div
+        className="absolute inset-0 -z-30 bg-cover bg-center bg-fixed scale-[1.03]"
+        style={{ backgroundImage: "url('/images/cappadocia-rose-valley-section.png')" }}
+      />
+      <div className="absolute inset-0 -z-20 bg-gradient-to-b from-white/95 via-orange-50/88 to-white/96 dark:from-dark/96 dark:via-[#15110f]/88 dark:to-dark/96" />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_20%,rgba(251,191,36,0.11),transparent_48%)]" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange-400/45 to-transparent" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-emerald-500/5 rounded-full blur-[130px]" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
@@ -118,7 +124,7 @@ export function ExperiencesSection() {
               transition={{ duration: 0.6, delay: index * 0.15 }}
               onMouseEnter={() => setHoveredId(exp.id)}
               onMouseLeave={() => setHoveredId(null)}
-              className="group relative overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 backdrop-blur-sm transition-all duration-700 hover:border-emerald-500/30 hover:shadow-glow-emerald"
+              className="group relative overflow-hidden rounded-3xl border border-white/50 dark:border-white/10 bg-white/80 dark:bg-black/35 backdrop-blur-xl transition-all duration-700 hover:-translate-y-2 hover:border-emerald-500/30 hover:shadow-[0_30px_70px_-30px_rgba(6,78,59,0.5)]"
             >
               {/* Image */}
               <div className="relative h-64 overflow-hidden">

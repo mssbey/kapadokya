@@ -30,7 +30,7 @@ export function Footer() {
             <div className="mb-6">
               <Image
                 src="/logo.png"
-                alt="Discovery Cappadocia"
+                alt="DiscoveryCappadocia"
                 width={160}
                 height={44}
                 className="drop-shadow-[0_0_12px_rgba(16,185,129,0.15)]"
@@ -120,7 +120,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-16 pt-8 border-t border-gray-200 dark:border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-gray-400 dark:text-white/30 text-sm">
-            © {new Date().getFullYear()} Discovery Cappadocia. All rights reserved.
+            © {new Date().getFullYear()} DiscoveryCappadocia. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <span className="text-gray-300 dark:text-white/20 text-xs">Trusted by 10,000+ travelers</span>

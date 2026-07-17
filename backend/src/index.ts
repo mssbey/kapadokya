@@ -66,7 +66,7 @@ const PORT = process.env.PORT || 5000;
 
 if (!process.env.VERCEL) {
   server.listen(PORT, () => {
-    console.log(`🚀 Discovery Cappadocia API running on port ${PORT}`);
+    console.log(`🚀 DiscoveryCappadocia API running on port ${PORT}`);
   });
 
   // Graceful shutdown

@@ -1,4 +1,4 @@
-# 🏔️ Discovery Cappadocia
+# 🏔️ DiscoveryCappadocia
 
 A premium, full-stack travel booking platform for Cappadocia experiences — balloon flights, daily tours, activities, and transfers.
 

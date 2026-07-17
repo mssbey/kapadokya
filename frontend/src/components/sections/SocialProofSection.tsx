@@ -31,7 +31,7 @@ const testimonials = [
   {
     name: 'Emma Wilson',
     location: 'London, UK',
-    text: 'I\'ve traveled extensively but Cappadocia with Discovery was truly special. The VIP balloon package was worth every penny. The champagne toast at sunrise — unforgettable!',
+    text: 'I\'ve traveled extensively but Cappadocia with DiscoveryCappadocia was truly special. The VIP balloon package was worth every penny. The champagne toast at sunrise — unforgettable!',
     rating: 5,
     avatar: 'E',
     tourType: 'VIP Balloon',
@@ -47,8 +47,13 @@ const trustBadges = [
 
 export function SocialProofSection() {
   return (
-    <section className="py-24 md:py-32 relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-gray-50 dark:from-dark-50 via-white dark:via-dark to-gray-50 dark:to-dark-50" />
+    <section className="py-24 md:py-32 relative overflow-hidden isolate">
+      <div
+        className="absolute inset-0 -z-20 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/images/cappadocia-blue-hour-section.png')" }}
+      />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-slate-950/88 via-slate-950/80 to-slate-950/92" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/50 to-transparent" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -61,21 +66,21 @@ export function SocialProofSection() {
           <span className="text-gold text-sm font-medium uppercase tracking-widest mb-4 block">
             Testimonials
           </span>
-          <h2 className="section-heading mb-6">What Our Guests Say</h2>
-          <p className="section-subheading mx-auto">
-            Join thousands of happy travelers who chose Discovery Cappadocia
+          <h2 className="section-heading mb-6 !text-white">What Our Guests Say</h2>
+          <p className="section-subheading mx-auto !text-white/65">
+            Join thousands of happy travelers who chose DiscoveryCappadocia
           </p>
 
           {/* Overall Rating */}
-          <div className="mt-8 inline-flex items-center gap-4 px-6 py-3 rounded-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+          <div className="mt-8 inline-flex items-center gap-4 px-6 py-3 rounded-full bg-white/10 backdrop-blur-xl border border-white/15 shadow-2xl">
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map((i) => (
                 <Star key={i} className="w-5 h-5 text-gold fill-gold" />
               ))}
             </div>
-            <span className="text-gray-900 dark:text-white font-bold text-lg">4.9</span>
-            <span className="text-gray-300 dark:text-white/40">|</span>
-            <span className="text-gray-500 dark:text-white/60">2,847 reviews</span>
+            <span className="text-white font-bold text-lg">4.9</span>
+            <span className="text-white/30">|</span>
+            <span className="text-white/60">2,847 reviews</span>
           </div>
         </motion.div>
 
@@ -88,15 +93,15 @@ export function SocialProofSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="glass-card p-6 md:p-8 group"
+              className="rounded-2xl border border-white/15 bg-slate-950/55 backdrop-blur-xl p-6 md:p-8 group shadow-2xl shadow-black/20 transition-all duration-500 hover:-translate-y-1 hover:border-emerald-400/35"
             >
               <div className="flex items-start gap-4 mb-4">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center font-bold text-white text-lg flex-shrink-0">
                   {t.avatar}
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900 dark:text-white">{t.name}</h4>
-                  <p className="text-sm text-gray-400 dark:text-white/40">{t.location}</p>
+                  <h4 className="font-semibold text-white">{t.name}</h4>
+                  <p className="text-sm text-white/45">{t.location}</p>
                 </div>
                 <Quote className="w-8 h-8 text-emerald-500/20 group-hover:text-emerald-500/40 transition-colors flex-shrink-0" />
               </div>
@@ -107,7 +112,7 @@ export function SocialProofSection() {
                 ))}
               </div>
 
-              <p className="text-gray-600 dark:text-white/60 leading-relaxed mb-4">&ldquo;{t.text}&rdquo;</p>
+              <p className="text-white/68 leading-relaxed mb-4">&ldquo;{t.text}&rdquo;</p>
 
               <span className="badge-emerald text-xs">{t.tourType}</span>
             </motion.div>
@@ -128,11 +133,11 @@ export function SocialProofSection() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="text-center p-6 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 hover:border-emerald-300 dark:hover:border-emerald-500/20 transition-all"
+              className="text-center p-6 rounded-2xl bg-slate-950/50 backdrop-blur-xl border border-white/10 hover:border-emerald-400/35 hover:-translate-y-1 transition-all duration-300 shadow-xl shadow-black/10"
             >
               <badge.icon className="w-8 h-8 text-emerald-500 dark:text-emerald-400 mx-auto mb-3" />
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{badge.label}</h4>
-              <p className="text-gray-400 dark:text-white/40 text-sm">{badge.desc}</p>
+              <h4 className="font-semibold text-white mb-1">{badge.label}</h4>
+              <p className="text-white/45 text-sm">{badge.desc}</p>
             </motion.div>
           ))}
         </motion.div>

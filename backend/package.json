@@ -1,7 +1,7 @@
 {
   "name": "discovery-cappadocia-backend",
   "version": "1.0.0",
-  "description": "Discovery Cappadocia - Premium Travel Booking Platform API",
+  "description": "DiscoveryCappadocia - Premium Travel Booking Platform API",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",

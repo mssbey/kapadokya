@@ -72,8 +72,13 @@ export function LiveAvailabilitySection() {
   }, []);
 
   return (
-    <section className="py-24 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-white dark:from-dark to-gray-50 dark:to-dark-50" />
+    <section className="py-24 md:py-32 relative overflow-hidden isolate">
+      <div
+        className="absolute inset-0 -z-20 bg-cover bg-center bg-fixed"
+        style={{ backgroundImage: "url('/images/cappadocia-sunrise-section.png')" }}
+      />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/95 via-amber-50/88 to-white/95 dark:from-dark/95 dark:via-[#17120d]/86 dark:to-dark-50/95" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/50 to-transparent" />
       <div className="absolute top-1/2 left-0 w-96 h-96 bg-red-500/5 rounded-full blur-[120px]" />
       <div className="absolute top-1/2 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-[120px]" />
 
@@ -99,7 +104,7 @@ export function LiveAvailabilitySection() {
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
-          className="glass-card p-6 md:p-8 mb-10 max-w-2xl mx-auto text-center"
+          className="glass-card p-6 md:p-8 mb-10 max-w-2xl mx-auto text-center shadow-2xl shadow-amber-950/10 ring-1 ring-white/30"
         >
           <div className="flex items-center justify-center gap-2 mb-4">
             <Flame className="w-5 h-5 text-orange-400" />
@@ -125,7 +130,7 @@ export function LiveAvailabilitySection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className={`glass-card p-6 transition-all duration-500 ${
+                className={`glass-card p-6 transition-all duration-500 shadow-xl shadow-amber-950/10 ring-1 ring-white/20 hover:-translate-y-1 ${
                   pulseIndex === i ? 'border-emerald-500/30 shadow-glow-emerald' : ''
                 }`}
               >

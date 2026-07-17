@@ -151,7 +151,7 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
 
                 <Image
                   src="/logo.png"
-                  alt="Discovery Cappadocia"
+                  alt="DiscoveryCappadocia"
                   width={280}
                   height={80}
                   className="relative z-10 drop-shadow-[0_0_40px_rgba(16,185,129,0.3)]"

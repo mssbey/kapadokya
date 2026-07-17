@@ -19,7 +19,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Discovery Cappadocia | Premium Travel & Hot Air Balloon Experiences',
+  title: 'DiscoveryCappadocia | Premium Travel & Hot Air Balloon Experiences',
   description:
     'Experience Cappadocia like never before. Book luxury hot air balloon flights, guided tours, and unforgettable adventures in one of the most magical destinations on Earth.',
   keywords: [
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     'Göreme',
   ],
   openGraph: {
-    title: 'Discovery Cappadocia | Premium Travel Experiences',
+    title: 'DiscoveryCappadocia | Premium Travel Experiences',
     description: 'Experience the sky like never before.',
     type: 'website',
     locale: 'en_US',

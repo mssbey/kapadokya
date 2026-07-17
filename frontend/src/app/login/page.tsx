@@ -43,7 +43,7 @@ export default function LoginPage() {
           <Link href="/" className="inline-block mb-6">
             <Image
               src="/logo.png"
-              alt="Discovery Cappadocia"
+              alt="DiscoveryCappadocia"
               width={200}
               height={55}
               className="drop-shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:drop-shadow-[0_0_25px_rgba(16,185,129,0.35)] transition-all duration-500"

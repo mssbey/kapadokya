@@ -236,7 +236,7 @@ export function Navbar() {
                 <div className="absolute inset-0 rounded-xl bg-emerald-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-150" />
                 <Image
                   src="/logo.png"
-                  alt="Discovery Cappadocia"
+                  alt="DiscoveryCappadocia"
                   width={isScrolled ? 140 : 160}
                   height={isScrolled ? 38 : 44}
                   className="relative z-10 transition-all duration-500 drop-shadow-[0_0_12px_rgba(16,185,129,0.15)] group-hover:drop-shadow-[0_0_20px_rgba(16,185,129,0.3)]"
