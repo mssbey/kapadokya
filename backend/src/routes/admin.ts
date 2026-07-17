@@ -127,6 +127,20 @@ adminRouter.get('/tours', async (_req, res, next) => {
   }
 });
 
+// Get single tour (admin)
+adminRouter.get('/tours/:id', async (req, res, next) => {
+  try {
+    const tour = await prisma.tour.findUnique({
+      where: { id: req.params.id },
+      include: { upsells: true, _count: { select: { bookings: true } } },
+    });
+    if (!tour) throw new AppError('Tour not found', 404);
+    res.json({ success: true, data: tour });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Create tour
 adminRouter.post('/tours', async (req, res, next) => {
   try {
@@ -181,7 +195,20 @@ adminRouter.delete('/tours/:id', async (req, res, next) => {
     await prisma.tour.delete({ where: { id: req.params.id } });
     await invalidateCache('tours:*');
     res.json({ success: true, message: 'Tour deleted' });
-  } catch (err) {
+  } catch (err: any) {
+    const isForeignKeyViolation =
+      err?.code === 'P2003' ||
+      err?.code === 'P2014' ||
+      err?.meta?.code === '23503' ||
+      err?.meta?.code === '23001' ||
+      /foreign key constraint/i.test(err?.message || '');
+
+    if (isForeignKeyViolation) {
+      return next(new AppError('Cannot delete a tour that has existing bookings. Deactivate it instead.', 409));
+    }
+    if (err?.code === 'P2025') {
+      return next(new AppError('Tour not found', 404));
+    }
     next(err);
   }
 });
@@ -203,7 +230,7 @@ adminRouter.get('/bookings', async (req, res, next) => {
         include: {
           tour: { select: { title: true, category: true } },
           user: { select: { name: true, email: true } },
-          payment: { select: { status: true, provider: true } },
+          payment: { select: { status: true, provider: true, amount: true, currency: true, providerPaymentId: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -217,6 +244,24 @@ adminRouter.get('/bookings', async (req, res, next) => {
       data: bookings,
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Get single booking (full detail)
+adminRouter.get('/bookings/:id', async (req, res, next) => {
+  try {
+    const booking = await prisma.booking.findUnique({
+      where: { id: req.params.id },
+      include: {
+        tour: { select: { title: true, category: true, basePrice: true } },
+        user: { select: { name: true, email: true, phone: true } },
+        payment: true,
+      },
+    });
+    if (!booking) throw new AppError('Booking not found', 404);
+    res.json({ success: true, data: booking });
   } catch (err) {
     next(err);
   }
@@ -342,6 +387,53 @@ adminRouter.post('/availability/bulk', async (req, res, next) => {
     res.json({ success: true, data: results, count: results.length });
   } catch (err) {
     if (err instanceof z.ZodError) return next(new AppError(err.errors[0].message, 400));
+    next(err);
+  }
+});
+
+// =================== PAYMENTS ===================
+
+adminRouter.get('/payments', async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const status = req.query.status as string;
+    const provider = req.query.provider as string;
+
+    const where: any = {};
+    if (status) where.status = status;
+    if (provider) where.provider = provider;
+
+    const [payments, total, totals] = await Promise.all([
+      prisma.payment.findMany({
+        where,
+        include: {
+          booking: {
+            select: {
+              id: true,
+              date: true,
+              guestName: true,
+              guestEmail: true,
+              tour: { select: { title: true, category: true } },
+              user: { select: { name: true, email: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.payment.count({ where }),
+      prisma.payment.aggregate({ where: { ...where, status: 'COMPLETED' }, _sum: { amount: true } }),
+    ]);
+
+    res.json({
+      success: true,
+      data: payments,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      totalCompleted: totals._sum.amount || 0,
+    });
+  } catch (err) {
     next(err);
   }
 });
