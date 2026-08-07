@@ -9,14 +9,14 @@ async function main() {
   // Create admin user
   const adminPassword = await bcrypt.hash('Admin123!', 12);
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@discoverycappadocia.com' },
+    where: { email: 'admin@kapheratravel.com' },
     update: {},
     create: {
       name: 'Admin',
-      email: 'admin@discoverycappadocia.com',
+      email: 'admin@kapheratravel.com',
       password: adminPassword,
       role: 'ADMIN',
-      phone: '+90 555 000 0000',
+      phone: '+90 540 101 50 50',
     },
   });
   console.log('✅ Admin user created:', admin.email);
@@ -33,9 +33,8 @@ async function main() {
       duration: '3-4 hours (1 hour flight)',
       maxCapacity: 20,
       images: [
-        '/images/tours/balloon-1.jpg',
-        '/images/tours/balloon-2.jpg',
-        '/images/tours/balloon-3.jpg',
+        '/images/cappadocia-hero-signature.png',
+        '/images/cappadocia-sunrise-section.png',
       ],
       videoUrl: 'https://www.youtube.com/watch?v=cappadocia-balloon',
       highlights: [
@@ -61,8 +60,8 @@ async function main() {
       sortOrder: 1,
     },
     {
-      title: 'Full Day Cappadocia Tour',
-      slug: 'full-day-cappadocia-tour',
+      title: 'Cappadocia Green Tour',
+      slug: 'cappadocia-green-tour',
       description: 'Discover the most remarkable sights of Cappadocia in a single day. Visit ancient underground cities, explore dramatic valleys, and see centuries-old cave churches with stunning frescoes. This comprehensive tour covers all the must-see attractions with an expert guide who brings the history and geology to life.',
       shortDesc: 'Complete Cappadocia exploration with expert guide',
       category: TourCategory.DAILY_TOUR,
@@ -70,9 +69,8 @@ async function main() {
       duration: '8-10 hours',
       maxCapacity: 15,
       images: [
-        '/images/tours/daily-1.jpg',
-        '/images/tours/daily-2.jpg',
-        '/images/tours/daily-3.jpg',
+        '/images/cappadocia-sunrise-section.png',
+        '/images/cappadocia-routes-aerial.png',
       ],
       highlights: [
         'Goreme Open Air Museum',
@@ -106,9 +104,8 @@ async function main() {
       duration: '2-3 hours',
       maxCapacity: 10,
       images: [
-        '/images/tours/atv-1.jpg',
-        '/images/tours/atv-2.jpg',
-        '/images/tours/atv-3.jpg',
+        '/images/cappadocia-atv-tour.png',
+        '/images/cappadocia-routes-aerial.png',
       ],
       highlights: [
         'Ride through Sword Valley',
@@ -132,6 +129,51 @@ async function main() {
       sortOrder: 3,
     },
     {
+      title: 'Sunrise or Sunset Horse Riding',
+      slug: 'cappadocia-horse-riding',
+      description: 'Ride quiet Cappadocia trails through valleys and rock formations with a local guide. Departure timing is matched to sunrise or sunset conditions.',
+      shortDesc: 'Guided horse riding through Cappadocia valleys',
+      category: TourCategory.ADVENTURE,
+      basePrice: 50,
+      duration: '2 hours',
+      maxCapacity: 10,
+      images: ['/images/cappadocia-blue-hour-section.png', '/images/cappadocia-rose-valley-section.png'],
+      highlights: ['Sunrise or sunset departure', 'Small-group trail', 'Safety briefing', 'Scenic photo stops'],
+      includes: ['Horse and equipment', 'Helmet', 'Local guide', 'Selected hotel pickup'],
+      excludes: ['Personal expenses', 'Photos', 'Tips'],
+      sortOrder: 4,
+    },
+    {
+      title: 'Cappadocia Jeep Safari',
+      slug: 'cappadocia-jeep-safari',
+      description: 'Reach rugged valleys and panoramic viewpoints on a guided off-road Jeep safari through Cappadocia.',
+      shortDesc: 'Off-road adventure to hidden viewpoints',
+      category: TourCategory.ADVENTURE,
+      basePrice: 65,
+      duration: '2-3 hours',
+      maxCapacity: 16,
+      images: ['/images/cappadocia-routes-aerial.png', '/images/cappadocia-rose-valley-section.png'],
+      highlights: ['Off-road valley route', 'Panoramic stops', 'Local driver-guide', 'Flexible departure options'],
+      includes: ['Jeep and driver', 'Fuel', 'Insurance', 'Selected hotel pickup'],
+      excludes: ['Food and drinks', 'Personal expenses', 'Tips'],
+      sortOrder: 5,
+    },
+    {
+      title: 'Cappadocia Red Tour',
+      slug: 'cappadocia-red-tour',
+      description: 'Explore northern Cappadocia with a licensed guide, comfortable transport and the region’s best-known landscape and cultural stops.',
+      shortDesc: 'Full-day guided northern Cappadocia route',
+      category: TourCategory.DAILY_TOUR,
+      basePrice: 70,
+      duration: '7-8 hours',
+      maxCapacity: 15,
+      images: ['/images/cappadocia-tours-hero.png', '/images/cappadocia-routes-aerial.png'],
+      highlights: ['Göreme region', 'Fairy chimney valleys', 'Cultural stop', 'Professional guide'],
+      includes: ['Licensed guide', 'Transport', 'Lunch', 'Stated museum entries'],
+      excludes: ['Drinks', 'Personal expenses', 'Tips'],
+      sortOrder: 6,
+    },
+    {
       title: 'Private Airport/Hotel Transfer',
       slug: 'private-transfer',
       description: 'Start and end your Cappadocia journey in comfort with our premium private transfer service. Our professional drivers ensure a smooth, safe journey between the airport and your hotel in a luxury vehicle. Available 24/7 for your convenience.',
@@ -141,8 +183,7 @@ async function main() {
       duration: '45-60 min',
       maxCapacity: 6,
       images: [
-        '/images/tours/transfer-1.jpg',
-        '/images/tours/transfer-2.jpg',
+        '/images/cappadocia-routes-aerial.png',
       ],
       highlights: [
         'Meet & greet at airport',
@@ -161,7 +202,7 @@ async function main() {
       excludes: [
         'Tips',
       ],
-      sortOrder: 4,
+      sortOrder: 7,
     },
   ];
 
@@ -184,20 +225,7 @@ async function main() {
             price: 75,
             icon: '📸',
           },
-          {
-            tourId: tour.id,
-            name: 'VIP Package',
-            description: 'Smaller basket (max 8 people), longer flight, premium champagne',
-            price: 150,
-            icon: '👑',
-          },
-          {
-            tourId: tour.id,
-            name: 'Hotel Transfer (Round Trip)',
-            description: 'Private car pickup from and return to your hotel',
-            price: 25,
-            icon: '🚗',
-          },
+          // VIP Package and Hotel Transfer are included free of charge — not sold as add-ons.
         ],
         skipDuplicates: true,
       });

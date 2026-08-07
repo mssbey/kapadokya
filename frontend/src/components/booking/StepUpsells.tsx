@@ -3,7 +3,13 @@
 import { motion } from 'framer-motion';
 import { useBookingStore } from '@/store/bookingStore';
 import { formatPrice, cn } from '@/lib/utils';
-import { Camera, Crown, Car, Check, Sparkles } from 'lucide-react';
+import { Camera, Check, Sparkles } from 'lucide-react';
+
+// VIP Package and Hotel Transfer are included free of charge, so they are never
+// offered as paid add-ons — filtered out even if they still exist in the database.
+const retiredUpsells = ['vip', 'transfer'];
+const isRetired = (name: string) =>
+  retiredUpsells.some((k) => name.toLowerCase().includes(k));
 
 const defaultUpsells = [
   {
@@ -14,33 +20,16 @@ const defaultUpsells = [
     icon: '📸',
     lucideIcon: Camera,
   },
-  {
-    id: 'vip-pkg',
-    name: 'VIP Package',
-    description: 'Smaller group (max 8), extended duration, premium champagne celebration, priority boarding',
-    price: 150,
-    icon: '👑',
-    lucideIcon: Crown,
-  },
-  {
-    id: 'transfer-pkg',
-    name: 'Hotel Transfer (Round Trip)',
-    description: 'Private comfortable vehicle pickup from and return to your hotel door',
-    price: 25,
-    icon: '🚗',
-    lucideIcon: Car,
-  },
 ];
 
 export function StepUpsells() {
   const { selectedTour, selectedUpsells, toggleUpsell, nextStep, prevStep } = useBookingStore();
 
-  const upsells = selectedTour?.upsells?.length
-    ? selectedTour.upsells.map((u) => ({
-        ...u,
-        lucideIcon: u.name.includes('Photo') ? Camera : u.name.includes('VIP') ? Crown : Car,
-      }))
-    : defaultUpsells;
+  const upsells = (
+    selectedTour?.upsells?.length
+      ? selectedTour.upsells.map((u) => ({ ...u, lucideIcon: Camera }))
+      : defaultUpsells
+  ).filter((u) => !isRetired(u.name));
 
   return (
     <div>
@@ -58,6 +47,11 @@ export function StepUpsells() {
       </div>
 
       <div className="space-y-4">
+        {upsells.length === 0 && (
+          <div className="glass-card p-6 text-center text-gray-500 dark:text-white/50 text-sm">
+            No paid add-ons for this experience — everything else is already included.
+          </div>
+        )}
         {upsells.map((upsell, i) => {
           const isSelected = selectedUpsells.some((u) => u.id === upsell.id);
           const Icon = upsell.lucideIcon;

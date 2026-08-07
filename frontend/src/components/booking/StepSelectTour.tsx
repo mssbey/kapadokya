@@ -1,178 +1,62 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { ArrowRight, Clock, Loader2, MapPin } from 'lucide-react';
 import { useBookingStore } from '@/store/bookingStore';
 import { api } from '@/lib/api';
-import { formatPrice, getCategoryIcon } from '@/lib/utils';
-import { Clock, Users, Star, ArrowRight, Loader2 } from 'lucide-react';
-import type { Tour } from '@/types';
+import { formatPrice } from '@/lib/utils';
+import { CATALOG } from '@/lib/site';
+import type { Tour, TourCategory } from '@/types';
+
+const fallbackTours: Tour[] = CATALOG.map((tour, index) => ({
+  id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
+  title: tour.title, slug: tour.slug, description: tour.description, shortDesc: tour.description,
+  category: (tour.category === 'Balloon' ? 'BALLOON' : tour.category === 'Daily Tour' ? 'DAILY_TOUR' : tour.category === 'Transfer' ? 'TRANSFER' : 'ADVENTURE') as TourCategory,
+  basePrice: tour.price, currency: 'EUR', duration: tour.duration, maxCapacity: 20,
+  images: [tour.image], highlights: tour.highlights, includes: tour.included, excludes: tour.notIncluded,
+  isActive: true, sortOrder: index + 1, upsells: [],
+}));
+
+const aliases: Record<string, string> = {
+  'cappadocia-hot-air-balloon': 'hot-air-balloon-flight',
+  'cappadocia-sunset-atv-tour': 'atv-quad-safari',
+  'cappadocia-airport-transfer': 'private-transfer',
+};
 
 export function StepSelectTour() {
+  const query = useSearchParams().get('tour');
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
+  const autoSelected = useRef(false);
   const { setTour, nextStep, selectedTour } = useBookingStore();
 
   useEffect(() => {
-    async function fetchTours() {
-      try {
-        const res = await api.get('/tours');
-        setTours(res.data.data);
-      } catch {
-        // Fallback data for demo
-        setTours([
-          {
-            id: '1',
-            title: 'Cappadocia Hot Air Balloon Flight',
-            slug: 'hot-air-balloon-flight',
-            description: 'Experience the magic of Cappadocia from above with our premium hot air balloon flight.',
-            shortDesc: 'Sunrise balloon flight over fairy chimneys with champagne toast',
-            category: 'BALLOON',
-            basePrice: 250,
-            currency: 'USD',
-            duration: '3-4 hours',
-            maxCapacity: 20,
-            images: [],
-            highlights: [],
-            includes: [],
-            excludes: [],
-            isActive: true,
-            sortOrder: 1,
-            upsells: [],
-          },
-          {
-            id: '2',
-            title: 'Full Day Cappadocia Tour',
-            slug: 'full-day-cappadocia-tour',
-            description: 'Discover the most remarkable sights of Cappadocia in a single day.',
-            shortDesc: 'Complete Cappadocia exploration with expert guide',
-            category: 'DAILY_TOUR',
-            basePrice: 75,
-            currency: 'USD',
-            duration: '8-10 hours',
-            maxCapacity: 15,
-            images: [],
-            highlights: [],
-            includes: [],
-            excludes: [],
-            isActive: true,
-            sortOrder: 2,
-            upsells: [],
-          },
-          {
-            id: '3',
-            title: 'ATV Quad Safari Adventure',
-            slug: 'atv-quad-safari',
-            description: 'Adrenaline-pumping ride through the dramatic landscapes of Cappadocia.',
-            shortDesc: 'Thrilling ATV ride through valleys and fairy chimneys',
-            category: 'ADVENTURE',
-            basePrice: 60,
-            currency: 'USD',
-            duration: '2-3 hours',
-            maxCapacity: 10,
-            images: [],
-            highlights: [],
-            includes: [],
-            excludes: [],
-            isActive: true,
-            sortOrder: 3,
-            upsells: [],
-          },
-          {
-            id: '4',
-            title: 'Private Airport/Hotel Transfer',
-            slug: 'private-transfer',
-            description: 'Comfortable private transfer with professional driver.',
-            shortDesc: 'Comfortable private transfer with professional driver',
-            category: 'TRANSFER',
-            basePrice: 40,
-            currency: 'USD',
-            duration: '45-60 min',
-            maxCapacity: 6,
-            images: [],
-            highlights: [],
-            includes: [],
-            excludes: [],
-            isActive: true,
-            sortOrder: 4,
-            upsells: [],
-          },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchTours();
+    api.get('/tours').then((res) => setTours(res.data.data)).catch(() => setTours(fallbackTours)).finally(() => setLoading(false));
   }, []);
 
-  function handleSelect(tour: Tour) {
-    setTour(tour);
-    nextStep();
-  }
+  useEffect(() => {
+    if (loading || !query || autoSelected.current) return;
+    const expected = aliases[query] || query;
+    const match = tours.find((tour) => tour.slug === expected || tour.slug === query || tour.id === query);
+    if (match) { autoSelected.current = true; setTour(match); nextStep(); }
+  }, [loading, nextStep, query, setTour, tours]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
-      </div>
-    );
-  }
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>;
 
   return (
     <div className="space-y-4">
-      <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white mb-6">
-        Choose Your Experience
-      </h2>
-
-      {tours.map((tour, i) => (
-        <motion.button
-          key={tour.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.1 }}
-          onClick={() => handleSelect(tour)}
-          className={`w-full text-left glass-card p-5 md:p-6 flex items-center gap-5 group transition-all duration-300 ${
-            selectedTour?.id === tour.id
-              ? 'border-emerald-500/50 bg-emerald-500/10'
-              : 'hover:border-white/20'
-          }`}
-        >
-          <div className="w-14 h-14 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-3xl flex-shrink-0 group-hover:scale-110 transition-transform">
-            {getCategoryIcon(tour.category)}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <h3 className="font-display text-lg font-semibold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors">
-              {tour.title}
-            </h3>
-            <p className="text-gray-500 dark:text-white/50 text-sm mt-1 truncate">{tour.shortDesc}</p>
-            <div className="flex items-center gap-4 mt-2 text-xs text-gray-400 dark:text-white/40">
-              <div className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {tour.duration}
-              </div>
-              <div className="flex items-center gap-1">
-                <Users className="w-3 h-3" />
-                Up to {tour.maxCapacity}
-              </div>
-              <div className="flex items-center gap-1">
-                <Star className="w-3 h-3 text-gold" />
-                4.9
-              </div>
-            </div>
-          </div>
-
-          <div className="text-right flex-shrink-0">
-            <div className="text-xs text-gray-400 dark:text-white/40">from</div>
-            <div className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors">
-              {formatPrice(tour.basePrice)}
-            </div>
-            <div className="text-xs text-gray-400 dark:text-white/30">per person</div>
-          </div>
-
-          <ArrowRight className="w-5 h-5 text-gray-300 dark:text-white/20 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all flex-shrink-0" />
+      <h2 className="mb-6 font-display text-2xl font-bold">Choose your experience</h2>
+      {tours.map((tour, index) => (
+        <motion.button key={tour.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * .04 }} onClick={() => { window.dataLayer?.push({ event: 'add_to_cart', tour_name: tour.title }); setTour(tour); nextStep(); }} className={`group flex w-full items-center gap-4 rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:border-emerald-500 dark:bg-white/5 md:p-5 ${selectedTour?.id === tour.id ? 'border-emerald-500' : 'border-stone-200 dark:border-white/10'}`}>
+          <div className="hidden h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-stone-100 sm:block"><img src={tour.images[0] || '/images/cappadocia-routes-aerial.png'} alt="" className="h-full w-full object-cover" /></div>
+          <div className="min-w-0 flex-1"><h3 className="font-display text-lg font-bold group-hover:text-emerald-700 dark:group-hover:text-emerald-400">{tour.title}</h3><p className="mt-1 line-clamp-1 text-sm text-stone-500 dark:text-white/50">{tour.shortDesc}</p><div className="mt-2 flex gap-4 text-xs text-stone-400"><span className="flex gap-1"><Clock className="h-3.5 w-3.5" />{tour.duration}</span><span className="flex gap-1"><MapPin className="h-3.5 w-3.5" />Pickup available</span></div></div>
+          <div className="shrink-0 text-right"><p className="text-xs text-stone-400">From</p><p className="text-xl font-extrabold">{formatPrice(tour.basePrice, tour.currency || 'EUR')}</p></div>
+          <ArrowRight className="hidden h-5 w-5 text-stone-300 sm:block" />
         </motion.button>
       ))}
+      <p className="pt-2 text-xs text-stone-400">Availability is confirmed from the booking system before payment.</p>
     </div>
   );
 }

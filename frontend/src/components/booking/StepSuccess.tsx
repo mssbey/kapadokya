@@ -1,13 +1,17 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useBookingStore } from '@/store/bookingStore';
 import { formatPrice, formatDate } from '@/lib/utils';
-import { CheckCircle, Download, Mail, ArrowRight, PartyPopper } from 'lucide-react';
+import { CheckCircle, Download, ArrowRight, PartyPopper, MessageCircle } from 'lucide-react';
+import { SITE, whatsappUrl } from '@/lib/site';
 
 export function StepSuccess() {
-  const { selectedTour, selectedDate, adults, children, totalPrice, guestEmail, reset } = useBookingStore();
+  const { selectedTour, selectedDate, adults, children, totalPrice, reset } = useBookingStore();
+  const [reservationNumber, setReservationNumber] = useState('');
+  useEffect(() => setReservationNumber(sessionStorage.getItem('dc_last_booking_id') || ''), []);
 
   return (
     <div className="max-w-2xl mx-auto text-center">
@@ -36,8 +40,7 @@ export function StepSuccess() {
           Booking Confirmed! <PartyPopper className="inline w-10 h-10" />
         </h1>
         <p className="text-gray-500 dark:text-white/60 text-lg mb-8">
-          Your adventure in Cappadocia awaits. A confirmation email has been sent to{' '}
-          <span className="text-emerald-400">{guestEmail || 'your email'}</span>.
+          Payment received. Keep this reservation summary and contact our team if you need pickup assistance.
         </p>
       </motion.div>
 
@@ -53,6 +56,10 @@ export function StepSuccess() {
         </h3>
 
         <div className="space-y-4">
+          <div className="flex justify-between py-3 border-b border-gray-200 dark:border-white/10">
+            <span className="text-gray-500 dark:text-white/50">Reservation Number</span>
+            <span className="max-w-[60%] break-all text-right font-mono text-xs text-gray-900 dark:text-white">{reservationNumber || 'Processing'}</span>
+          </div>
           <div className="flex justify-between py-3 border-b border-gray-200 dark:border-white/10">
             <span className="text-gray-500 dark:text-white/50">Tour</span>
             <span className="text-gray-900 dark:text-white font-medium">{selectedTour?.title || 'N/A'}</span>
@@ -94,10 +101,11 @@ export function StepSuccess() {
           <ArrowRight className="w-5 h-5" />
           Back to Home
         </Link>
-        <button className="btn-secondary flex items-center justify-center gap-2">
+        <button onClick={() => window.print()} className="btn-secondary flex items-center justify-center gap-2">
           <Download className="w-5 h-5" />
-          Download Receipt
+          Print / Save Voucher
         </button>
+        <a href={whatsappUrl(`Hello, I need help with reservation ${reservationNumber}.`)} target="_blank" rel="noreferrer" data-event="whatsapp_click" className="btn-secondary flex items-center justify-center gap-2"><MessageCircle className="h-5 w-5" /> WhatsApp Support</a>
       </motion.div>
 
       <motion.p
@@ -107,8 +115,8 @@ export function StepSuccess() {
         className="text-gray-400 dark:text-white/30 text-sm mt-8"
       >
         Need help? Contact us at{' '}
-        <a href="mailto:info@discoverycappadocia.com" className="text-emerald-400 hover:underline">
-          info@discoverycappadocia.com
+        <a href={`mailto:${SITE.email}`} className="text-emerald-400 hover:underline">
+          {SITE.email}
         </a>
       </motion.p>
     </div>

@@ -1,136 +1,49 @@
 'use client';
 
-import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Phone, Mail, Instagram, Facebook, Youtube } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { BadgeCheck, LockKeyhole, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
+import { SITE, whatsappUrl } from '@/lib/site';
+
+const quick = [['About us', '/#about'], ['All tours', '/tours'], ['FAQ', '/#faq'], ['Contact', '/#contact']];
+const support = [['Cancellation & Refund Policy', '/legal/cancellation-refund'], ['Privacy Policy', '/legal/privacy'], ['Terms & Conditions', '/legal/terms'], ['Distance Sales Agreement', '/legal/distance-sales'], ['KVKK / Personal Data', '/legal/kvkk'], ['Cookie Policy', '/legal/cookie-policy']];
 
 export function Footer() {
+  const pathname = usePathname();
+  // The guest is already in the funnel — no "come book with us" banner on top of it.
+  const inBookingFlow = pathname?.startsWith('/booking') ?? false;
+
   return (
-    <footer className="relative bg-gray-50 dark:bg-dark-50 border-t border-gray-200 dark:border-white/5">
-      {/* CTA Banner */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10">
-        <div className="glass-card p-8 md:p-12 text-center bg-gradient-to-r from-emerald-50 dark:from-emerald-900/30 to-gray-50 dark:to-dark-50/80">
-          <h3 className="font-display text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Ready for an Unforgettable Experience?
-          </h3>
-          <p className="text-gray-500 dark:text-white/60 text-lg mb-8 max-w-xl mx-auto">
-            Book your Cappadocia adventure today and create memories that last a lifetime.
-          </p>
-          <Link href="/booking" className="btn-primary inline-flex items-center gap-2 text-lg">
-            Book Your Adventure
-            <span>→</span>
-          </Link>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 mt-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-          {/* Brand */}
-          <div>
-            <div className="mb-6">
-              <Image
-                src="/logo.png"
-                alt="DiscoveryCappadocia"
-                width={160}
-                height={44}
-                className="drop-shadow-[0_0_12px_rgba(16,185,129,0.15)]"
-              />
-            </div>
-            <p className="text-gray-500 dark:text-white/50 text-sm leading-relaxed mb-6">
-              Premium travel experiences in the magical land of Cappadocia. Hot air balloon flights,
-              guided tours, and unforgettable adventures.
-            </p>
-            <div className="flex gap-3">
-              {[
-                { icon: Instagram, href: '#' },
-                { icon: Facebook, href: '#' },
-                { icon: Youtube, href: '#' },
-              ].map(({ icon: Icon, href }, i) => (
-                <a
-                  key={i}
-                  href={href}
-                  className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center text-gray-400 dark:text-white/50 hover:text-emerald-500 dark:hover:text-emerald-400 hover:border-emerald-300 dark:hover:border-emerald-500/30 transition-all"
-                >
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h4 className="font-display text-lg font-semibold text-gray-900 dark:text-white mb-6">Experiences</h4>
-            <ul className="space-y-3">
-              {['Hot Air Balloon', 'Daily Tours', 'ATV Safari', 'Private Transfer', 'VIP Packages'].map((item) => (
-                <li key={item}>
-                  <Link
-                    href="/tours"
-                    className="text-gray-500 dark:text-white/50 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors text-sm"
-                  >
-                    {item}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h4 className="font-display text-lg font-semibold text-gray-900 dark:text-white mb-6">Company</h4>
-            <ul className="space-y-3">
-              {['About Us', 'Blog', 'Reviews', 'FAQ', 'Terms & Conditions', 'Privacy Policy'].map((item) => (
-                <li key={item}>
-                  <Link
-                    href="#"
-                    className="text-gray-500 dark:text-white/50 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors text-sm"
-                  >
-                    {item}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h4 className="font-display text-lg font-semibold text-gray-900 dark:text-white mb-6">Contact</h4>
-            <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-500 dark:text-white/50 text-sm">
-                  Göreme, Nevşehir<br />Cappadocia, Turkey
-                </span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                <a href="tel:+905550000000" className="text-gray-500 dark:text-white/50 hover:text-gray-900 dark:hover:text-white transition-colors text-sm">
-                  +90 555 000 00 00
-                </a>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                <a href="mailto:info@discoverycappadocia.com" className="text-gray-500 dark:text-white/50 hover:text-gray-900 dark:hover:text-white transition-colors text-sm">
-                  info@discoverycappadocia.com
-                </a>
-              </li>
-            </ul>
+    <footer id="contact" className="bg-[#07110e] text-white">
+      {!inBookingFlow && (
+        <div className="border-b border-white/10 bg-[#102d26]">
+          <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 px-4 py-8 sm:px-6 md:flex-row md:items-center lg:px-8">
+            <div><p className="font-display text-2xl font-bold">Cappadocia is easier with a local expert.</p><p className="mt-1 text-sm text-white/60">Tell us your dates and we’ll help build your itinerary.</p></div>
+            <a href={whatsappUrl('Hello 👋 I would like help planning my Cappadocia trip.')} target="_blank" rel="noreferrer" data-event="whatsapp_click" className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-6 py-4 font-extrabold"><MessageCircle className="h-5 w-5" /> Chat with our local team</a>
           </div>
         </div>
-
-        {/* Bottom */}
-        <div className="mt-16 pt-8 border-t border-gray-200 dark:border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-gray-400 dark:text-white/30 text-sm">
-            © {new Date().getFullYear()} DiscoveryCappadocia. All rights reserved.
-          </p>
-          <div className="flex items-center gap-6">
-            <span className="text-gray-300 dark:text-white/20 text-xs">Trusted by 10,000+ travelers</span>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <span key={i} className="text-gold text-sm">★</span>
-              ))}
-              <span className="text-gray-400 dark:text-white/40 text-xs ml-1">4.9/5</span>
-            </div>
+      )}
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <Image src="/logo.png" width={180} height={50} alt="Discovery Cappadocia" className="h-auto w-44" />
+            <p className="mt-5 text-sm font-semibold text-white/80">{SITE.legalName}</p>
+            <p className="mt-2 text-sm leading-7 text-white/55">A local Cappadocia booking team for balloon flights, guided tours, adventures and airport transfers.</p>
+            <div className="mt-5 flex gap-3 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4"><BadgeCheck className="h-6 w-6 shrink-0 text-amber-300" /><div><p className="text-sm font-bold">Licensed Travel Agency</p><p className="mt-1 text-xs text-white/45">TÜRSAB No: {SITE.tursabNumber}</p></div></div>
           </div>
+          <div><h3 className="font-bold">Quick links</h3><ul className="mt-5 space-y-3">{quick.map(([label, href]) => <li key={label}><Link href={href} className="text-sm text-white/55 hover:text-amber-300">{label}</Link></li>)}</ul></div>
+          <div><h3 className="font-bold">Customer support</h3><ul className="mt-5 space-y-3">{support.map(([label, href]) => <li key={label}><Link href={href} className="text-sm text-white/55 hover:text-amber-300">{label}</Link></li>)}</ul></div>
+          <div><h3 className="font-bold">Contact</h3><ul className="mt-5 space-y-4 text-sm text-white/55">
+            <li className="flex gap-3"><MessageCircle className="h-5 w-5 shrink-0 text-emerald-400" /><a href={whatsappUrl()} target="_blank" rel="noreferrer" data-event="whatsapp_click">WhatsApp: {SITE.phoneDisplay}</a></li>
+            <li className="flex gap-3"><Phone className="h-5 w-5 shrink-0 text-emerald-400" /><a href={`tel:${SITE.phone}`}>{SITE.phoneDisplay}</a></li>
+            <li className="flex gap-3"><Mail className="h-5 w-5 shrink-0 text-emerald-400" /><a href={`mailto:${SITE.email}`} className="break-all">{SITE.email}</a></li>
+            <li className="flex gap-3"><MapPin className="h-5 w-5 shrink-0 text-emerald-400" /><span>{SITE.address}</span></li>
+          </ul></div>
+        </div>
+        <div className="mt-12 flex flex-col justify-between gap-5 border-t border-white/10 pt-7 text-xs text-white/38 md:flex-row md:items-center">
+          <p>© {new Date().getFullYear()} {SITE.name}. All rights reserved.</p>
+          <div className="flex flex-wrap items-center gap-4"><span className="flex items-center gap-1"><LockKeyhole className="h-4 w-4" /> SSL secured</span><span>Visa</span><span>Mastercard</span><span>3D Secure where supported</span></div>
         </div>
       </div>
     </footer>

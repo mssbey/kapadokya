@@ -11,10 +11,10 @@ import {
   BarChart3, Users, Calendar, DollarSign, TrendingUp, MapPin,
   Package, ChevronRight, ChevronLeft, Eye, EyeOff, Edit2, Trash2,
   Plus, Loader2, CreditCard,
-  CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw
+  CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw, Tag
 } from 'lucide-react';
 
-type Tab = 'dashboard' | 'tours' | 'bookings' | 'payments' | 'availability' | 'customers' | 'revenue';
+type Tab = 'dashboard' | 'tours' | 'bookings' | 'payments' | 'availability' | 'customers' | 'promos' | 'revenue';
 
 function extractError(err: any, fallback: string): string {
   return err?.response?.data?.message || fallback;
@@ -26,6 +26,38 @@ function LoadingBlock() {
       <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
     </div>
   );
+}
+
+function PromoCodesTab() {
+  const [codes, setCodes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({ code: '', type: 'PERCENT', value: 10, maxUses: '' });
+
+  const loadCodes = useCallback(async () => {
+    setLoading(true);
+    try { const response = await api.get('/admin/promo-codes'); setCodes(response.data.data); }
+    catch (error: any) { toast.error(extractError(error, 'Failed to load promo codes.')); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { loadCodes(); }, [loadCodes]);
+
+  async function createCode(event: React.FormEvent) {
+    event.preventDefault();
+    try {
+      await api.post('/admin/promo-codes', { code: form.code, type: form.type, value: Number(form.value), maxUses: form.maxUses ? Number(form.maxUses) : null });
+      toast.success('Promo code created');
+      setForm({ code: '', type: 'PERCENT', value: 10, maxUses: '' });
+      loadCodes();
+    } catch (error: any) { toast.error(extractError(error, 'Promo code could not be created.')); }
+  }
+
+  async function toggleCode(code: any) {
+    try { await api.patch(`/admin/promo-codes/${code.id}`, { isActive: !code.isActive }); loadCodes(); }
+    catch (error: any) { toast.error(extractError(error, 'Promo code could not be updated.')); }
+  }
+
+  return <div><h1 className="mb-8 font-display text-3xl font-bold">Promo Codes</h1><form onSubmit={createCode} className="glass-card mb-8 grid gap-4 p-6 md:grid-cols-5"><div><label className="mb-2 block text-xs text-gray-500">Code</label><input required value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} className="input-glass uppercase" placeholder="SUMMER10" /></div><div><label className="mb-2 block text-xs text-gray-500">Discount type</label><select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="input-glass"><option value="PERCENT">Percent</option><option value="FIXED">Fixed EUR</option></select></div><div><label className="mb-2 block text-xs text-gray-500">Value</label><input required min="0.01" step="0.01" type="number" value={form.value} onChange={(e) => setForm({ ...form, value: Number(e.target.value) })} className="input-glass" /></div><div><label className="mb-2 block text-xs text-gray-500">Maximum uses</label><input min="1" type="number" value={form.maxUses} onChange={(e) => setForm({ ...form, maxUses: e.target.value })} className="input-glass" placeholder="Unlimited" /></div><button className="btn-primary self-end !px-4 !py-3">Create code</button></form>{loading ? <LoadingBlock /> : <div className="glass-card overflow-hidden"><div className="overflow-x-auto"><table className="w-full"><thead><tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-white/10"><th className="p-4">Code</th><th className="p-4">Discount</th><th className="p-4">Usage</th><th className="p-4">Status</th><th className="p-4"></th></tr></thead><tbody>{codes.map((code) => <tr key={code.id} className="border-b border-gray-100 text-sm dark:border-white/5"><td className="p-4 font-mono font-bold">{code.code}</td><td className="p-4">{code.type === 'PERCENT' ? `${code.value}%` : formatPrice(code.value, 'EUR')}</td><td className="p-4">{code.usedCount}{code.maxUses ? ` / ${code.maxUses}` : ''}</td><td className="p-4">{code.isActive ? 'Active' : 'Disabled'}</td><td className="p-4 text-right"><button onClick={() => toggleCode(code)} className="rounded-lg border border-gray-200 px-3 py-2 text-xs dark:border-white/10">{code.isActive ? 'Disable' : 'Enable'}</button></td></tr>)}</tbody></table></div>{codes.length === 0 && <p className="p-8 text-center text-sm text-gray-400">No promo codes yet.</p>}</div>}</div>;
 }
 
 function ErrorBlock({ message, onRetry }: { message: string; onRetry: () => void }) {
@@ -107,6 +139,7 @@ export default function AdminPage() {
     { id: 'payments', label: 'Payments', icon: CreditCard },
     { id: 'availability', label: 'Availability', icon: Package },
     { id: 'customers', label: 'Customers', icon: Users },
+    { id: 'promos', label: 'Promo Codes', icon: Tag },
     { id: 'revenue', label: 'Revenue', icon: DollarSign },
   ];
 
@@ -186,6 +219,7 @@ export default function AdminPage() {
           {activeTab === 'payments' && <PaymentsTab />}
           {activeTab === 'availability' && <AvailabilityTab />}
           {activeTab === 'customers' && <CustomersTab />}
+          {activeTab === 'promos' && <PromoCodesTab />}
           {activeTab === 'revenue' && <RevenueTab />}
         </main>
       </div>

@@ -5,6 +5,23 @@ import { AppError } from '../middleware/errorHandler';
 
 export const availabilityRouter = Router();
 
+// Real today/tomorrow availability only. Admins control this through availability records.
+availabilityRouter.get('/last-minute/list', async (_req, res, next) => {
+  try {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 2);
+    const rows = await prisma.availability.findMany({
+      where: { date: { gte: start, lt: end }, isBlocked: false, seatsAvailable: { gt: 0 }, tour: { isActive: true } },
+      include: { tour: { select: { title: true, slug: true, basePrice: true, currency: true } } },
+      orderBy: [{ date: 'asc' }, { seatsAvailable: 'asc' }],
+      take: 6,
+    });
+    res.json({ success: true, data: rows });
+  } catch (err) { next(err); }
+});
+
 // Get availability for a tour
 availabilityRouter.get('/:tourId', async (req, res, next) => {
   try {

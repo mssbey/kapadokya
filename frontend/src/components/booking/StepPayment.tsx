@@ -1,185 +1,75 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { CreditCard, Loader2, Lock, ShieldCheck } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useBookingStore } from '@/store/bookingStore';
 import { api } from '@/lib/api';
-import { formatPrice, cn } from '@/lib/utils';
-import { CreditCard, Shield, Lock, Loader2 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { cn, formatPrice } from '@/lib/utils';
+
+const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
+
+function StripeForm({ amount, onSuccess }: { amount: number; onSuccess: () => void }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+
+  async function submit() {
+    if (!stripe || !elements) return;
+    setProcessing(true);
+    const result = await stripe.confirmPayment({ elements, confirmParams: { return_url: `${window.location.origin}/booking?payment=return` }, redirect: 'if_required' });
+    setProcessing(false);
+    if (result.error) return toast.error(result.error.message || 'Payment could not be completed.');
+    if (result.paymentIntent?.status === 'succeeded') { window.dataLayer?.push({ event: 'purchase', value: amount, currency: 'EUR' }); onSuccess(); }
+    else toast('Your payment is being confirmed. Please keep this page open.');
+  }
+
+  return <div className="space-y-5"><div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/5"><PaymentElement /></div><button onClick={submit} disabled={!stripe || processing} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-4 font-bold text-white disabled:opacity-60">{processing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Lock className="h-5 w-5" />} Pay {formatPrice(amount)} securely</button></div>;
+}
 
 export function StepPayment() {
   const { totalPrice, getFormData, nextStep, prevStep } = useBookingStore();
   const [paymentMethod, setPaymentMethod] = useState<'STRIPE' | 'IYZICO'>('STRIPE');
-  const [processing, setProcessing] = useState(false);
+  const [preparing, setPreparing] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
+  const [iyzicoForm, setIyzicoForm] = useState('');
+  const [promoCode, setPromoCode] = useState('');
 
-  async function handlePayment() {
-    setProcessing(true);
-
+  async function preparePayment() {
+    setPreparing(true);
     try {
-      // Create booking
-      const bookingData = getFormData();
-      const bookingRes = await api.post('/bookings', bookingData);
-      const { booking } = bookingRes.data.data;
-
-      // Create payment intent
-      const paymentRes = await api.post('/payments/create-intent', {
-        bookingId: booking.id,
-        provider: paymentMethod,
-      });
-
-      // In production, integrate with Stripe Elements or iyzico checkout
-      // For now, simulate successful payment
-      toast.success('Payment processed successfully!');
-      nextStep();
+      window.dataLayer?.push({ event: 'begin_checkout', value: totalPrice, currency: 'EUR' });
+      const bookingRes = await api.post('/bookings', { ...getFormData(), promoCode: promoCode.trim() || undefined });
+      const booking = bookingRes.data.data.booking;
+      sessionStorage.setItem('dc_last_booking_id', booking.id);
+      const paymentRes = await api.post('/payments/create-intent', { bookingId: booking.id, provider: paymentMethod });
+      if (paymentMethod === 'STRIPE') {
+        if (!paymentRes.data.data.clientSecret) throw new Error('Secure payment session could not be created.');
+        setClientSecret(paymentRes.data.data.clientSecret);
+      } else {
+        if (!paymentRes.data.data.checkoutFormContent) throw new Error('iyzico checkout could not be created.');
+        setIyzicoForm(paymentRes.data.data.checkoutFormContent);
+      }
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Payment failed. Please try again.';
-      toast.error(message);
-    } finally {
-      setProcessing(false);
-    }
+      toast.error(error.response?.data?.message || error.message || 'Payment setup failed. No charge was made.');
+    } finally { setPreparing(false); }
   }
+
+  if (clientSecret && stripePromise) return <div><h2 className="mb-6 font-display text-2xl font-bold">Secure card payment</h2><Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}><StripeForm amount={totalPrice} onSuccess={nextStep} /></Elements></div>;
+  if (iyzicoForm) return <div><h2 className="mb-6 font-display text-2xl font-bold">Secure iyzico payment</h2><div className="rounded-2xl bg-white p-5" dangerouslySetInnerHTML={{ __html: iyzicoForm }} /></div>;
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white">Payment</h2>
-          <p className="text-gray-500 dark:text-white/50 text-sm mt-1">Secure payment processing</p>
-        </div>
-        <button onClick={prevStep} className="glass-button text-sm" disabled={processing}>
-          ← Back
-        </button>
-      </div>
-
+      <div className="mb-6 flex items-center justify-between"><div><h2 className="font-display text-2xl font-bold">Payment</h2><p className="mt-1 text-sm text-gray-500 dark:text-white/50">Your booking is not confirmed until payment succeeds.</p></div><button onClick={prevStep} className="glass-button text-sm" disabled={preparing}>← Back</button></div>
       <div className="space-y-6">
-        {/* Payment Method Selection */}
-        <div className="glass-card p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Select Payment Method</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => setPaymentMethod('STRIPE')}
-              className={cn(
-                'p-4 rounded-xl border transition-all duration-300 text-left',
-                paymentMethod === 'STRIPE'
-                  ? 'border-emerald-500/50 bg-emerald-500/10'
-                  : 'border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 hover:border-gray-300 dark:hover:border-white/20'
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <CreditCard className={cn(
-                  'w-8 h-8',
-                  paymentMethod === 'STRIPE' ? 'text-emerald-400' : 'text-gray-400 dark:text-white/40'
-                )} />
-                <div>
-                  <div className="font-semibold text-gray-900 dark:text-white text-sm">Credit Card</div>
-                  <div className="text-gray-400 dark:text-white/40 text-xs">Visa, Mastercard, Amex</div>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={() => setPaymentMethod('IYZICO')}
-              className={cn(
-                'p-4 rounded-xl border transition-all duration-300 text-left',
-                paymentMethod === 'IYZICO'
-                  ? 'border-emerald-500/50 bg-emerald-500/10'
-                  : 'border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 hover:border-gray-300 dark:hover:border-white/20'
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  'w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm',
-                  paymentMethod === 'IYZICO' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-white/40'
-                )}>
-                  iy
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-900 dark:text-white text-sm">iyzico</div>
-                  <div className="text-gray-400 dark:text-white/40 text-xs">Turkish cards & more</div>
-                </div>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* Card Form Placeholder */}
-        <div className="glass-card p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Lock className="w-4 h-4 text-emerald-400" />
-            Card Details
-          </h3>
-
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-gray-500 dark:text-white/50 mb-1.5 block">Card Number</label>
-              <input
-                type="text"
-                placeholder="4242 4242 4242 4242"
-                className="input-glass font-mono"
-                maxLength={19}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-gray-500 dark:text-white/50 mb-1.5 block">Expiry</label>
-                <input
-                  type="text"
-                  placeholder="MM / YY"
-                  className="input-glass"
-                  maxLength={7}
-                />
-              </div>
-              <div>
-                <label className="text-sm text-gray-500 dark:text-white/50 mb-1.5 block">CVC</label>
-                <input
-                  type="text"
-                  placeholder="123"
-                  className="input-glass"
-                  maxLength={4}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Security Badge */}
-        <div className="flex items-center justify-center gap-6 text-gray-400 dark:text-white/30 text-xs">
-          <div className="flex items-center gap-1.5">
-            <Shield className="w-4 h-4" />
-            SSL Encrypted
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Lock className="w-4 h-4" />
-            PCI Compliant
-          </div>
-        </div>
-
-        {/* Pay Button */}
-        <motion.button
-          onClick={handlePayment}
-          disabled={processing}
-          whileTap={{ scale: 0.98 }}
-          className={cn(
-            'w-full py-5 rounded-xl font-bold text-lg transition-all duration-300',
-            'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white',
-            'shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40',
-            'flex items-center justify-center gap-3',
-            processing && 'opacity-80 cursor-wait'
-          )}
-        >
-          {processing ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Processing Payment...
-            </>
-          ) : (
-            <>
-              <Lock className="w-5 h-5" />
-              Pay {formatPrice(totalPrice)} Securely
-            </>
-          )}
-        </motion.button>
+        <div className="glass-card p-6"><h3 className="mb-4 font-semibold">Select payment method</h3><div className="grid grid-cols-2 gap-3"><button onClick={() => setPaymentMethod('STRIPE')} className={cn('rounded-xl border p-4 text-left', paymentMethod === 'STRIPE' ? 'border-emerald-500 bg-emerald-500/10' : 'border-gray-200 dark:border-white/10')}><CreditCard className="mb-2 h-7 w-7 text-emerald-500" /><b>Credit card</b><p className="mt-1 text-xs text-gray-400">Visa, Mastercard</p></button><button onClick={() => setPaymentMethod('IYZICO')} className={cn('rounded-xl border p-4 text-left', paymentMethod === 'IYZICO' ? 'border-emerald-500 bg-emerald-500/10' : 'border-gray-200 dark:border-white/10')}><div className="mb-2 text-xl font-extrabold text-emerald-500">iy</div><b>iyzico</b><p className="mt-1 text-xs text-gray-400">Secure local checkout</p></button></div></div>
+        <div className="glass-card p-6"><label className="text-sm font-semibold" htmlFor="promo">Promo code</label><div className="mt-2 flex gap-2"><input id="promo" value={promoCode} onChange={(event) => setPromoCode(event.target.value.toUpperCase())} placeholder="Enter code" className="input-glass uppercase" /><span className="self-center text-xs text-gray-400">Validated securely</span></div></div>
+        <div className="flex flex-wrap justify-center gap-5 text-xs text-gray-400"><span className="flex gap-1"><ShieldCheck className="h-4 w-4" /> SSL secured</span><span className="flex gap-1"><Lock className="h-4 w-4" /> 3D Secure where supported</span><span>Card data handled by payment provider</span></div>
+        {!publishableKey && paymentMethod === 'STRIPE' && <p className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-300/10 dark:text-amber-200">Card checkout is disabled until NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is configured.</p>}
+        <button onClick={preparePayment} disabled={preparing || (paymentMethod === 'STRIPE' && !publishableKey)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-4 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">{preparing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Lock className="h-5 w-5" />} Continue to secure payment · {formatPrice(totalPrice)}</button>
       </div>
     </div>
   );

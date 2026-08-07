@@ -38,6 +38,9 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// Stripe signature verification requires the exact raw request body.
+app.use('/api/payments/webhook/stripe', express.raw({ type: 'application/json' }));
+
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -66,7 +69,7 @@ const PORT = process.env.PORT || 5000;
 
 if (!process.env.VERCEL) {
   server.listen(PORT, () => {
-    console.log(`🚀 DiscoveryCappadocia API running on port ${PORT}`);
+    console.log(`Discovery Cappadocia API running on port ${PORT}`);
   });
 
   // Graceful shutdown

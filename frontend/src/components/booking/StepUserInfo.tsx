@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useBookingStore } from '@/store/bookingStore';
 import { cn } from '@/lib/utils';
 import { User, Mail, Phone, MessageSquare } from 'lucide-react';
+import Link from 'next/link';
 
 export function StepUserInfo() {
   const { guestName, guestEmail, guestPhone, notes, setGuestInfo, nextStep, prevStep } = useBookingStore();
@@ -12,6 +13,7 @@ export function StepUserInfo() {
   const [localEmail, setLocalEmail] = useState(guestEmail);
   const [localPhone, setLocalPhone] = useState(guestPhone);
   const [localNotes, setLocalNotes] = useState(notes);
+  const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   function validate(): boolean {
@@ -26,6 +28,7 @@ export function StepUserInfo() {
     if (!localPhone.trim() || localPhone.trim().length < 5) {
       errs.phone = 'Please enter a valid phone number';
     }
+    if (!consent) errs.consent = 'Please confirm the privacy notice and booking terms';
 
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -129,6 +132,11 @@ export function StepUserInfo() {
         <p className="text-gray-400 dark:text-white/30 text-xs">
           * Required fields. Your information is secure and will only be used for booking purposes.
         </p>
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 p-4 text-sm dark:border-white/10">
+          <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-1 h-4 w-4 accent-emerald-600" />
+          <span className="text-gray-600 dark:text-white/60">I have read the <Link href="/legal/privacy" target="_blank" className="underline">Privacy Policy</Link>, <Link href="/legal/kvkk" target="_blank" className="underline">KVKK notice</Link> and the tour-specific booking conditions.</span>
+        </label>
+        {errors.consent && <p className="text-xs text-red-500">{errors.consent}</p>}
       </div>
 
       <div className="mt-6 flex justify-end">

@@ -472,3 +472,46 @@ adminRouter.get('/customers', async (req, res, next) => {
     next(err);
   }
 });
+
+// =================== PROMO CODES ===================
+
+const promoBaseSchema = z.object({
+  code: z.string().trim().toUpperCase().min(2).max(40),
+  type: z.enum(['PERCENT', 'FIXED']),
+  value: z.number().positive(),
+  isActive: z.boolean().optional().default(true),
+  startsAt: z.string().datetime().nullable().optional(),
+  endsAt: z.string().datetime().nullable().optional(),
+  maxUses: z.number().int().positive().nullable().optional(),
+});
+const promoSchema = promoBaseSchema.refine((data) => data.type !== 'PERCENT' || data.value <= 100, { message: 'Percentage cannot exceed 100' });
+
+adminRouter.get('/promo-codes', async (_req, res, next) => {
+  try {
+    const codes = await prisma.promoCode.findMany({ orderBy: { createdAt: 'desc' } });
+    res.json({ success: true, data: codes });
+  } catch (err) { next(err); }
+});
+
+adminRouter.post('/promo-codes', async (req, res, next) => {
+  try {
+    const data = promoSchema.parse(req.body);
+    const code = await prisma.promoCode.create({ data: { ...data, startsAt: data.startsAt ? new Date(data.startsAt) : null, endsAt: data.endsAt ? new Date(data.endsAt) : null } });
+    res.status(201).json({ success: true, data: code });
+  } catch (err) {
+    if (err instanceof z.ZodError) return next(new AppError(err.errors[0].message, 400));
+    next(err);
+  }
+});
+
+adminRouter.patch('/promo-codes/:id', async (req, res, next) => {
+  try {
+    const data = promoBaseSchema.partial().parse(req.body);
+    if (data.type === 'PERCENT' && data.value !== undefined && data.value > 100) throw new AppError('Percentage cannot exceed 100', 400);
+    const code = await prisma.promoCode.update({ where: { id: req.params.id }, data: { ...data, startsAt: data.startsAt ? new Date(data.startsAt) : data.startsAt, endsAt: data.endsAt ? new Date(data.endsAt) : data.endsAt } });
+    res.json({ success: true, data: code });
+  } catch (err) {
+    if (err instanceof z.ZodError) return next(new AppError(err.errors[0].message, 400));
+    next(err);
+  }
+});

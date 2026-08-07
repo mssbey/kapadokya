@@ -23,6 +23,7 @@ const createBookingSchema = z.object({
   guestEmail: z.string().email(),
   guestPhone: z.string().min(5).max(20),
   notes: z.string().max(500).optional(),
+  promoCode: z.string().trim().toUpperCase().max(40).optional(),
 });
 
 // Create booking
@@ -60,7 +61,7 @@ bookingRouter.post('/', optionalAuth, async (req: AuthRequest, res, next) => {
       throw new AppError(`Only ${availability.seatsAvailable} seats available`, 400);
     }
 
-    // Calculate price
+    // Calculate price from server-owned records only.
     const unitPrice = availability.priceOverride || tour.basePrice;
     const childDiscount = 0.5;
     let totalPrice = (data.adults * unitPrice) + (data.children * unitPrice * childDiscount);
@@ -70,46 +71,60 @@ bookingRouter.post('/', optionalAuth, async (req: AuthRequest, res, next) => {
     }
 
     // Add upsells
+    let selectedUpsells: { id: string; name: string; price: number }[] = [];
     if (data.upsells && data.upsells.length > 0) {
-      const upsellTotal = data.upsells.reduce((sum, u) => sum + u.price, 0);
+      const requestedIds = data.upsells.map((item) => item.id);
+      const validUpsells = tour.upsells.filter((item) => item.isActive && requestedIds.includes(item.id));
+      if (validUpsells.length !== requestedIds.length) throw new AppError('One or more add-ons are invalid', 400);
+      selectedUpsells = validUpsells.map(({ id, name, price }) => ({ id, name, price }));
+      const upsellTotal = validUpsells.reduce((sum, item) => sum + item.price, 0);
       totalPrice += upsellTotal * totalPeople;
+    }
+
+    let promo: Awaited<ReturnType<typeof prisma.promoCode.findUnique>> = null;
+    if (data.promoCode) {
+      promo = await prisma.promoCode.findUnique({ where: { code: data.promoCode } });
+      const now = new Date();
+      if (!promo) throw new AppError('Promo code is invalid or expired', 400);
+      const invalid = !promo.isActive || (promo.startsAt && promo.startsAt > now) || (promo.endsAt && promo.endsAt < now) || (promo.maxUses !== null && promo.usedCount >= promo.maxUses);
+      if (invalid) throw new AppError('Promo code is invalid or expired', 400);
+      totalPrice = promo.type === 'PERCENT' ? totalPrice * (1 - promo.value / 100) : Math.max(0, totalPrice - promo.value);
     }
 
     totalPrice = Math.round(totalPrice * 100) / 100;
 
     // Create booking + update availability in transaction
     const booking = await prisma.$transaction(async (tx) => {
-      // Recheck availability inside transaction
-      const freshAvail = await tx.availability.findUnique({
-        where: {
-          tourId_date: {
-            tourId: data.tourId,
-            date: bookingDate,
-          },
-        },
+      // Reserve seats atomically to prevent concurrent overselling.
+      const reservation = await tx.availability.updateMany({
+        where: { tourId: data.tourId, date: bookingDate, isBlocked: false, seatsAvailable: { gte: totalPeople } },
+        data: { seatsAvailable: { decrement: totalPeople } },
       });
-
-      if (!freshAvail || freshAvail.seatsAvailable < totalPeople) {
+      if (reservation.count !== 1) {
         throw new AppError('Seats no longer available', 409);
       }
 
-      // Update seats
-      await tx.availability.update({
-        where: { id: freshAvail.id },
-        data: { seatsAvailable: freshAvail.seatsAvailable - totalPeople },
-      });
+      if (promo) {
+        const claimed = await tx.promoCode.updateMany({
+          where: { id: promo.id, isActive: true, OR: [{ maxUses: null }, { usedCount: { lt: promo.maxUses ?? Number.MAX_SAFE_INTEGER } }] },
+          data: { usedCount: { increment: 1 } },
+        });
+        if (claimed.count !== 1) throw new AppError('Promo code has reached its usage limit', 409);
+      }
 
       // Create booking
-      return tx.booking.create({
+      const createdBooking = await tx.booking.create({
         data: {
-          userId: req.user?.id || null as any,
+          userId: req.user?.id || null,
           tourId: data.tourId,
           date: bookingDate,
           adults: data.adults,
           children: data.children,
           isPrivate: data.isPrivate,
-          upsells: data.upsells ? JSON.parse(JSON.stringify(data.upsells)) : undefined,
+          upsells: selectedUpsells.length ? JSON.parse(JSON.stringify(selectedUpsells)) : undefined,
           totalPrice,
+          currency: tour.currency,
+          promoCodeId: promo?.id,
           guestName: data.guestName,
           guestEmail: data.guestEmail,
           guestPhone: data.guestPhone,
@@ -119,6 +134,7 @@ bookingRouter.post('/', optionalAuth, async (req: AuthRequest, res, next) => {
           tour: { select: { title: true, slug: true } },
         },
       });
+      return createdBooking;
     });
 
     // Invalidate cache

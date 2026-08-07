@@ -115,7 +115,7 @@ export default function LoginPage() {
           <div className="p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
             <p className="text-gray-400 dark:text-white/40 text-xs text-center">
               <strong className="text-gray-500 dark:text-white/60">Demo Admin:</strong>{' '}
-              admin@discoverycappadocia.com / Admin123!
+              admin@kapheratravel.com / Admin123!
             </p>
           </div>
         </form>

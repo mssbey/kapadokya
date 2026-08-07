@@ -38,6 +38,11 @@ enum TourCategory {
   TRANSFER
 }
 
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
 model User {
   id        String    @id @default(uuid())
   name      String
@@ -60,7 +65,7 @@ model Tour {
   shortDesc     String
   category      TourCategory
   basePrice     Float
-  currency      String         @default("USD")
+  currency      String         @default("EUR")
   duration      String
   maxCapacity   Int
   images        String[]
@@ -115,8 +120,8 @@ model Availability {
 
 model Booking {
   id           String        @id @default(uuid())
-  userId       String
-  user         User          @relation(fields: [userId], references: [id])
+  userId       String?
+  user         User?         @relation(fields: [userId], references: [id])
   tourId       String
   tour         Tour          @relation(fields: [tourId], references: [id])
   date         DateTime      @db.Date
@@ -125,7 +130,9 @@ model Booking {
   isPrivate    Boolean       @default(false)
   upsells      Json?
   totalPrice   Float
-  currency     String        @default("USD")
+  currency     String        @default("EUR")
+  promoCodeId  String?
+  promoCode    PromoCode?    @relation(fields: [promoCodeId], references: [id])
   status       BookingStatus @default(PENDING)
   guestName    String?
   guestEmail   String?
@@ -141,12 +148,27 @@ model Booking {
   @@index([status])
 }
 
+model PromoCode {
+  id          String       @id @default(uuid())
+  code        String       @unique
+  type        DiscountType
+  value       Float
+  isActive    Boolean      @default(true)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  maxUses     Int?
+  usedCount   Int          @default(0)
+  bookings    Booking[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
 model Payment {
   id              String          @id @default(uuid())
   bookingId       String          @unique
   booking         Booking         @relation(fields: [bookingId], references: [id])
   amount          Float
-  currency        String          @default("USD")
+  currency        String          @default("EUR")
   status          PaymentStatus   @default(PENDING)
   provider        PaymentProvider
   providerPaymentId String?
