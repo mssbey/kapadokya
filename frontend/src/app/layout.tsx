@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   keywords: ['Cappadocia Hot Air Balloon', 'Cappadocia Balloon Tour', 'Cappadocia ATV Tour', 'Cappadocia Horse Riding', 'Cappadocia Jeep Safari', 'Cappadocia Green Tour', 'Cappadocia Red Tour', 'Cappadocia Airport Transfer'],
   openGraph: { title: 'Discovery Cappadocia | Local Tours & Experiences', description: 'Explore and book Cappadocia’s essential experiences with local support.', type: 'website', locale: 'en_US', images: ['/images/cappadocia-hero-signature.png'] },
   alternates: { canonical: '/' },
+  icons: { icon: '/logo.png', apple: '/logo.png' },
 };
 
 const themeScript = `(function(){try{var t=localStorage.getItem('dc_theme')||'light';var r=t;if(t==='system'){r=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}if(r==='dark'){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')}}catch(e){}})();`;
