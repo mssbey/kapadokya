@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { useI18n } from '@/components/I18nProvider';
 import { api } from '@/lib/api';
 import { formatPrice, cn, getStatusColor, getCategoryLabel } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -115,6 +116,9 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const { user, logout, loadUser } = useAuthStore();
   const router = useRouter();
+  // Locale-aware so an admin working in /tr is not bounced into /en on sign-out
+  // or when the auth guard kicks in.
+  const { href } = useI18n();
   const [checkedAuth, setCheckedAuth] = useState(false);
 
   useEffect(() => {
@@ -125,12 +129,12 @@ export default function AdminPage() {
   useEffect(() => {
     if (!checkedAuth) return;
     if (!user) {
-      router.replace('/login');
+      router.replace(href('/login'));
     } else if (user.role !== 'ADMIN') {
       toast.error('Admin access required');
-      router.replace('/');
+      router.replace(href('/'));
     }
-  }, [checkedAuth, user, router]);
+  }, [checkedAuth, user, router, href]);
 
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },

@@ -4,18 +4,12 @@ import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 import { useBookingStore } from '@/store/bookingStore';
 import { cn } from '@/lib/utils';
-
-const steps = [
-  { num: 1, label: 'Select Tour' },
-  { num: 2, label: 'Pick Date' },
-  { num: 3, label: 'Guests' },
-  { num: 4, label: 'Extras' },
-  { num: 5, label: 'Details' },
-  { num: 6, label: 'Payment' },
-];
+import { useI18n } from '@/components/I18nProvider';
 
 export function StepIndicator() {
   const { step } = useBookingStore();
+  const { t } = useI18n();
+  const steps = t.booking.steps.map((label, index) => ({ num: index + 1, label }));
 
   return (
     <div className="flex items-center justify-center gap-2 md:gap-0 overflow-x-auto pb-4">

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { useI18n } from '@/components/I18nProvider';
 import { User, Mail, Lock, Phone, Eye, EyeOff, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -17,6 +18,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { register, isLoading } = useAuthStore();
   const router = useRouter();
+  const { href } = useI18n();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +31,7 @@ export default function RegisterPage() {
     try {
       await register(name, email, password, phone || undefined);
       toast.success('Account created! Welcome aboard.');
-      router.push('/');
+      router.push(href('/'));
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Registration failed');
     }
@@ -46,7 +48,7 @@ export default function RegisterPage() {
         className="relative w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
+          <Link href={href('/')} className="inline-block mb-6">
             <Image
               src="/logo.png"
               alt="DiscoveryCappadocia"
@@ -152,7 +154,7 @@ export default function RegisterPage() {
 
         <p className="text-center text-gray-400 dark:text-white/40 text-sm mt-6">
           Already have an account?{' '}
-          <Link href="/login" className="text-emerald-500 dark:text-emerald-400 hover:text-emerald-400 dark:hover:text-emerald-300 transition-colors">
+          <Link href={href('/login')} className="text-emerald-500 dark:text-emerald-400 hover:text-emerald-400 dark:hover:text-emerald-300 transition-colors">
             Sign in
           </Link>
         </p>

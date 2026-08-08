@@ -1,170 +1,145 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import { MapPin } from 'lucide-react';
+import { Loader2, Maximize2, Navigation } from 'lucide-react';
+import { useI18n } from '@/components/I18nProvider';
+import { TOUR_STOPS, directionsUrl } from '@/lib/tourStops';
 
-const tourPoints = [
-  { id: 1, name: 'Göreme Open Air Museum', lat: 38.6431, lng: 34.8307, type: 'museum' },
-  { id: 2, name: 'Balloon Launch Site', lat: 38.6400, lng: 34.8280, type: 'balloon' },
-  { id: 3, name: 'Uçhisar Castle', lat: 38.6333, lng: 34.8068, type: 'castle' },
-  { id: 4, name: 'Love Valley', lat: 38.6568, lng: 34.8266, type: 'valley' },
-  { id: 5, name: 'Derinkuyu Underground City', lat: 38.3744, lng: 34.7346, type: 'underground' },
-  { id: 6, name: 'Paşabağ (Monks Valley)', lat: 38.6542, lng: 34.8553, type: 'valley' },
-];
+// Leaflet touches `window` at import time, so the map only ever loads in the browser.
+const CappadociaMap = dynamic(() => import('@/components/map/CappadociaMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-[#0f1f1b]">
+      <Loader2 className="h-6 w-6 animate-spin text-emerald-400/70" />
+    </div>
+  ),
+});
 
 export function MapSection() {
-  const [activePoint, setActivePoint] = useState<number | null>(null);
+  const [activeId, setActiveId] = useState<number | null>(null);
+  const [fitAllToken, setFitAllToken] = useState(0);
+  const { t } = useI18n();
+
+  const stops = useMemo(
+    () =>
+      TOUR_STOPS.map((stop, index) => ({
+        ...stop,
+        name: t.map.points[index] ?? '',
+        description: t.map.descriptions[index] ?? '',
+      })),
+    [t],
+  );
 
   return (
-    <section id="map" className="py-24 md:py-32 relative overflow-hidden isolate">
-      <div
-        className="absolute inset-0 -z-20 bg-cover bg-center"
-        style={{ backgroundImage: "url('/images/cappadocia-routes-aerial.png')" }}
-      />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/96 via-stone-50/88 to-white/96 dark:from-dark/96 dark:via-[#0b1411]/88 dark:to-dark-50/96" />
-      <div className="absolute left-[-10%] top-1/3 w-[40rem] h-[40rem] rounded-full bg-emerald-500/10 blur-[150px]" />
+    <section
+      id="map"
+      className="relative isolate overflow-hidden bg-[#0d241f] py-20 text-white md:py-28"
+      aria-labelledby="map-heading"
+    >
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_15%_0%,rgba(16,185,129,.16),transparent_45%),radial-gradient(circle_at_85%_100%,rgba(217,170,82,.12),transparent_45%)]" />
+      <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-b from-transparent to-[#07110e]" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="max-w-2xl"
         >
-          <span className="text-emerald-500 dark:text-emerald-400 text-sm font-medium uppercase tracking-widest mb-4 block">
-            Explore the Region
-          </span>
-          <h2 className="section-heading mb-6">Tour Routes & Destinations</h2>
-          <p className="section-subheading mx-auto">
-            Discover the magical locations you&apos;ll visit on our tours
-          </p>
+          <p className="mb-3 text-xs font-bold uppercase tracking-[.25em] text-amber-300">{t.map.eyebrow}</p>
+          <h2 id="map-heading" className="font-display text-4xl font-bold md:text-5xl">
+            {t.map.heading}
+          </h2>
+          <p className="mt-5 leading-relaxed text-white/65">{t.map.subtitle}</p>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="glass-card overflow-hidden shadow-[0_35px_90px_-35px_rgba(6,78,59,0.45)] ring-1 ring-white/30"
+          transition={{ delay: 0.1 }}
+          className="mt-12 grid gap-6 lg:grid-cols-[1.65fr_1fr]"
         >
-          {/* Map Container */}
-          <div className="relative h-[500px] bg-gray-100 dark:bg-dark-100">
-            {/* Styled Map Placeholder — replace with Mapbox/Google Maps in production */}
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-100 dark:from-dark-50 to-gray-200 dark:to-dark-200">
-              <img
-                src="/images/cappadocia-routes-aerial.png"
-                alt="Cappadocia aerial view"
-                className="w-full h-full object-cover opacity-70 scale-[1.02]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-white/25 via-white/10 to-white/45 dark:from-dark/35 dark:via-dark/15 dark:to-dark/60" />
+          {/* lg:h-auto lets the map stretch to the stop list's height so the two cards line up. */}
+          <div className="relative h-[420px] overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0f1f1b] shadow-[0_35px_90px_-45px_rgba(0,0,0,.9)] md:h-[540px] lg:h-auto lg:min-h-[540px]">
+            <CappadociaMap
+              stops={stops}
+              activeId={activeId}
+              onSelect={(id) => setActiveId(id)}
+              fitAllToken={fitAllToken}
+              labels={{
+                directions: t.map.directions,
+                ariaLabel: t.map.ariaLabel,
+                zoomIn: t.map.zoomIn,
+                zoomOut: t.map.zoomOut,
+              }}
+            />
 
-              {/* Tour Points */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative w-full max-w-lg h-80">
-                  {tourPoints.map((point, i) => {
-                    const positions = [
-                      { top: '20%', left: '45%' },
-                      { top: '30%', left: '40%' },
-                      { top: '60%', left: '25%' },
-                      { top: '15%', left: '60%' },
-                      { top: '75%', left: '50%' },
-                      { top: '25%', left: '75%' },
-                    ];
+            <button
+              type="button"
+              onClick={() => {
+                setActiveId(null);
+                setFitAllToken((token) => token + 1);
+              }}
+              className="absolute left-4 top-4 z-[1000] inline-flex items-center gap-2 rounded-xl border border-white/15 bg-[#0d241f]/85 px-3.5 py-2.5 text-xs font-semibold text-white/85 backdrop-blur-md transition hover:border-emerald-400/40 hover:text-white"
+            >
+              <Maximize2 className="h-4 w-4 text-emerald-300" />
+              {t.map.fitAll}
+            </button>
+          </div>
 
-                    return (
-                      <motion.button
-                        key={point.id}
-                        initial={{ scale: 0 }}
-                        whileInView={{ scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.5 + i * 0.1, type: 'spring' }}
-                        onClick={() => setActivePoint(activePoint === point.id ? null : point.id)}
-                        className="absolute group"
-                        style={positions[i]}
+          <div className="rounded-[1.75rem] border border-white/10 bg-white/[.04] p-5 backdrop-blur-sm sm:p-6">
+            <h3 className="text-xs font-bold uppercase tracking-[.22em] text-white/45">{t.map.stopsTitle}</h3>
+
+            <ul className="mt-4 space-y-1.5">
+              {stops.map((stop, index) => {
+                const active = stop.id === activeId;
+                return (
+                  <li key={stop.id}>
+                    <button
+                      type="button"
+                      onClick={() => setActiveId(active ? null : stop.id)}
+                      aria-pressed={active}
+                      className={`flex w-full items-start gap-3 rounded-2xl border px-3.5 py-3 text-left transition ${
+                        active
+                          ? 'border-emerald-400/40 bg-emerald-400/12'
+                          : 'border-transparent hover:border-white/10 hover:bg-white/5'
+                      }`}
+                    >
+                      <span
+                        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition ${
+                          active ? 'bg-emerald-400 text-[#0d241f]' : 'bg-white/10 text-white/70'
+                        }`}
                       >
-                        <div className={`relative ${activePoint === point.id ? 'z-20' : 'z-10'}`}>
-                          {/* Pulse ring */}
-                          <div className="absolute inset-0 w-10 h-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/20 animate-ping" />
+                        {index + 1}
+                      </span>
+                      <span className="min-w-0">
+                        <span className={`block text-sm font-semibold ${active ? 'text-white' : 'text-white/85'}`}>
+                          {stop.name}
+                        </span>
+                        <span className="mt-0.5 block text-xs leading-relaxed text-white/50">{stop.description}</span>
+                      </span>
+                    </button>
 
-                          {/* Pin */}
-                          <div className={`w-10 h-10 -translate-x-1/2 -translate-y-1/2 rounded-full flex items-center justify-center transition-all duration-300 ${
-                            activePoint === point.id
-                              ? 'bg-emerald-500 scale-125 shadow-glow-emerald'
-                              : 'bg-emerald-600/60 dark:bg-white/20 backdrop-blur-sm border border-emerald-600/40 dark:border-white/30 hover:bg-emerald-500/80 dark:hover:bg-emerald-500/50'
-                          }`}>
-                            <MapPin className="w-5 h-5 text-white" />
-                          </div>
+                    {active && (
+                      <a
+                        href={directionsUrl(stop)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="ml-12 mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-300 hover:text-emerald-200"
+                      >
+                        <Navigation className="h-3.5 w-3.5" />
+                        {t.map.directions}
+                      </a>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
 
-                          {/* Label */}
-                          {activePoint === point.id && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap"
-                            >
-                              <div className="bg-gray-900/90 dark:bg-dark/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-emerald-500/30 text-sm text-white font-medium shadow-lg">
-                                {point.name}
-                              </div>
-                            </motion.div>
-                          )}
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-
-                  {/* Connecting lines (decorative SVG) */}
-                  <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 320">
-                    <motion.path
-                      d="M 180 64 C 160 96 100 160 100 192 C 100 224 160 224 200 240"
-                      stroke="rgba(16, 185, 129, 0.2)"
-                      strokeWidth="1.5"
-                      strokeDasharray="5,5"
-                      fill="none"
-                      initial={{ pathLength: 0 }}
-                      whileInView={{ pathLength: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 2, delay: 1 }}
-                    />
-                    <motion.path
-                      d="M 180 64 C 240 80 280 64 300 80"
-                      stroke="rgba(212, 168, 83, 0.2)"
-                      strokeWidth="1.5"
-                      strokeDasharray="5,5"
-                      fill="none"
-                      initial={{ pathLength: 0 }}
-                      whileInView={{ pathLength: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 2, delay: 1.3 }}
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Points List (sidebar) */}
-            <div className="absolute right-4 top-4 bottom-4 w-56 hidden lg:block">
-              <div className="glass p-4 h-full overflow-y-auto space-y-2">
-                <h4 className="text-sm font-semibold text-gray-500 dark:text-white/60 uppercase tracking-wide mb-3">
-                  Tour Stops
-                </h4>
-                {tourPoints.map((point) => (
-                  <button
-                    key={point.id}
-                    onClick={() => setActivePoint(activePoint === point.id ? null : point.id)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
-                      activePoint === point.id
-                        ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                        : 'text-gray-500 dark:text-white/60 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-3 h-3 flex-shrink-0" />
-                      {point.name}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
+            <p className="mt-5 border-t border-white/10 pt-4 text-xs leading-relaxed text-white/40">{t.map.note}</p>
           </div>
         </motion.div>
       </div>

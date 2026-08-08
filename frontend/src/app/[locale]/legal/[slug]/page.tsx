@@ -1,6 +1,14 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { SITE } from '@/lib/site';
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  isLocale,
+  languageAlternates,
+  localePath,
+  type Locale,
+} from '@/lib/i18n';
 
 const pages: Record<string, { title: string; intro: string; sections: [string, string][] }> = {
   terms: { title: 'Terms & Conditions', intro: 'These terms explain the general rules for using Discovery Cappadocia and booking travel services.', sections: [['Bookings', 'A booking is confirmed only after the required payment is accepted and a written confirmation is issued. Product-specific conditions shown at checkout form part of your agreement.'], ['Traveller responsibilities', 'You are responsible for providing accurate names, contact details, hotel and flight information, arriving at the agreed pickup point, and following safety instructions.'], ['Changes', 'Routes, pickup times and activity details may change where weather, safety, traffic or operational conditions require it.'], ['Contact', `Questions may be sent to ${SITE.email} or ${SITE.phoneDisplay}.`]] },
@@ -11,9 +19,28 @@ const pages: Record<string, { title: string; intro: string; sections: [string, s
   'distance-sales': { title: 'Distance Sales Agreement', intro: 'The final distance sales agreement must be presented with the supplier identity, selected service, total, payment and cancellation terms before the customer pays.', sections: [['Pre-contract information', 'The checkout must show the exact service, date, participants, pickup, taxes, total amount, payment schedule and product-specific cancellation terms.'], ['Confirmation', 'After payment, the customer should receive a durable confirmation containing the reservation number and all agreed service details.'], ['Important', 'This page is an operational template and must be reviewed and completed by qualified Turkish counsel before production use.']] },
 };
 
-type Props = { params: { slug: string } };
-export function generateStaticParams() { return Object.keys(pages).map((slug) => ({ slug })); }
-export function generateMetadata({ params }: Props): Metadata { const page = pages[params.slug]; return page ? { title: page.title, description: page.intro, alternates: { canonical: `/legal/${params.slug}` } } : {}; }
+type Props = { params: { locale: string; slug: string } };
+
+export function generateStaticParams() {
+  return LOCALES.flatMap((locale) => Object.keys(pages).map((slug) => ({ locale, slug })));
+}
+
+// NOTE: the legal texts themselves are intentionally left in English — they are
+// drafts pending review by Turkish counsel, and translating unreviewed legal
+// wording into five languages would multiply that risk.
+export function generateMetadata({ params }: Props): Metadata {
+  const page = pages[params.slug];
+  if (!page) return {};
+  const locale: Locale = isLocale(params.locale) ? params.locale : DEFAULT_LOCALE;
+  return {
+    title: page.title,
+    description: page.intro,
+    alternates: {
+      canonical: localePath(locale, `/legal/${params.slug}`),
+      languages: languageAlternates(`/legal/${params.slug}`),
+    },
+  };
+}
 
 export default function LegalPage({ params }: Props) {
   const page = pages[params.slug];

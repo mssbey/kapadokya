@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { useI18n } from '@/components/I18nProvider';
 import { cn } from '@/lib/utils';
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -16,13 +17,14 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading } = useAuthStore();
   const router = useRouter();
+  const { href } = useI18n();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
       await login(email, password);
       toast.success('Welcome back!');
-      router.push('/');
+      router.push(href('/'));
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Invalid credentials');
     }
@@ -40,7 +42,7 @@ export default function LoginPage() {
       >
         {/* Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
+          <Link href={href('/')} className="inline-block mb-6">
             <Image
               src="/logo.png"
               alt="DiscoveryCappadocia"
@@ -122,7 +124,7 @@ export default function LoginPage() {
 
         <p className="text-center text-gray-400 dark:text-white/40 text-sm mt-6">
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-emerald-500 dark:text-emerald-400 hover:text-emerald-400 dark:hover:text-emerald-300 transition-colors">
+          <Link href={href('/register')} className="text-emerald-500 dark:text-emerald-400 hover:text-emerald-400 dark:hover:text-emerald-300 transition-colors">
             Create one
           </Link>
         </p>
