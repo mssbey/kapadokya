@@ -213,6 +213,25 @@ adminRouter.delete('/tours/:id', async (req, res, next) => {
   }
 });
 
+// Quick price change — the full tour form is overkill when all you want is to
+// move a price, and it would round-trip every other field with it.
+adminRouter.patch('/tours/:id/price', async (req, res, next) => {
+  try {
+    const { basePrice } = z.object({ basePrice: z.number().positive() }).parse(req.body);
+    const tour = await prisma.tour.update({
+      where: { id: req.params.id },
+      data: { basePrice },
+    });
+    await invalidateCache('tours:*');
+    await invalidateCache(`tour:${tour.slug}`);
+    res.json({ success: true, data: tour });
+  } catch (err) {
+    if (err instanceof z.ZodError) return next(new AppError(err.errors[0].message, 400));
+    if ((err as any)?.code === 'P2025') return next(new AppError('Tour not found', 404));
+    next(err);
+  }
+});
+
 // =================== BOOKINGS MANAGEMENT ===================
 
 adminRouter.get('/bookings', async (req, res, next) => {
@@ -323,13 +342,14 @@ adminRouter.post('/availability', async (req, res, next) => {
         date: bookingDate,
         seatsAvailable: data.seatsAvailable,
         seatsTotal: data.seatsTotal,
-        priceOverride: data.priceOverride ?? undefined,
+        // `null` is meaningful here: it clears an override back to base price.
+        priceOverride: data.priceOverride ?? null,
         isBlocked: data.isBlocked ?? false,
       },
       update: {
         seatsAvailable: data.seatsAvailable,
         seatsTotal: data.seatsTotal,
-        priceOverride: data.priceOverride ?? undefined,
+        priceOverride: data.priceOverride ?? null,
         isBlocked: data.isBlocked ?? false,
       },
     });
@@ -387,6 +407,167 @@ adminRouter.post('/availability/bulk', async (req, res, next) => {
     res.json({ success: true, data: results, count: results.length });
   } catch (err) {
     if (err instanceof z.ZodError) return next(new AppError(err.errors[0].message, 400));
+    next(err);
+  }
+});
+
+/**
+ * Classification used by the availability calendar. `missing` is the one that
+ * matters operationally: no row at all means the tour silently cannot be
+ * booked that day, which is invisible unless you go looking for it.
+ */
+type DayStatus = 'missing' | 'blocked' | 'soldOut' | 'low' | 'open';
+
+function classifyDay(row: { seatsAvailable: number; seatsTotal: number; isBlocked: boolean } | undefined): DayStatus {
+  if (!row) return 'missing';
+  if (row.isBlocked) return 'blocked';
+  if (row.seatsAvailable <= 0) return 'soldOut';
+  if (row.seatsTotal > 0 && row.seatsAvailable / row.seatsTotal <= 0.2) return 'low';
+  return 'open';
+}
+
+function toDateKey(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
+/** Every YYYY-MM-DD from `from` to `to` inclusive. */
+function eachDay(from: Date, to: Date): string[] {
+  const days: string[] = [];
+  for (let d = new Date(from); d <= to; d.setUTCDate(d.getUTCDate() + 1)) {
+    days.push(toDateKey(d));
+  }
+  return days;
+}
+
+const rangeSchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  days: z.coerce.number().int().min(1).max(365).optional(),
+});
+
+/** Resolves an explicit from/to pair, or `days` forward from today. */
+function resolveRange(query: unknown): { from: Date; to: Date } {
+  const parsed = rangeSchema.parse(query);
+  const from = parsed.from ? new Date(`${parsed.from}T00:00:00.000Z`) : new Date(`${toDateKey(new Date())}T00:00:00.000Z`);
+  const to = parsed.to
+    ? new Date(`${parsed.to}T00:00:00.000Z`)
+    : new Date(from.getTime() + (parsed.days ?? 60) * 86400000);
+  if (to < from) throw new AppError('End date must be on or after the start date', 400);
+  return { from, to };
+}
+
+// Day-by-day availability for one tour — what the calendar renders.
+adminRouter.get('/availability', async (req, res, next) => {
+  try {
+    const tourId = z.string().uuid().parse(req.query.tourId);
+    const { from, to } = resolveRange(req.query);
+
+    const tour = await prisma.tour.findUnique({
+      where: { id: tourId },
+      select: { id: true, title: true, basePrice: true, currency: true, maxCapacity: true, isActive: true },
+    });
+    if (!tour) throw new AppError('Tour not found', 404);
+
+    const [rows, bookings] = await Promise.all([
+      prisma.availability.findMany({
+        where: { tourId, date: { gte: from, lte: to } },
+        orderBy: { date: 'asc' },
+      }),
+      prisma.booking.groupBy({
+        by: ['date'],
+        where: { tourId, date: { gte: from, lte: to }, status: { in: ['PENDING', 'CONFIRMED', 'COMPLETED'] } },
+        _count: { _all: true },
+        _sum: { adults: true, children: true },
+      }),
+    ]);
+
+    const rowByDate = new Map(rows.map((row) => [toDateKey(row.date), row]));
+    const bookingByDate = new Map(
+      bookings.map((b) => [
+        toDateKey(b.date),
+        { count: b._count._all, guests: (b._sum.adults || 0) + (b._sum.children || 0) },
+      ]),
+    );
+
+    const summary: Record<DayStatus, number> = { missing: 0, blocked: 0, soldOut: 0, low: 0, open: 0 };
+    const days = eachDay(from, to).map((date) => {
+      const row = rowByDate.get(date);
+      const status = classifyDay(row);
+      summary[status] += 1;
+      const booked = bookingByDate.get(date);
+      return {
+        date,
+        status,
+        seatsAvailable: row?.seatsAvailable ?? null,
+        seatsTotal: row?.seatsTotal ?? null,
+        priceOverride: row?.priceOverride ?? null,
+        isBlocked: row?.isBlocked ?? false,
+        bookings: booked?.count ?? 0,
+        guests: booked?.guests ?? 0,
+      };
+    });
+
+    res.json({
+      success: true,
+      data: { tour, from: toDateKey(from), to: toDateKey(to), days, summary },
+    });
+  } catch (err) {
+    if (err instanceof z.ZodError) return next(new AppError('A valid tourId is required', 400));
+    next(err);
+  }
+});
+
+// Cross-catalogue gap report: which tours are unsellable, and from when.
+adminRouter.get('/availability/gaps', async (req, res, next) => {
+  try {
+    const { from, to } = resolveRange(req.query);
+    const dates = eachDay(from, to);
+
+    const tours = await prisma.tour.findMany({
+      where: { isActive: true },
+      select: { id: true, title: true, category: true, basePrice: true, currency: true },
+      orderBy: { sortOrder: 'asc' },
+    });
+
+    const rows = await prisma.availability.findMany({
+      where: { tourId: { in: tours.map((t) => t.id) }, date: { gte: from, lte: to } },
+      select: { tourId: true, date: true, seatsAvailable: true, seatsTotal: true, isBlocked: true },
+    });
+
+    const byTour = new Map<string, Map<string, (typeof rows)[number]>>();
+    for (const row of rows) {
+      if (!byTour.has(row.tourId)) byTour.set(row.tourId, new Map());
+      byTour.get(row.tourId)!.set(toDateKey(row.date), row);
+    }
+
+    const report = tours.map((tour) => {
+      const rowsForTour = byTour.get(tour.id);
+      const counts: Record<DayStatus, number> = { missing: 0, blocked: 0, soldOut: 0, low: 0, open: 0 };
+      let firstGap: string | null = null;
+      for (const date of dates) {
+        const status = classifyDay(rowsForTour?.get(date));
+        counts[status] += 1;
+        if (firstGap === null && (status === 'missing' || status === 'blocked' || status === 'soldOut')) {
+          firstGap = date;
+        }
+      }
+      return { ...tour, ...counts, firstGap, unsellable: counts.missing + counts.blocked + counts.soldOut };
+    });
+
+    // Worst offenders first — that is the order you want to work through them.
+    report.sort((a, b) => b.unsellable - a.unsellable);
+
+    res.json({
+      success: true,
+      data: {
+        from: toDateKey(from),
+        to: toDateKey(to),
+        totalDays: dates.length,
+        tours: report,
+        toursWithGaps: report.filter((t) => t.unsellable > 0).length,
+      },
+    });
+  } catch (err) {
     next(err);
   }
 });

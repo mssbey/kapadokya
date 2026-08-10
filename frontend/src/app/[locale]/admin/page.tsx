@@ -2,16 +2,19 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { useI18n } from '@/components/I18nProvider';
+import { AdminLogin } from '@/components/admin/AdminLogin';
+import { AvailabilityBoard } from '@/components/admin/AvailabilityBoard';
+import { GapsPanel } from '@/components/admin/GapsPanel';
 import { api } from '@/lib/api';
 import { formatPrice, cn, getStatusColor, getCategoryLabel } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import {
   BarChart3, Users, Calendar, DollarSign, TrendingUp, MapPin,
   Package, ChevronRight, ChevronLeft, Eye, EyeOff, Edit2, Trash2,
-  Plus, Loader2, CreditCard,
+  Plus, Loader2, CreditCard, Check, ExternalLink,
   CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw, Tag
 } from 'lucide-react';
 
@@ -115,9 +118,7 @@ function Pagination({
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const { user, logout, loadUser } = useAuthStore();
-  const router = useRouter();
-  // Locale-aware so an admin working in /tr is not bounced into /en on sign-out
-  // or when the auth guard kicks in.
+  // Locale-aware so an admin working in /tr is not bounced into /en on sign-out.
   const { href } = useI18n();
   const [checkedAuth, setCheckedAuth] = useState(false);
 
@@ -125,16 +126,6 @@ export default function AdminPage() {
     loadUser();
     setCheckedAuth(true);
   }, [loadUser]);
-
-  useEffect(() => {
-    if (!checkedAuth) return;
-    if (!user) {
-      router.replace(href('/login'));
-    } else if (user.role !== 'ADMIN') {
-      toast.error('Admin access required');
-      router.replace(href('/'));
-    }
-  }, [checkedAuth, user, router, href]);
 
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -147,7 +138,7 @@ export default function AdminPage() {
     { id: 'revenue', label: 'Revenue', icon: DollarSign },
   ];
 
-  if (!checkedAuth || !user || user.role !== 'ADMIN') {
+  if (!checkedAuth) {
     return (
       <div className="min-h-screen pt-20 flex items-center justify-center bg-gray-50 dark:bg-dark">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
@@ -155,14 +146,26 @@ export default function AdminPage() {
     );
   }
 
+  // Sign-in happens on /admin itself rather than by bouncing to the customer
+  // login page — the URL an admin bookmarks is the one that should let them in.
+  if (!user) return <AdminLogin />;
+  if (user.role !== 'ADMIN') return <AdminLogin signedInAsNonAdmin={user.email} />;
+
   return (
     <div className="min-h-screen pt-20 bg-gray-50 dark:bg-dark">
       <div className="flex">
         {/* Sidebar */}
         <aside className="hidden lg:block w-64 min-h-[calc(100vh-5rem)] bg-white dark:bg-dark-50 border-r border-gray-200 dark:border-white/5 p-4 relative">
-          <div className="mb-8">
-            <h2 className="font-display text-lg font-bold text-gray-900 dark:text-white px-3">Admin Panel</h2>
-            <p className="text-gray-400 dark:text-white/40 text-xs px-3 mt-1">{user?.email}</p>
+          <div className="mb-8 px-3">
+            <h2 className="font-display text-lg font-bold text-gray-900 dark:text-white">Admin Panel</h2>
+            <p className="text-gray-400 dark:text-white/40 text-xs mt-1 truncate" title={user.email}>{user.email}</p>
+            <Link
+              href={href('/')}
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              View site
+            </Link>
           </div>
 
           <nav className="space-y-1">
@@ -217,11 +220,11 @@ export default function AdminPage() {
 
         {/* Main Content */}
         <main className="flex-1 p-4 md:p-8 pb-20 lg:pb-8 min-w-0">
-          {activeTab === 'dashboard' && <DashboardTab />}
+          {activeTab === 'dashboard' && <DashboardTab onOpenAvailability={() => setActiveTab('availability')} />}
           {activeTab === 'tours' && <ToursTab />}
           {activeTab === 'bookings' && <BookingsTab />}
           {activeTab === 'payments' && <PaymentsTab />}
-          {activeTab === 'availability' && <AvailabilityTab />}
+          {activeTab === 'availability' && <AvailabilityBoard />}
           {activeTab === 'customers' && <CustomersTab />}
           {activeTab === 'promos' && <PromoCodesTab />}
           {activeTab === 'revenue' && <RevenueTab />}
@@ -233,7 +236,7 @@ export default function AdminPage() {
 
 // =================== DASHBOARD ===================
 
-function DashboardTab() {
+function DashboardTab({ onOpenAvailability }: { onOpenAvailability: () => void }) {
   const [stats, setStats] = useState<any>(null);
   const [categoryRevenue, setCategoryRevenue] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -298,6 +301,10 @@ function DashboardTab() {
             <p className="text-gray-400 dark:text-white/40 text-sm mt-1">{card.label}</p>
           </motion.div>
         ))}
+      </div>
+
+      <div className="mb-6">
+        <GapsPanel onOpenAvailability={onOpenAvailability} />
       </div>
 
       {/* Quick Stats */}
@@ -559,12 +566,85 @@ function TourFormModal({
   );
 }
 
+/**
+ * Price editing without opening the full tour form — the common case is
+ * "move this one number", and the form round-trips every other field with it.
+ */
+function InlinePrice({ tour, onSaved }: { tour: any; onSaved: (basePrice: number) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(String(tour.basePrice));
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    const basePrice = Number(value);
+    if (!Number.isFinite(basePrice) || basePrice <= 0) {
+      toast.error('Price must be greater than zero.');
+      return;
+    }
+    if (basePrice === tour.basePrice) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      await api.patch(`/admin/tours/${tour.id}/price`, { basePrice });
+      onSaved(basePrice);
+      toast.success(`${tour.title} — price updated`);
+      setEditing(false);
+    } catch (err: any) {
+      toast.error(extractError(err, 'Failed to update the price.'));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!editing) {
+    return (
+      <button
+        onClick={() => {
+          setValue(String(tour.basePrice));
+          setEditing(true);
+        }}
+        className="rounded-md px-1.5 py-0.5 font-medium text-gray-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:text-white/60 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400"
+        title="Click to edit the price"
+      >
+        {formatPrice(tour.basePrice, tour.currency || 'EUR')}
+      </button>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      <input
+        autoFocus
+        type="number"
+        min={0}
+        step="0.01"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') save();
+          if (e.key === 'Escape') setEditing(false);
+        }}
+        className="w-24 rounded-lg border border-emerald-400 bg-white px-2 py-1 text-sm text-gray-900 outline-none dark:bg-white/10 dark:text-white"
+      />
+      <button onClick={save} disabled={saving} aria-label="Save price" className="rounded-md p-1 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10">
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+      </button>
+      <button onClick={() => setEditing(false)} aria-label="Cancel" className="rounded-md p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5">
+        <X className="h-4 w-4" />
+      </button>
+    </span>
+  );
+}
+
 function ToursTab() {
   const [tours, setTours] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modalTour, setModalTour] = useState<any | null | 'new'>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
   const fetchTours = useCallback(async () => {
     setLoading(true);
@@ -582,6 +662,11 @@ function ToursTab() {
   useEffect(() => {
     fetchTours();
   }, [fetchTours]);
+
+  const query = search.trim().toLowerCase();
+  const visibleTours = query
+    ? tours.filter((tour) => `${tour.title} ${tour.slug} ${tour.category}`.toLowerCase().includes(query))
+    : tours;
 
   async function toggleTour(tourId: string) {
     const prev = tours;
@@ -610,12 +695,25 @@ function ToursTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="font-display text-3xl font-bold text-gray-900 dark:text-white">Tours</h1>
-        <button onClick={() => setModalTour('new')} className="btn-primary text-sm flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Add Tour
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="font-display text-3xl font-bold text-gray-900 dark:text-white">Tours</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-white/50">
+            {tours.length} product{tours.length === 1 ? '' : 's'} · click a price to change it
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search tours"
+            className="input-glass !w-52 !py-2.5"
+          />
+          <button onClick={() => setModalTour('new')} className="btn-primary text-sm flex items-center gap-2 !px-5 !py-2.5">
+            <Plus className="w-4 h-4" />
+            Add Tour
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -626,7 +724,10 @@ function ToursTab() {
         <p className="text-gray-400 dark:text-white/40 text-sm py-10 text-center">No tours yet. Create your first one.</p>
       ) : (
         <div className="space-y-3">
-          {tours.map((tour) => (
+          {visibleTours.length === 0 && (
+            <p className="text-gray-400 dark:text-white/40 text-sm py-10 text-center">No tours match “{search}”.</p>
+          )}
+          {visibleTours.map((tour) => (
             <div key={tour.id} className="glass-card p-5 flex items-center gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -635,9 +736,14 @@ function ToursTab() {
                     {tour.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
-                <div className="flex items-center gap-4 mt-1 text-sm text-gray-400 dark:text-white/40">
+                <div className="flex items-center gap-3 mt-1 text-sm text-gray-400 dark:text-white/40">
                   <span>{getCategoryLabel(tour.category)}</span>
-                  <span>{formatPrice(tour.basePrice)}</span>
+                  <InlinePrice
+                    tour={tour}
+                    onSaved={(basePrice) =>
+                      setTours((prev) => prev.map((t) => (t.id === tour.id ? { ...t, basePrice } : t)))
+                    }
+                  />
                   <span>{tour._count?.bookings || 0} bookings</span>
                 </div>
               </div>
@@ -982,153 +1088,6 @@ function PaymentsTab() {
           <Pagination page={page} pages={pages} onChange={setPage} />
         </div>
       )}
-    </div>
-  );
-}
-
-// =================== AVAILABILITY ===================
-
-function AvailabilityTab() {
-  const [tours, setTours] = useState<any[]>([]);
-  const [loadingTours, setLoadingTours] = useState(true);
-  const [toursError, setToursError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [lastResult, setLastResult] = useState<string | null>(null);
-
-  const [form, setForm] = useState({
-    tourId: '',
-    seatsTotal: 20,
-    startDate: '',
-    endDate: '',
-    priceOverride: '',
-  });
-
-  const fetchTours = useCallback(async () => {
-    setLoadingTours(true);
-    setToursError(null);
-    try {
-      const res = await api.get('/admin/tours');
-      setTours(res.data.data);
-      setForm((f) => ({ ...f, tourId: f.tourId || res.data.data[0]?.id || '' }));
-    } catch (err: any) {
-      setToursError(extractError(err, 'Failed to load tours.'));
-    } finally {
-      setLoadingTours(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchTours();
-  }, [fetchTours]);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.tourId || !form.startDate || !form.endDate) {
-      toast.error('Please fill tour, start date and end date');
-      return;
-    }
-    if (form.endDate < form.startDate) {
-      toast.error('End date must be after start date');
-      return;
-    }
-    setSubmitting(true);
-    setLastResult(null);
-    try {
-      const res = await api.post('/admin/availability/bulk', {
-        tourId: form.tourId,
-        startDate: form.startDate,
-        endDate: form.endDate,
-        seatsTotal: Number(form.seatsTotal),
-        priceOverride: form.priceOverride ? Number(form.priceOverride) : undefined,
-      });
-      const count = res.data.count || 0;
-      setLastResult(`Availability set for ${count} day${count === 1 ? '' : 's'}.`);
-      toast.success(`Availability updated for ${count} day${count === 1 ? '' : 's'}`);
-    } catch (err: any) {
-      toast.error(extractError(err, 'Failed to set availability'));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  return (
-    <div>
-      <h1 className="font-display text-3xl font-bold text-gray-900 dark:text-white mb-8">Availability Management</h1>
-
-      <div className="glass-card p-6">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Bulk Set Availability</h3>
-
-        {loadingTours ? (
-          <LoadingBlock />
-        ) : toursError ? (
-          <ErrorBlock message={toursError} onRetry={fetchTours} />
-        ) : (
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-500 dark:text-white/50 mb-1.5 block">Tour</label>
-              <select
-                className="input-glass"
-                value={form.tourId}
-                onChange={(e) => setForm({ ...form, tourId: e.target.value })}
-              >
-                {tours.map((t) => (
-                  <option key={t.id} value={t.id}>{t.title}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm text-gray-500 dark:text-white/50 mb-1.5 block">Seats per Day</label>
-              <input
-                type="number"
-                min={1}
-                className="input-glass"
-                value={form.seatsTotal}
-                onChange={(e) => setForm({ ...form, seatsTotal: e.target.value as any })}
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-500 dark:text-white/50 mb-1.5 block">Start Date</label>
-              <input
-                type="date"
-                className="input-glass"
-                value={form.startDate}
-                onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-500 dark:text-white/50 mb-1.5 block">End Date</label>
-              <input
-                type="date"
-                className="input-glass"
-                value={form.endDate}
-                onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-500 dark:text-white/50 mb-1.5 block">Price Override (Optional)</label>
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                className="input-glass"
-                placeholder="Leave empty for base price"
-                value={form.priceOverride}
-                onChange={(e) => setForm({ ...form, priceOverride: e.target.value })}
-              />
-            </div>
-            <div className="flex items-end">
-              <button type="submit" disabled={submitting || tours.length === 0} className="btn-primary w-full flex items-center justify-center gap-2">
-                {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                Set Availability
-              </button>
-            </div>
-          </form>
-        )}
-
-        {lastResult && (
-          <p className="text-emerald-400 text-sm mt-4">{lastResult}</p>
-        )}
-      </div>
     </div>
   );
 }
