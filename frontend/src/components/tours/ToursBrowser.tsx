@@ -4,11 +4,11 @@ import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Clock3, MapPin, Search } from 'lucide-react';
-import { getCatalog, type CategoryKey } from '@/lib/site';
+import { CATEGORY_KEYS, getCatalog, type CategoryKey } from '@/lib/site';
 import { useSitePreferences } from '@/components/SitePreferences';
 import { useI18n } from '@/components/I18nProvider';
 
-const categoryKeys: (CategoryKey | 'all')[] = ['all', 'Balloon', 'Adventure', 'Daily Tour', 'Transfer'];
+const categoryKeys: (CategoryKey | 'all')[] = ['all', ...CATEGORY_KEYS];
 
 export function ToursBrowser() {
   const [category, setCategory] = useState<CategoryKey | 'all'>('all');
@@ -17,15 +17,18 @@ export function ToursBrowser() {
   const { t, href } = useI18n();
 
   const catalog = useMemo(() => getCatalog(t), [t]);
-  const tours = useMemo(
-    () =>
-      catalog.filter(
-        (tour) =>
-          (category === 'all' || tour.categoryKey === category) &&
-          tour.title.toLowerCase().includes(search.toLowerCase()),
-      ),
-    [catalog, category, search],
-  );
+  const tours = useMemo(() => {
+    // The catalogue is large enough now that matching titles alone hides
+    // relevant results — "underground", "sunrise" and so on live in the
+    // description.
+    const query = search.trim().toLowerCase();
+    return catalog.filter(
+      (tour) =>
+        (category === 'all' || tour.categoryKey === category) &&
+        (query === '' ||
+          `${tour.title} ${tour.category} ${tour.description}`.toLowerCase().includes(query)),
+    );
+  }, [catalog, category, search]);
 
   return (
     <div className="min-h-screen bg-[#f8f6f1] pb-24 pt-20 dark:bg-dark">

@@ -1,4 +1,5 @@
 import type { Dictionary } from './en';
+import { toursEs } from './tours/es';
 
 export const es: Dictionary = {
   meta: {
@@ -207,8 +208,11 @@ export const es: Dictionary = {
     categories: {
       all: 'Todos',
       Balloon: 'Globo',
+      'Daily Tour': 'Tour diario',
+      'Private Tour': 'Tour privado',
       Adventure: 'Aventura',
-      'Daily Tour': 'Excursión de un día',
+      Cultural: 'Cultura',
+      Package: 'Paquete',
       Transfer: 'Traslado',
     },
     searchPlaceholder: 'Buscar experiencias',
@@ -466,139 +470,5 @@ export const es: Dictionary = {
       '¡Hola 👋 Bienvenido a Discovery Cappadocia!\nMe gustaría recibir información sobre los tours de Capadocia.',
   },
 
-  tours: {
-    'cappadocia-hot-air-balloon': {
-      title: 'Vuelo en globo sobre Göreme',
-      category: 'Globo',
-      description:
-        'Contempla cómo Capadocia despierta bajo tus pies en un vuelo al amanecer operado profesionalmente sobre sus valles y chimeneas de hadas.',
-      duration: '3–4 horas',
-      startTime: 'Antes del amanecer',
-      pickup: 'Hoteles seleccionados incluidos',
-      languages: 'Inglés, turco',
-      badge: 'Experiencia estrella',
-      highlights: [
-        'Vistas del amanecer sobre Capadocia',
-        'Vuelo con operador autorizado',
-        'Traslado de hotel en paquetes seleccionados',
-        'Celebración tras el vuelo',
-      ],
-      included: [
-        'Seguro de vuelo',
-        'Información previa al vuelo',
-        'Recogida en hotel donde se indica',
-        'Certificado de vuelo',
-      ],
-      notIncluded: ['Gastos personales', 'Fotos opcionales', 'Propinas'],
-    },
-    'cappadocia-sunset-atv-tour': {
-      title: 'Tour en quad al atardecer',
-      category: 'Aventura',
-      description:
-        'Recorre los valles esculpidos de Capadocia y para en miradores panorámicos mientras el paisaje se tiñe de dorado.',
-      duration: '2 horas',
-      startTime: 'Antes del atardecer',
-      pickup: 'Hoteles seleccionados incluidos',
-      languages: 'Inglés, turco',
-      badge: 'Favorito al atardecer',
-      highlights: [
-        'Ruta guiada por los valles',
-        'Parada en mirador al atardecer',
-        'Explicación apta para principiantes',
-        'Casco incluido',
-      ],
-      included: ['Quad y combustible', 'Equipo de seguridad', 'Guía local', 'Recogida en hotel donde se indica'],
-      notIncluded: ['Bebidas', 'Gastos personales', 'Propinas'],
-    },
-    'cappadocia-horse-riding': {
-      title: 'Paseo a caballo al amanecer o al atardecer',
-      category: 'Aventura',
-      description:
-        'Explora senderos tranquilos y formaciones rocosas en el momento más especial del día con un guía local experimentado.',
-      duration: '2 horas',
-      startTime: 'Amanecer o atardecer',
-      pickup: 'Hoteles seleccionados incluidos',
-      languages: 'Inglés, turco',
-      badge: '',
-      highlights: [
-        'Paseo en grupo reducido',
-        'Paradas fotográficas con vistas',
-        'Explicación de seguridad',
-        'Rutas adaptadas a las condiciones',
-      ],
-      included: ['Caballo y equipo', 'Guía', 'Casco', 'Recogida en hotel donde se indica'],
-      notIncluded: ['Gastos personales', 'Fotos', 'Propinas'],
-    },
-    'cappadocia-jeep-safari': {
-      title: 'Jeep safari en Capadocia',
-      category: 'Aventura',
-      description:
-        'Llega a miradores escondidos y valles agrestes en una enérgica experiencia todoterreno por Capadocia.',
-      duration: '2–3 horas',
-      startTime: 'Mañana o atardecer',
-      pickup: 'Hoteles seleccionados incluidos',
-      languages: 'Inglés, turco',
-      badge: '',
-      highlights: [
-        'Ruta todoterreno por los valles',
-        'Paradas panorámicas',
-        'Conductor-guía local',
-        'Horarios de salida flexibles',
-      ],
-      included: ['Jeep y conductor', 'Combustible', 'Recogida en hotel donde se indica', 'Seguro'],
-      notIncluded: ['Comida y bebidas', 'Gastos personales', 'Propinas'],
-    },
-    'cappadocia-green-tour': {
-      title: 'Tour verde de Capadocia',
-      category: 'Excursión de un día',
-      description:
-        'Una ruta guiada de día completo por el sur de Capadocia, con miradores espectaculares y patrimonio subterráneo.',
-      duration: '8–9 horas',
-      startTime: 'Sobre las 09:30',
-      pickup: 'Recogida en hotel incluida',
-      languages: 'Inglés',
-      badge: '',
-      highlights: ['Ciudad subterránea', 'Región de Ihlara', 'Miradores panorámicos', 'Guía profesional'],
-      included: ['Guía autorizado', 'Transporte', 'Almuerzo', 'Entradas a museos indicadas en el programa'],
-      notIncluded: ['Bebidas', 'Gastos personales', 'Propinas'],
-    },
-    'cappadocia-red-tour': {
-      title: 'Tour rojo de Capadocia',
-      category: 'Excursión de un día',
-      description:
-        'Descubre en un solo día los célebres paisajes al aire libre, miradores y paradas culturales del norte de Capadocia.',
-      duration: '7–8 horas',
-      startTime: 'Sobre las 09:30',
-      pickup: 'Recogida en hotel incluida',
-      languages: 'Inglés',
-      badge: '',
-      highlights: [
-        'Lo mejor de la región de Göreme',
-        'Valles de chimeneas de hadas',
-        'Parada cultural local',
-        'Guía profesional',
-      ],
-      included: ['Guía autorizado', 'Transporte', 'Almuerzo', 'Entradas a museos indicadas en el programa'],
-      notIncluded: ['Bebidas', 'Gastos personales', 'Propinas'],
-    },
-    'cappadocia-airport-transfer': {
-      title: 'Traslado al aeropuerto de Capadocia',
-      category: 'Traslado',
-      description:
-        'Un traslado reservado con antelación entre el aeropuerto de Kayseri o Nevşehir y tu hotel en Capadocia.',
-      duration: '45–90 min',
-      startTime: 'Ajustado a tu vuelo',
-      pickup: 'Recogida en aeropuerto u hotel',
-      languages: 'Inglés, turco',
-      badge: '',
-      highlights: [
-        'Horario ajustado al vuelo',
-        'Servicio puerta a puerta',
-        'Equipaje incluido',
-        'Soporte por WhatsApp',
-      ],
-      included: ['Vehículo', 'Conductor', 'Equipaje estándar', 'Traslado de ida'],
-      notIncluded: ['Paradas adicionales', 'Equipaje voluminoso salvo acuerdo previo', 'Propinas'],
-    },
-  },
+  tours: toursEs,
 };

@@ -1,4 +1,5 @@
 import type { Dictionary } from './en';
+import { toursTr } from './tours/tr';
 
 export const tr: Dictionary = {
   meta: {
@@ -206,8 +207,11 @@ export const tr: Dictionary = {
     categories: {
       all: 'Tümü',
       Balloon: 'Balon',
-      Adventure: 'Macera',
       'Daily Tour': 'Günlük Tur',
+      'Private Tour': 'Özel Tur',
+      Adventure: 'Macera',
+      Cultural: 'Kültür',
+      Package: 'Paket',
       Transfer: 'Transfer',
     },
     searchPlaceholder: 'Deneyim ara',
@@ -458,133 +462,5 @@ export const tr: Dictionary = {
       'Merhaba 👋 Discovery Cappadocia’ya hoş geldiniz!\nKapadokya turları hakkında bilgi almak istiyorum.',
   },
 
-  tours: {
-    'cappadocia-hot-air-balloon': {
-      title: 'Göreme Sıcak Hava Balonu Uçuşu',
-      category: 'Balon',
-      description:
-        'Vadilerin ve peribacalarının üzerinde, profesyonel olarak işletilen bir gün doğumu uçuşunda Kapadokya’nın ayağınızın altında uyanışını izleyin.',
-      duration: '3–4 saat',
-      startTime: 'Gün doğumundan önce',
-      pickup: 'Seçili oteller dahil',
-      languages: 'İngilizce, Türkçe',
-      badge: 'İmza deneyim',
-      highlights: [
-        'Kapadokya üzerinde gün doğumu manzarası',
-        'Belgeli operatörle uçuş',
-        'Seçili paketlerde otel transferi',
-        'Uçuş sonrası kutlama',
-      ],
-      included: ['Uçuş sigortası', 'Uçuş öncesi bilgilendirme', 'Belirtilen yerlerde otelden alım', 'Uçuş sertifikası'],
-      notIncluded: ['Kişisel harcamalar', 'Opsiyonel fotoğraflar', 'Bahşişler'],
-    },
-    'cappadocia-sunset-atv-tour': {
-      title: 'Gün Batımı ATV Turu',
-      category: 'Macera',
-      description:
-        'Kapadokya’nın oyulmuş vadilerinde sürüş yapın ve manzara altın rengine dönerken panoramik seyir noktalarında durun.',
-      duration: '2 saat',
-      startTime: 'Gün batımından önce',
-      pickup: 'Seçili oteller dahil',
-      languages: 'İngilizce, Türkçe',
-      badge: 'Gün batımı favorisi',
-      highlights: [
-        'Rehberli vadi rotası',
-        'Gün batımı seyir noktası molası',
-        'Yeni başlayanlara uygun bilgilendirme',
-        'Kask sağlanır',
-      ],
-      included: ['ATV ve yakıt', 'Güvenlik ekipmanı', 'Yerel rehber', 'Belirtilen yerlerde otelden alım'],
-      notIncluded: ['İçecekler', 'Kişisel harcamalar', 'Bahşişler'],
-    },
-    'cappadocia-horse-riding': {
-      title: 'Gün Doğumu veya Gün Batımı At Binme',
-      category: 'Macera',
-      description:
-        'Günün en atmosferik saatinde, deneyimli bir yerel rehber eşliğinde sakin patikaları ve kaya oluşumlarını keşfedin.',
-      duration: '2 saat',
-      startTime: 'Gün doğumu veya gün batımı',
-      pickup: 'Seçili oteller dahil',
-      languages: 'İngilizce, Türkçe',
-      badge: '',
-      highlights: [
-        'Küçük grupla patika sürüşü',
-        'Manzaralı fotoğraf molaları',
-        'Güvenlik bilgilendirmesi',
-        'Koşullara göre belirlenen rotalar',
-      ],
-      included: ['At ve ekipman', 'Rehber', 'Kask', 'Belirtilen yerlerde otelden alım'],
-      notIncluded: ['Kişisel harcamalar', 'Fotoğraflar', 'Bahşişler'],
-    },
-    'cappadocia-jeep-safari': {
-      title: 'Kapadokya Jeep Safari',
-      category: 'Macera',
-      description:
-        'Hareketli bir arazi deneyiminde gizli seyir noktalarına ve engebeli vadilere ulaşın.',
-      duration: '2–3 saat',
-      startTime: 'Sabah veya gün batımı',
-      pickup: 'Seçili oteller dahil',
-      languages: 'İngilizce, Türkçe',
-      badge: '',
-      highlights: [
-        'Arazi vadi rotası',
-        'Panoramik molalar',
-        'Yerel şoför-rehber',
-        'Esnek kalkış seçenekleri',
-      ],
-      included: ['Jeep ve şoför', 'Yakıt', 'Belirtilen yerlerde otelden alım', 'Sigorta'],
-      notIncluded: ['Yiyecek ve içecek', 'Kişisel harcamalar', 'Bahşişler'],
-    },
-    'cappadocia-green-tour': {
-      title: 'Kapadokya Yeşil Tur',
-      category: 'Günlük Tur',
-      description:
-        'Etkileyici seyir noktaları ve yeraltı mirasını kapsayan, güney Kapadokya’da tam günlük rehberli rota.',
-      duration: '8–9 saat',
-      startTime: 'Yaklaşık 09:30',
-      pickup: 'Otelden alım dahil',
-      languages: 'İngilizce',
-      badge: '',
-      highlights: ['Yeraltı şehri', 'Ihlara bölgesi', 'Panoramik seyir noktaları', 'Profesyonel rehber'],
-      included: ['Belgeli rehber', 'Ulaşım', 'Öğle yemeği', 'Programda belirtilen müze girişleri'],
-      notIncluded: ['İçecekler', 'Kişisel harcamalar', 'Bahşişler'],
-    },
-    'cappadocia-red-tour': {
-      title: 'Kapadokya Kırmızı Tur',
-      category: 'Günlük Tur',
-      description:
-        'Kuzey Kapadokya’nın ünlü açık hava manzaralarını, seyir noktalarını ve kültürel duraklarını tek günde keşfedin.',
-      duration: '7–8 saat',
-      startTime: 'Yaklaşık 09:30',
-      pickup: 'Otelden alım dahil',
-      languages: 'İngilizce',
-      badge: '',
-      highlights: [
-        'Göreme bölgesinin öne çıkanları',
-        'Peribacası vadileri',
-        'Yerel kültür durağı',
-        'Profesyonel rehber',
-      ],
-      included: ['Belgeli rehber', 'Ulaşım', 'Öğle yemeği', 'Programda belirtilen müze girişleri'],
-      notIncluded: ['İçecekler', 'Kişisel harcamalar', 'Bahşişler'],
-    },
-    'cappadocia-airport-transfer': {
-      title: 'Kapadokya Havalimanı Transferi',
-      category: 'Transfer',
-      description: 'Kayseri veya Nevşehir havalimanı ile Kapadokya otelinizi arasında önceden ayarlanmış transfer.',
-      duration: '45–90 dk',
-      startTime: 'Uçuşunuza göre ayarlanır',
-      pickup: 'Havalimanı veya otelden alım',
-      languages: 'İngilizce, Türkçe',
-      badge: '',
-      highlights: [
-        'Uçuş saatine göre planlama',
-        'Kapıdan kapıya hizmet',
-        'Bagaj dahil',
-        'WhatsApp desteği',
-      ],
-      included: ['Araç', 'Şoför', 'Standart bagaj', 'Tek yön transfer'],
-      notIncluded: ['Ek duraklar', 'Önceden ayarlanmadıkça büyük bagaj', 'Bahşişler'],
-    },
-  },
+  tours: toursTr,
 };

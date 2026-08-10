@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CalendarClock, Check, Clock3, Languages, MapPin, ShieldCheck, Star, X } from 'lucide-react';
-import { TOUR_BASE, getTour } from '@/lib/site';
+import { TOUR_BASE, getRelated, getTour } from '@/lib/site';
 import { TourBookingCard } from '@/components/TourBookingCard';
 import { TrackEvent } from '@/components/Analytics';
 import {
@@ -47,9 +47,9 @@ export default function TourPage({ params }: Props) {
   if (!tour) notFound();
 
   const href = (path: string) => localePath(locale, path);
-  const relatedTours = TOUR_BASE.filter((item) => item.slug !== tour.slug)
-    .slice(0, 4)
-    .map((item) => ({ slug: item.slug, title: t.tours[item.slug].title }));
+  // Same-category suggestions first: with 28 products, "related" has to mean
+  // something or it is just the top of the catalogue on every page.
+  const relatedTours = getRelated(t, tour).map((item) => ({ slug: item.slug, title: item.title }));
 
   const schema = {
     '@context': 'https://schema.org',

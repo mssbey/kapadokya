@@ -1,4 +1,5 @@
 import type { Dictionary } from './en';
+import { toursIt } from './tours/it';
 
 export const it: Dictionary = {
   meta: {
@@ -207,8 +208,11 @@ export const it: Dictionary = {
     categories: {
       all: 'Tutti',
       Balloon: 'Mongolfiera',
+      'Daily Tour': 'Tour giornaliero',
+      'Private Tour': 'Tour privato',
       Adventure: 'Avventura',
-      'Daily Tour': 'Escursione giornaliera',
+      Cultural: 'Cultura',
+      Package: 'Pacchetto',
       Transfer: 'Transfer',
     },
     searchPlaceholder: 'Cerca esperienze',
@@ -466,139 +470,5 @@ export const it: Dictionary = {
       'Salve 👋 Benvenuto in Discovery Cappadocia!\nVorrei ricevere informazioni sui tour in Cappadocia.',
   },
 
-  tours: {
-    'cappadocia-hot-air-balloon': {
-      title: 'Volo in mongolfiera su Göreme',
-      category: 'Mongolfiera',
-      description:
-        'Guarda la Cappadocia risvegliarsi sotto di te durante un volo all’alba gestito da professionisti sopra valli e camini delle fate.',
-      duration: '3–4 ore',
-      startTime: 'Prima dell’alba',
-      pickup: 'Hotel selezionati inclusi',
-      languages: 'Inglese, turco',
-      badge: 'Esperienza simbolo',
-      highlights: [
-        'Vista dell’alba sulla Cappadocia',
-        'Volo con operatore autorizzato',
-        'Transfer hotel su pacchetti selezionati',
-        'Brindisi dopo il volo',
-      ],
-      included: [
-        'Assicurazione di volo',
-        'Briefing pre-volo',
-        'Prelievo in hotel dove indicato',
-        'Certificato di volo',
-      ],
-      notIncluded: ['Spese personali', 'Foto opzionali', 'Mance'],
-    },
-    'cappadocia-sunset-atv-tour': {
-      title: 'Tour in quad al tramonto',
-      category: 'Avventura',
-      description:
-        'Attraversa le valli scolpite della Cappadocia e fermati nei punti panoramici mentre il paesaggio si tinge d’oro.',
-      duration: '2 ore',
-      startTime: 'Prima del tramonto',
-      pickup: 'Hotel selezionati inclusi',
-      languages: 'Inglese, turco',
-      badge: 'Preferito al tramonto',
-      highlights: [
-        'Percorso guidato tra le valli',
-        'Sosta al punto panoramico del tramonto',
-        'Briefing adatto ai principianti',
-        'Casco incluso',
-      ],
-      included: ['Quad e carburante', 'Attrezzatura di sicurezza', 'Guida locale', 'Prelievo in hotel dove indicato'],
-      notIncluded: ['Bevande', 'Spese personali', 'Mance'],
-    },
-    'cappadocia-horse-riding': {
-      title: 'Passeggiata a cavallo all’alba o al tramonto',
-      category: 'Avventura',
-      description:
-        'Esplora sentieri tranquilli e formazioni rocciose nel momento più suggestivo della giornata con una guida locale esperta.',
-      duration: '2 ore',
-      startTime: 'Alba o tramonto',
-      pickup: 'Hotel selezionati inclusi',
-      languages: 'Inglese, turco',
-      badge: '',
-      highlights: [
-        'Passeggiata in piccolo gruppo',
-        'Soste fotografiche panoramiche',
-        'Briefing sulla sicurezza',
-        'Percorsi adattati alle condizioni',
-      ],
-      included: ['Cavallo e attrezzatura', 'Guida', 'Casco', 'Prelievo in hotel dove indicato'],
-      notIncluded: ['Spese personali', 'Foto', 'Mance'],
-    },
-    'cappadocia-jeep-safari': {
-      title: 'Jeep safari in Cappadocia',
-      category: 'Avventura',
-      description:
-        'Raggiungi punti panoramici nascosti e valli impervie in un’esperienza fuoristrada piena di energia.',
-      duration: '2–3 ore',
-      startTime: 'Mattina o tramonto',
-      pickup: 'Hotel selezionati inclusi',
-      languages: 'Inglese, turco',
-      badge: '',
-      highlights: [
-        'Percorso fuoristrada tra le valli',
-        'Soste panoramiche',
-        'Autista-guida locale',
-        'Orari di partenza flessibili',
-      ],
-      included: ['Jeep e autista', 'Carburante', 'Prelievo in hotel dove indicato', 'Assicurazione'],
-      notIncluded: ['Cibo e bevande', 'Spese personali', 'Mance'],
-    },
-    'cappadocia-green-tour': {
-      title: 'Tour verde della Cappadocia',
-      category: 'Escursione giornaliera',
-      description:
-        'Un itinerario guidato di un’intera giornata nella Cappadocia meridionale, tra panorami spettacolari e patrimonio sotterraneo.',
-      duration: '8–9 ore',
-      startTime: 'Verso le 09:30',
-      pickup: 'Prelievo in hotel incluso',
-      languages: 'Inglese',
-      badge: '',
-      highlights: ['Città sotterranea', 'Regione di Ihlara', 'Punti panoramici', 'Guida professionale'],
-      included: ['Guida autorizzata', 'Trasporto', 'Pranzo', 'Ingressi ai musei indicati nel programma'],
-      notIncluded: ['Bevande', 'Spese personali', 'Mance'],
-    },
-    'cappadocia-red-tour': {
-      title: 'Tour rosso della Cappadocia',
-      category: 'Escursione giornaliera',
-      description:
-        'Scopri in un solo giorno i celebri paesaggi all’aperto, i punti panoramici e le tappe culturali della Cappadocia settentrionale.',
-      duration: '7–8 ore',
-      startTime: 'Verso le 09:30',
-      pickup: 'Prelievo in hotel incluso',
-      languages: 'Inglese',
-      badge: '',
-      highlights: [
-        'Il meglio della regione di Göreme',
-        'Valli dei camini delle fate',
-        'Tappa culturale locale',
-        'Guida professionale',
-      ],
-      included: ['Guida autorizzata', 'Trasporto', 'Pranzo', 'Ingressi ai musei indicati nel programma'],
-      notIncluded: ['Bevande', 'Spese personali', 'Mance'],
-    },
-    'cappadocia-airport-transfer': {
-      title: 'Transfer aeroporto Cappadocia',
-      category: 'Transfer',
-      description:
-        'Un transfer prenotato in anticipo tra l’aeroporto di Kayseri o Nevşehir e il tuo hotel in Cappadocia.',
-      duration: '45–90 min',
-      startTime: 'In base al tuo volo',
-      pickup: 'Prelievo in aeroporto o in hotel',
-      languages: 'Inglese, turco',
-      badge: '',
-      highlights: [
-        'Orari calibrati sul volo',
-        'Servizio porta a porta',
-        'Bagaglio incluso',
-        'Assistenza su WhatsApp',
-      ],
-      included: ['Veicolo', 'Autista', 'Bagaglio standard', 'Transfer di sola andata'],
-      notIncluded: ['Soste extra', 'Bagagli fuori misura salvo accordi', 'Mance'],
-    },
-  },
+  tours: toursIt,
 };

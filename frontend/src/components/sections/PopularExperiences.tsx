@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Clock3, Heart, MapPin, Star } from 'lucide-react';
-import { getCatalog } from '@/lib/site';
+import { getFeatured } from '@/lib/site';
 import { useSitePreferences } from '@/components/SitePreferences';
 import { useI18n } from '@/components/I18nProvider';
 
@@ -12,7 +12,8 @@ export function PopularExperiences() {
   const { price } = useSitePreferences();
   const { t, href } = useI18n();
   const [saved, setSaved] = useState<string[]>([]);
-  const catalog = getCatalog(t);
+  // Only the flagged headline products — the full catalogue lives on /tours.
+  const catalog = getFeatured(t);
 
   useEffect(() => {
     try { setSaved(JSON.parse(localStorage.getItem('dc_wishlist') || '[]')); } catch { setSaved([]); }

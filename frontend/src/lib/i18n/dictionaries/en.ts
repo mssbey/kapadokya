@@ -1,3 +1,5 @@
+import { toursEn } from './tours/en';
+
 /**
  * English is the source of truth: the `Dictionary` type is derived from this
  * file, so every other locale is checked against it at build time.
@@ -209,8 +211,11 @@ export const en = {
     categories: {
       all: 'All',
       Balloon: 'Balloon',
-      Adventure: 'Adventure',
       'Daily Tour': 'Daily Tour',
+      'Private Tour': 'Private Tour',
+      Adventure: 'Adventure',
+      Cultural: 'Cultural',
+      Package: 'Package',
       Transfer: 'Transfer',
     },
     searchPlaceholder: 'Search experiences',
@@ -468,135 +473,7 @@ export const en = {
       'Hello 👋 Welcome to Discovery Cappadocia!\nI would like to get information about Cappadocia tours.',
   },
 
-  tours: {
-    'cappadocia-hot-air-balloon': {
-      title: 'Göreme Hot Air Balloon Flight',
-      category: 'Balloon',
-      description:
-        'Watch Cappadocia wake beneath you on a professionally operated sunrise flight over its valleys and fairy chimneys.',
-      duration: '3–4 hours',
-      startTime: 'Before sunrise',
-      pickup: 'Selected hotels included',
-      languages: 'English, Turkish',
-      badge: 'Signature experience',
-      highlights: [
-        'Sunrise views over Cappadocia',
-        'Flight with a licensed operator',
-        'Hotel transfer on selected packages',
-        'Post-flight celebration',
-      ],
-      included: ['Flight insurance', 'Pre-flight briefing', 'Hotel pickup where stated', 'Flight certificate'],
-      notIncluded: ['Personal expenses', 'Optional photos', 'Gratuities'],
-    },
-    'cappadocia-sunset-atv-tour': {
-      title: 'Sunset ATV Tour',
-      category: 'Adventure',
-      description:
-        'Ride through Cappadocia’s sculpted valleys and stop at panoramic viewpoints as the landscape turns gold.',
-      duration: '2 hours',
-      startTime: 'Before sunset',
-      pickup: 'Selected hotels included',
-      languages: 'English, Turkish',
-      badge: 'Sunset favourite',
-      highlights: [
-        'Guided valley route',
-        'Sunset viewpoint stop',
-        'Beginner-friendly briefing',
-        'Helmet provided',
-      ],
-      included: ['ATV and fuel', 'Safety equipment', 'Local guide', 'Hotel pickup where stated'],
-      notIncluded: ['Drinks', 'Personal expenses', 'Gratuities'],
-    },
-    'cappadocia-horse-riding': {
-      title: 'Sunrise or Sunset Horse Riding',
-      category: 'Adventure',
-      description:
-        'Explore quiet trails and rock formations at the most atmospheric time of day with an experienced local guide.',
-      duration: '2 hours',
-      startTime: 'Sunrise or sunset',
-      pickup: 'Selected hotels included',
-      languages: 'English, Turkish',
-      badge: '',
-      highlights: [
-        'Small-group trail ride',
-        'Scenic photo stops',
-        'Safety briefing',
-        'Routes matched to conditions',
-      ],
-      included: ['Horse and equipment', 'Guide', 'Helmet', 'Hotel pickup where stated'],
-      notIncluded: ['Personal expenses', 'Photos', 'Gratuities'],
-    },
-    'cappadocia-jeep-safari': {
-      title: 'Cappadocia Jeep Safari',
-      category: 'Adventure',
-      description:
-        'Reach hidden viewpoints and rugged valleys on an energetic off-road Cappadocia experience.',
-      duration: '2–3 hours',
-      startTime: 'Morning or sunset',
-      pickup: 'Selected hotels included',
-      languages: 'English, Turkish',
-      badge: '',
-      highlights: [
-        'Off-road valley route',
-        'Panoramic stops',
-        'Local driver-guide',
-        'Flexible departure options',
-      ],
-      included: ['Jeep and driver', 'Fuel', 'Hotel pickup where stated', 'Insurance'],
-      notIncluded: ['Food and drinks', 'Personal expenses', 'Gratuities'],
-    },
-    'cappadocia-green-tour': {
-      title: 'Cappadocia Green Tour',
-      category: 'Daily Tour',
-      description:
-        'A full-day guided route through southern Cappadocia, including dramatic viewpoints and underground heritage.',
-      duration: '8–9 hours',
-      startTime: '09:30 approx.',
-      pickup: 'Hotel pickup included',
-      languages: 'English',
-      badge: '',
-      highlights: ['Underground city', 'Ihlara region', 'Panoramic viewpoints', 'Professional guide'],
-      included: ['Licensed guide', 'Transport', 'Lunch', 'Museum entries stated in program'],
-      notIncluded: ['Drinks', 'Personal expenses', 'Gratuities'],
-    },
-    'cappadocia-red-tour': {
-      title: 'Cappadocia Red Tour',
-      category: 'Daily Tour',
-      description:
-        'Discover northern Cappadocia’s celebrated open-air landscapes, viewpoints and cultural stops in one day.',
-      duration: '7–8 hours',
-      startTime: '09:30 approx.',
-      pickup: 'Hotel pickup included',
-      languages: 'English',
-      badge: '',
-      highlights: [
-        'Göreme region highlights',
-        'Fairy chimney valleys',
-        'Local cultural stop',
-        'Professional guide',
-      ],
-      included: ['Licensed guide', 'Transport', 'Lunch', 'Museum entries stated in program'],
-      notIncluded: ['Drinks', 'Personal expenses', 'Gratuities'],
-    },
-    'cappadocia-airport-transfer': {
-      title: 'Cappadocia Airport Transfer',
-      category: 'Transfer',
-      description: 'A pre-booked transfer between Kayseri or Nevşehir airport and your Cappadocia hotel.',
-      duration: '45–90 min',
-      startTime: 'Matched to your flight',
-      pickup: 'Airport or hotel pickup',
-      languages: 'English, Turkish',
-      badge: '',
-      highlights: [
-        'Flight-aware scheduling',
-        'Door-to-door service',
-        'Luggage included',
-        'Support by WhatsApp',
-      ],
-      included: ['Vehicle', 'Driver', 'Standard luggage', 'One-way transfer'],
-      notIncluded: ['Extra stops', 'Oversize baggage unless arranged', 'Gratuities'],
-    },
-  },
+  tours: toursEn,
 };
 
 /**
