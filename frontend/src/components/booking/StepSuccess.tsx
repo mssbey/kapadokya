@@ -7,9 +7,13 @@ import { useBookingStore } from '@/store/bookingStore';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { CheckCircle, Download, ArrowRight, PartyPopper, MessageCircle } from 'lucide-react';
 import { SITE, whatsappUrl } from '@/lib/site';
+import { useI18n } from '@/components/I18nProvider';
+import { useGuestLabel } from '@/components/booking/useGuestLabel';
 
 export function StepSuccess() {
   const { selectedTour, selectedDate, adults, children, totalPrice, reset } = useBookingStore();
+  const { t, tag, href, fill } = useI18n();
+  const guestLabel = useGuestLabel();
   const [reservationNumber, setReservationNumber] = useState('');
   useEffect(() => setReservationNumber(sessionStorage.getItem('dc_last_booking_id') || ''), []);
 
@@ -37,10 +41,10 @@ export function StepSuccess() {
         transition={{ delay: 0.5 }}
       >
         <h1 className="font-display text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-          Booking Confirmed! <PartyPopper className="inline w-10 h-10" />
+          {t.booking.success.heading} <PartyPopper className="inline w-10 h-10" />
         </h1>
         <p className="text-gray-500 dark:text-white/60 text-lg mb-8">
-          Payment received. Keep this reservation summary and contact our team if you need pickup assistance.
+          {t.booking.success.subtitle}
         </p>
       </motion.div>
 
@@ -52,35 +56,32 @@ export function StepSuccess() {
         className="glass-card p-8 text-left mb-8"
       >
         <h3 className="font-display text-xl font-semibold text-gray-900 dark:text-white mb-6 text-center">
-          Booking Details
+          {t.booking.success.detailsTitle}
         </h3>
 
         <div className="space-y-4">
           <div className="flex justify-between py-3 border-b border-gray-200 dark:border-white/10">
-            <span className="text-gray-500 dark:text-white/50">Reservation Number</span>
-            <span className="max-w-[60%] break-all text-right font-mono text-xs text-gray-900 dark:text-white">{reservationNumber || 'Processing'}</span>
+            <span className="text-gray-500 dark:text-white/50">{t.booking.success.reservationNumber}</span>
+            <span className="max-w-[60%] break-all text-right font-mono text-xs text-gray-900 dark:text-white">{reservationNumber || t.booking.success.processing}</span>
           </div>
           <div className="flex justify-between py-3 border-b border-gray-200 dark:border-white/10">
-            <span className="text-gray-500 dark:text-white/50">Tour</span>
-            <span className="text-gray-900 dark:text-white font-medium">{selectedTour?.title || 'N/A'}</span>
+            <span className="text-gray-500 dark:text-white/50">{t.booking.success.tour}</span>
+            <span className="text-gray-900 dark:text-white font-medium">{selectedTour?.title || '—'}</span>
           </div>
           <div className="flex justify-between py-3 border-b border-gray-200 dark:border-white/10">
-            <span className="text-gray-500 dark:text-white/50">Date</span>
+            <span className="text-gray-500 dark:text-white/50">{t.booking.success.date}</span>
             <span className="text-gray-900 dark:text-white font-medium">
-              {selectedDate ? formatDate(selectedDate) : 'N/A'}
+              {selectedDate ? formatDate(selectedDate, tag) : '—'}
             </span>
           </div>
           <div className="flex justify-between py-3 border-b border-gray-200 dark:border-white/10">
-            <span className="text-gray-500 dark:text-white/50">Guests</span>
-            <span className="text-gray-900 dark:text-white font-medium">
-              {adults} Adult{adults > 1 ? 's' : ''}
-              {children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}
-            </span>
+            <span className="text-gray-500 dark:text-white/50">{t.booking.success.guests}</span>
+            <span className="text-gray-900 dark:text-white font-medium">{guestLabel(adults, children)}</span>
           </div>
           <div className="flex justify-between py-3">
-            <span className="text-gray-500 dark:text-white/50">Total Paid</span>
+            <span className="text-gray-500 dark:text-white/50">{t.booking.success.totalPaid}</span>
             <span className="text-2xl font-bold text-emerald-400">
-              {formatPrice(totalPrice)}
+              {formatPrice(totalPrice, 'EUR', tag)}
             </span>
           </div>
         </div>
@@ -94,18 +95,18 @@ export function StepSuccess() {
         className="flex flex-col sm:flex-row gap-4 justify-center"
       >
         <Link
-          href="/"
+          href={href('/')}
           onClick={() => reset()}
           className="btn-primary flex items-center justify-center gap-2"
         >
           <ArrowRight className="w-5 h-5" />
-          Back to Home
+          {t.booking.success.backHome}
         </Link>
         <button onClick={() => window.print()} className="btn-secondary flex items-center justify-center gap-2">
           <Download className="w-5 h-5" />
-          Print / Save Voucher
+          {t.booking.success.printVoucher}
         </button>
-        <a href={whatsappUrl(`Hello, I need help with reservation ${reservationNumber}.`)} target="_blank" rel="noreferrer" data-event="whatsapp_click" className="btn-secondary flex items-center justify-center gap-2"><MessageCircle className="h-5 w-5" /> WhatsApp Support</a>
+        <a href={whatsappUrl(fill(t.booking.success.whatsappMessage, { number: reservationNumber }))} target="_blank" rel="noreferrer" data-event="whatsapp_click" className="btn-secondary flex items-center justify-center gap-2"><MessageCircle className="h-5 w-5" /> {t.booking.success.whatsappSupport}</a>
       </motion.div>
 
       <motion.p
@@ -114,7 +115,7 @@ export function StepSuccess() {
         transition={{ delay: 1.2 }}
         className="text-gray-400 dark:text-white/30 text-sm mt-8"
       >
-        Need help? Contact us at{' '}
+        {t.booking.success.needHelp}{' '}
         <a href={`mailto:${SITE.email}`} className="text-emerald-400 hover:underline">
           {SITE.email}
         </a>

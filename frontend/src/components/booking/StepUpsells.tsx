@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useBookingStore } from '@/store/bookingStore';
 import { formatPrice, cn } from '@/lib/utils';
 import { Camera, Check, Sparkles } from 'lucide-react';
+import { useI18n } from '@/components/I18nProvider';
 
 // VIP Package and Hotel Transfer are included free of charge, so they are never
 // offered as paid add-ons — filtered out even if they still exist in the database.
@@ -11,19 +12,22 @@ const retiredUpsells = ['vip', 'transfer'];
 const isRetired = (name: string) =>
   retiredUpsells.some((k) => name.toLowerCase().includes(k));
 
-const defaultUpsells = [
-  {
-    id: 'photo-pkg',
-    name: 'Professional Photography Package',
-    description: 'Professional photographer captures your experience with 50+ edited photos delivered digitally',
-    price: 75,
-    icon: '📸',
-    lucideIcon: Camera,
-  },
-];
-
 export function StepUpsells() {
   const { selectedTour, selectedUpsells, toggleUpsell, nextStep, prevStep } = useBookingStore();
+  const { t, tag } = useI18n();
+
+  // Add-ons defined in the backend keep their stored wording; only the built-in
+  // fallback is translated.
+  const defaultUpsells = [
+    {
+      id: 'photo-pkg',
+      name: t.booking.upsells.defaultName,
+      description: t.booking.upsells.defaultDescription,
+      price: 75,
+      icon: '📸',
+      lucideIcon: Camera,
+    },
+  ];
 
   const upsells = (
     selectedTour?.upsells?.length
@@ -37,19 +41,19 @@ export function StepUpsells() {
         <div>
           <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-gold" />
-            Enhance Your Experience
+            {t.booking.upsells.heading}
           </h2>
-          <p className="text-gray-500 dark:text-white/50 text-sm mt-1">Optional add-ons to make it extra special</p>
+          <p className="text-gray-500 dark:text-white/50 text-sm mt-1">{t.booking.upsells.subtitle}</p>
         </div>
         <button onClick={prevStep} className="glass-button text-sm">
-          ← Back
+          {t.booking.back}
         </button>
       </div>
 
       <div className="space-y-4">
         {upsells.length === 0 && (
           <div className="glass-card p-6 text-center text-gray-500 dark:text-white/50 text-sm">
-            No paid add-ons for this experience — everything else is already included.
+            {t.booking.upsells.empty}
           </div>
         )}
         {upsells.map((upsell, i) => {
@@ -100,7 +104,7 @@ export function StepUpsells() {
               {/* Price + Check */}
               <div className="flex items-center gap-3 flex-shrink-0">
                 <span className="text-lg font-bold text-gray-900 dark:text-white">
-                  +{formatPrice(upsell.price)}
+                  +{formatPrice(upsell.price, 'EUR', tag)}
                 </span>
                 <div
                   className={cn(
@@ -123,10 +127,10 @@ export function StepUpsells() {
           onClick={nextStep}
           className="text-gray-500 dark:text-white/50 hover:text-gray-900 dark:hover:text-white text-sm transition-colors"
         >
-          Skip this step →
+          {t.booking.upsells.skip}
         </button>
         <button onClick={nextStep} className="btn-primary">
-          Continue →
+          {t.booking.continue}
         </button>
       </div>
     </div>

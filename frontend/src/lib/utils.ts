@@ -5,8 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatPrice(amount: number, currency: string = 'EUR'): string {
-  return new Intl.NumberFormat('en-US', {
+// `locale` is a BCP-47 tag (see LOCALE_TAGS). Callers in localized UI pass the
+// active tag from useI18n(); the default keeps non-localized surfaces working.
+export function formatPrice(amount: number, currency: string = 'EUR', locale: string = 'en-GB'): string {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
     minimumFractionDigits: 0,
@@ -14,8 +16,8 @@ export function formatPrice(amount: number, currency: string = 'EUR'): string {
   }).format(amount);
 }
 
-export function formatDate(date: string | Date): string {
-  return new Intl.DateTimeFormat('en-US', {
+export function formatDate(date: string | Date, locale: string = 'en-GB'): string {
+  return new Intl.DateTimeFormat(locale, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -23,8 +25,8 @@ export function formatDate(date: string | Date): string {
   }).format(new Date(date));
 }
 
-export function formatDateShort(date: string | Date): string {
-  return new Intl.DateTimeFormat('en-US', {
+export function formatDateShort(date: string | Date, locale: string = 'en-GB'): string {
+  return new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
   }).format(new Date(date));

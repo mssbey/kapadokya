@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBookingStore } from '@/store/bookingStore';
+import { useI18n } from '@/components/I18nProvider';
 import { StepIndicator } from '@/components/booking/StepIndicator';
 import { BookingSummary } from '@/components/booking/BookingSummary';
 import { StepSelectTour } from '@/components/booking/StepSelectTour';
@@ -15,8 +15,8 @@ import { StepPayment } from '@/components/booking/StepPayment';
 import { StepSuccess } from '@/components/booking/StepSuccess';
 
 function BookingContent() {
-  const searchParams = useSearchParams();
   const { step } = useBookingStore();
+  const { t } = useI18n();
 
   const steps: Record<number, React.ReactNode> = {
     1: <StepSelectTour />,
@@ -39,10 +39,10 @@ function BookingContent() {
             className="text-center mb-12"
           >
             <h1 className="font-display text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              Book Your Experience
+              {t.booking.title}
             </h1>
             <p className="text-gray-500 dark:text-white/60 text-lg max-w-xl mx-auto">
-              Complete your booking in just a few steps
+              {t.booking.subtitle}
             </p>
           </motion.div>
         )}

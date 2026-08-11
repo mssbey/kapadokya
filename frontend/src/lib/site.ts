@@ -1,3 +1,5 @@
+import type { Dictionary, TourSlug } from '@/lib/i18n';
+
 export const SITE = {
   name: 'Discovery Cappadocia',
   legalName: 'Cappadocia Kaphera Travel Agency',
@@ -6,144 +8,274 @@ export const SITE = {
   email: 'info@kapheratravel.com',
   address: 'Cappadocia, Nevşehir, Türkiye',
   tursabNumber: '18577',
-  whatsappMessage:
-    'Hello 👋 Welcome to Discovery Cappadocia!\nI would like to get information about Cappadocia tours.',
 } as const;
 
-export function whatsappUrl(message: string = SITE.whatsappMessage) {
+export function whatsappUrl(message: string) {
   return `https://wa.me/${SITE.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
 }
 
-export type CatalogTour = {
-  slug: string;
+/** Stable, language-independent category keys used for filtering and icons. */
+export type CategoryKey =
+  | 'Balloon'
+  | 'Daily Tour'
+  | 'Private Tour'
+  | 'Adventure'
+  | 'Cultural'
+  | 'Package'
+  | 'Transfer';
+
+/** Filter order for the category chips on /tours. */
+export const CATEGORY_KEYS: CategoryKey[] = [
+  'Balloon',
+  'Daily Tour',
+  'Private Tour',
+  'Adventure',
+  'Cultural',
+  'Package',
+  'Transfer',
+];
+
+/**
+ * Everything about a tour that does not change with language. The copy
+ * (title, description, highlights…) lives in the locale dictionaries and is
+ * merged in by `getCatalog`.
+ */
+type TourBase = {
+  slug: TourSlug;
+  categoryKey: CategoryKey;
+  image: string;
+  /** Per-person price in EUR, except for private/vehicle products where the
+   *  price covers the whole group — the dictionary copy says which. */
+  price: number;
+  /** Shown on the homepage grid. Everything else lives on /tours. */
+  featured?: boolean;
+};
+
+export const TOUR_BASE: TourBase[] = [
+  // ── Balloon ────────────────────────────────────────────────────────────
+  {
+    slug: 'cappadocia-hot-air-balloon',
+    categoryKey: 'Balloon',
+    image: '/images/cappadocia-hero-signature.png',
+    price: 49,
+    featured: true,
+  },
+  {
+    slug: 'cappadocia-balloon-comfort',
+    categoryKey: 'Balloon',
+    image: '/images/cappadocia-sunrise-section.png',
+    price: 75,
+    featured: true,
+  },
+  {
+    slug: 'cappadocia-balloon-private',
+    categoryKey: 'Balloon',
+    image: '/images/cappadocia-blue-hour-section.png',
+    price: 750,
+  },
+  {
+    slug: 'soganli-valley-balloon',
+    categoryKey: 'Balloon',
+    image: '/images/cappadocia-rose-valley-section.png',
+    price: 160,
+  },
+  {
+    slug: 'cappadocia-balloon-watching',
+    categoryKey: 'Balloon',
+    image: '/images/cappadocia-sunrise-section.png',
+    price: 30,
+  },
+
+  // ── Daily tours ────────────────────────────────────────────────────────
+  {
+    slug: 'cappadocia-red-tour',
+    categoryKey: 'Daily Tour',
+    image: '/images/cappadocia-tours-hero.png',
+    price: 40,
+    featured: true,
+  },
+  {
+    slug: 'cappadocia-green-tour',
+    categoryKey: 'Daily Tour',
+    image: '/images/cappadocia-sunrise-section.png',
+    price: 50,
+    featured: true,
+  },
+  {
+    slug: 'cappadocia-blue-tour',
+    categoryKey: 'Daily Tour',
+    image: '/images/cappadocia-routes-aerial.png',
+    price: 110,
+  },
+  {
+    slug: 'cappadocia-mix-tour',
+    categoryKey: 'Daily Tour',
+    image: '/images/cappadocia-rose-valley-section.png',
+    price: 50,
+  },
+
+  // ── Private tours (price is for the whole vehicle) ──────────────────────
+  {
+    slug: 'cappadocia-private-red-tour',
+    categoryKey: 'Private Tour',
+    image: '/images/cappadocia-tours-hero.png',
+    price: 140,
+  },
+  {
+    slug: 'cappadocia-private-green-tour',
+    categoryKey: 'Private Tour',
+    image: '/images/cappadocia-sunrise-section.png',
+    price: 160,
+  },
+  {
+    slug: 'cappadocia-private-mix-tour',
+    categoryKey: 'Private Tour',
+    image: '/images/cappadocia-rose-valley-section.png',
+    price: 150,
+  },
+
+  // ── Adventure ──────────────────────────────────────────────────────────
+  {
+    slug: 'cappadocia-sunset-atv-tour',
+    categoryKey: 'Adventure',
+    image: '/images/cappadocia-atv-tour.png',
+    price: 20,
+    featured: true,
+  },
+  {
+    slug: 'cappadocia-horse-riding',
+    categoryKey: 'Adventure',
+    image: '/images/cappadocia-blue-hour-section.png',
+    price: 15,
+    featured: true,
+  },
+  {
+    slug: 'cappadocia-jeep-safari',
+    categoryKey: 'Adventure',
+    image: '/images/cappadocia-routes-aerial.png',
+    price: 30,
+  },
+  {
+    slug: 'cappadocia-camel-riding',
+    categoryKey: 'Adventure',
+    image: '/images/cappadocia-rose-valley-section.png',
+    price: 40,
+  },
+  {
+    slug: 'cappadocia-classic-car-tour',
+    categoryKey: 'Adventure',
+    image: '/images/cappadocia-tours-hero.png',
+    price: 50,
+  },
+
+  // ── Cultural ───────────────────────────────────────────────────────────
+  {
+    slug: 'cappadocia-turkish-night',
+    categoryKey: 'Cultural',
+    image: '/images/cappadocia-blue-hour-section.png',
+    price: 45,
+    featured: true,
+  },
+  {
+    slug: 'cappadocia-whirling-dervish',
+    categoryKey: 'Cultural',
+    image: '/images/cappadocia-blue-hour-section.png',
+    price: 20,
+  },
+  {
+    slug: 'cappadocia-pottery-workshop',
+    categoryKey: 'Cultural',
+    image: '/images/cappadocia-tours-hero.png',
+    price: 15,
+  },
+  {
+    slug: 'cappadocia-turkish-bath',
+    categoryKey: 'Cultural',
+    image: '/images/cappadocia-blue-hour-section.png',
+    price: 30,
+  },
+  {
+    slug: 'cappadocia-photoshoot',
+    categoryKey: 'Cultural',
+    image: '/images/cappadocia-rose-valley-section.png',
+    price: 180,
+  },
+
+  // ── Multi-day packages ─────────────────────────────────────────────────
+  {
+    slug: 'cappadocia-2day-package',
+    categoryKey: 'Package',
+    image: '/images/cappadocia-hero-signature.png',
+    price: 300,
+    featured: true,
+  },
+  {
+    slug: 'cappadocia-3day-package',
+    categoryKey: 'Package',
+    image: '/images/cappadocia-routes-aerial.png',
+    price: 495,
+  },
+
+  // ── Transfers ──────────────────────────────────────────────────────────
+  {
+    slug: 'cappadocia-airport-transfer',
+    categoryKey: 'Transfer',
+    image: '/images/cappadocia-routes-aerial.png',
+    price: 90,
+  },
+  {
+    slug: 'kayseri-airport-private-transfer',
+    categoryKey: 'Transfer',
+    image: '/images/cappadocia-routes-aerial.png',
+    price: 100,
+  },
+  {
+    slug: 'nevsehir-airport-shuttle',
+    categoryKey: 'Transfer',
+    image: '/images/cappadocia-tours-hero.png',
+    price: 12.5,
+  },
+  {
+    slug: 'kayseri-airport-shuttle',
+    categoryKey: 'Transfer',
+    image: '/images/cappadocia-tours-hero.png',
+    price: 12.5,
+  },
+];
+
+export type CatalogTour = TourBase & {
   title: string;
+  /** Translated category label, for display only. Filter on `categoryKey`. */
   category: string;
   description: string;
-  image: string;
-  price: number;
   duration: string;
   startTime: string;
-  rating?: string;
   pickup: string;
   languages: string;
-  badge?: string;
+  badge: string;
   highlights: string[];
   included: string[];
   notIncluded: string[];
 };
 
-export const CATALOG: CatalogTour[] = [
-  {
-    slug: 'cappadocia-hot-air-balloon',
-    title: 'Göreme Hot Air Balloon Flight',
-    category: 'Balloon',
-    description: 'Watch Cappadocia wake beneath you on a professionally operated sunrise flight over its valleys and fairy chimneys.',
-    image: '/images/cappadocia-hero-signature.png',
-    price: 250,
-    duration: '3–4 hours',
-    startTime: 'Before sunrise',
-    pickup: 'Selected hotels included',
-    languages: 'English, Turkish',
-    badge: 'Signature experience',
-    highlights: ['Sunrise views over Cappadocia', 'Flight with a licensed operator', 'Hotel transfer on selected packages', 'Post-flight celebration'],
-    included: ['Flight insurance', 'Pre-flight briefing', 'Hotel pickup where stated', 'Flight certificate'],
-    notIncluded: ['Personal expenses', 'Optional photos', 'Gratuities'],
-  },
-  {
-    slug: 'cappadocia-sunset-atv-tour',
-    title: 'Sunset ATV Tour',
-    category: 'Adventure',
-    description: 'Ride through Cappadocia’s sculpted valleys and stop at panoramic viewpoints as the landscape turns gold.',
-    image: '/images/cappadocia-atv-tour.png',
-    price: 45,
-    duration: '2 hours',
-    startTime: 'Before sunset',
-    pickup: 'Selected hotels included',
-    languages: 'English, Turkish',
-    badge: 'Sunset favourite',
-    highlights: ['Guided valley route', 'Sunset viewpoint stop', 'Beginner-friendly briefing', 'Helmet provided'],
-    included: ['ATV and fuel', 'Safety equipment', 'Local guide', 'Hotel pickup where stated'],
-    notIncluded: ['Drinks', 'Personal expenses', 'Gratuities'],
-  },
-  {
-    slug: 'cappadocia-horse-riding',
-    title: 'Sunrise or Sunset Horse Riding',
-    category: 'Adventure',
-    description: 'Explore quiet trails and rock formations at the most atmospheric time of day with an experienced local guide.',
-    image: '/images/cappadocia-blue-hour-section.png',
-    price: 50,
-    duration: '2 hours',
-    startTime: 'Sunrise or sunset',
-    pickup: 'Selected hotels included',
-    languages: 'English, Turkish',
-    highlights: ['Small-group trail ride', 'Scenic photo stops', 'Safety briefing', 'Routes matched to conditions'],
-    included: ['Horse and equipment', 'Guide', 'Helmet', 'Hotel pickup where stated'],
-    notIncluded: ['Personal expenses', 'Photos', 'Gratuities'],
-  },
-  {
-    slug: 'cappadocia-jeep-safari',
-    title: 'Cappadocia Jeep Safari',
-    category: 'Adventure',
-    description: 'Reach hidden viewpoints and rugged valleys on an energetic off-road Cappadocia experience.',
-    image: '/images/cappadocia-routes-aerial.png',
-    price: 65,
-    duration: '2–3 hours',
-    startTime: 'Morning or sunset',
-    pickup: 'Selected hotels included',
-    languages: 'English, Turkish',
-    highlights: ['Off-road valley route', 'Panoramic stops', 'Local driver-guide', 'Flexible departure options'],
-    included: ['Jeep and driver', 'Fuel', 'Hotel pickup where stated', 'Insurance'],
-    notIncluded: ['Food and drinks', 'Personal expenses', 'Gratuities'],
-  },
-  {
-    slug: 'cappadocia-green-tour',
-    title: 'Cappadocia Green Tour',
-    category: 'Daily Tour',
-    description: 'A full-day guided route through southern Cappadocia, including dramatic viewpoints and underground heritage.',
-    image: '/images/cappadocia-sunrise-section.png',
-    price: 75,
-    duration: '8–9 hours',
-    startTime: '09:30 approx.',
-    pickup: 'Hotel pickup included',
-    languages: 'English',
-    highlights: ['Underground city', 'Ihlara region', 'Panoramic viewpoints', 'Professional guide'],
-    included: ['Licensed guide', 'Transport', 'Lunch', 'Museum entries stated in program'],
-    notIncluded: ['Drinks', 'Personal expenses', 'Gratuities'],
-  },
-  {
-    slug: 'cappadocia-red-tour',
-    title: 'Cappadocia Red Tour',
-    category: 'Daily Tour',
-    description: 'Discover northern Cappadocia’s celebrated open-air landscapes, viewpoints and cultural stops in one day.',
-    image: '/images/cappadocia-tours-hero.png',
-    price: 70,
-    duration: '7–8 hours',
-    startTime: '09:30 approx.',
-    pickup: 'Hotel pickup included',
-    languages: 'English',
-    highlights: ['Göreme region highlights', 'Fairy chimney valleys', 'Local cultural stop', 'Professional guide'],
-    included: ['Licensed guide', 'Transport', 'Lunch', 'Museum entries stated in program'],
-    notIncluded: ['Drinks', 'Personal expenses', 'Gratuities'],
-  },
-  {
-    slug: 'cappadocia-airport-transfer',
-    title: 'Cappadocia Airport Transfer',
-    category: 'Transfer',
-    description: 'A pre-booked transfer between Kayseri or Nevşehir airport and your Cappadocia hotel.',
-    image: '/images/cappadocia-routes-aerial.png',
-    price: 20,
-    duration: '45–90 min',
-    startTime: 'Matched to your flight',
-    pickup: 'Airport or hotel pickup',
-    languages: 'English, Turkish',
-    highlights: ['Flight-aware scheduling', 'Door-to-door service', 'Luggage included', 'Support by WhatsApp'],
-    included: ['Vehicle', 'Driver', 'Standard luggage', 'One-way transfer'],
-    notIncluded: ['Extra stops', 'Oversize baggage unless arranged', 'Gratuities'],
-  },
-];
+/** Merges the language-independent tour data with the active locale's copy. */
+export function getCatalog(dict: Dictionary): CatalogTour[] {
+  return TOUR_BASE.map((base) => ({ ...base, ...dict.tours[base.slug] }));
+}
 
-export const BALLOON_OPTIONS = [
-  { name: 'Standard Flight', detail: 'A classic sunrise flight in a shared basket.' },
-  { name: 'Comfort Flight', detail: 'More personal space with a smaller group.' },
-  { name: 'Private Flight', detail: 'A private basket and tailored celebration.' },
-] as const;
+/** The homepage subset — one or two headline products per category. */
+export function getFeatured(dict: Dictionary): CatalogTour[] {
+  return getCatalog(dict).filter((tour) => tour.featured);
+}
+
+export function getTour(dict: Dictionary, slug: string): CatalogTour | undefined {
+  return getCatalog(dict).find((tour) => tour.slug === slug);
+}
+
+/** Same-category suggestions first, topped up with anything else. */
+export function getRelated(dict: Dictionary, tour: CatalogTour, limit = 4): CatalogTour[] {
+  const others = getCatalog(dict).filter((item) => item.slug !== tour.slug);
+  const sameCategory = others.filter((item) => item.categoryKey === tour.categoryKey);
+  const rest = others.filter((item) => item.categoryKey !== tour.categoryKey);
+  return [...sameCategory, ...rest].slice(0, limit);
+}

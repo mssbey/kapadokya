@@ -6,24 +6,25 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { useI18n } from '@/components/I18nProvider';
 import { cn } from '@/lib/utils';
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 /**
- * Where to land after signing in. Pages that bounce a signed-out visitor here
- * pass `?next=`, so an admin who asked for /admin gets /admin back instead of
- * the home page. Read straight off the URL rather than via useSearchParams so
+ * Where a page that bounced a signed-out visitor here wants them sent back to,
+ * from `?next=`. Read straight off the URL rather than via useSearchParams so
  * this page keeps prerendering without a Suspense boundary.
  *
  * Only same-origin paths are honoured — anything else (a full URL, or the
- * protocol-relative `//evil.com`) falls back home, so the param cannot be used
- * to bounce someone off the site.
+ * protocol-relative `//evil.com`) is ignored, so the param cannot be used to
+ * bounce someone off the site. `null` means "no destination asked for", which
+ * the caller turns into the locale-aware home page.
  */
-function nextPath(): string {
-  if (typeof window === 'undefined') return '/';
+function nextPath(): string | null {
+  if (typeof window === 'undefined') return null;
   const next = new URLSearchParams(window.location.search).get('next');
-  if (!next || !next.startsWith('/') || next.startsWith('//')) return '/';
+  if (!next || !next.startsWith('/') || next.startsWith('//')) return null;
   return next;
 }
 
@@ -33,13 +34,14 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading } = useAuthStore();
   const router = useRouter();
+  const { href } = useI18n();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     try {
       await login(email, password);
       toast.success('Welcome back!');
-      router.push(nextPath());
+      router.push(nextPath() ?? href('/'));
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Invalid credentials');
     }
@@ -57,7 +59,7 @@ export default function LoginPage() {
       >
         {/* Header */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
+          <Link href={href('/')} className="inline-block mb-6">
             <Image
               src="/logo.png"
               alt="DiscoveryCappadocia"
@@ -132,7 +134,7 @@ export default function LoginPage() {
 
         <p className="text-center text-gray-400 dark:text-white/40 text-sm mt-6">
           Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-emerald-500 dark:text-emerald-400 hover:text-emerald-400 dark:hover:text-emerald-300 transition-colors">
+          <Link href={href('/register')} className="text-emerald-500 dark:text-emerald-400 hover:text-emerald-400 dark:hover:text-emerald-300 transition-colors">
             Create one
           </Link>
         </p>

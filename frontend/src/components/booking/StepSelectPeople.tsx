@@ -4,9 +4,11 @@ import { motion } from 'framer-motion';
 import { useBookingStore } from '@/store/bookingStore';
 import { cn } from '@/lib/utils';
 import { Minus, Plus, Crown } from 'lucide-react';
+import { useI18n } from '@/components/I18nProvider';
 
 export function StepSelectPeople() {
   const { adults, children, isPrivate, setPeople, nextStep, prevStep, selectedTour } = useBookingStore();
+  const { t, fill } = useI18n();
 
   const maxCapacity = selectedTour?.maxCapacity || 20;
   const totalPeople = adults + children;
@@ -29,11 +31,11 @@ export function StepSelectPeople() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white">Select Guests</h2>
-          <p className="text-gray-500 dark:text-white/50 text-sm mt-1">How many people are joining?</p>
+          <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white">{t.booking.people.heading}</h2>
+          <p className="text-gray-500 dark:text-white/50 text-sm mt-1">{t.booking.people.subtitle}</p>
         </div>
         <button onClick={prevStep} className="glass-button text-sm">
-          ← Back
+          {t.booking.back}
         </button>
       </div>
 
@@ -42,8 +44,8 @@ export function StepSelectPeople() {
         <div className="glass-card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white text-lg">Adults</h3>
-              <p className="text-gray-400 dark:text-white/40 text-sm">Age 13+</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white text-lg">{t.booking.people.adults}</h3>
+              <p className="text-gray-400 dark:text-white/40 text-sm">{t.booking.people.adultsAge}</p>
             </div>
             <div className="flex items-center gap-4">
               <button
@@ -86,8 +88,8 @@ export function StepSelectPeople() {
         <div className="glass-card p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white text-lg">Children</h3>
-              <p className="text-gray-400 dark:text-white/40 text-sm">Age 4-12 (50% discount)</p>
+              <h3 className="font-semibold text-gray-900 dark:text-white text-lg">{t.booking.people.children}</h3>
+              <p className="text-gray-400 dark:text-white/40 text-sm">{t.booking.people.childrenAge}</p>
             </div>
             <div className="flex items-center gap-4">
               <button
@@ -148,9 +150,9 @@ export function StepSelectPeople() {
                 )} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white text-lg">Private Experience</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white text-lg">{t.booking.people.privateTitle}</h3>
                 <p className="text-gray-400 dark:text-white/40 text-sm">
-                  Exclusive tour just for your group (+50%)
+                  {t.booking.people.privateSubtitle}
                 </p>
               </div>
             </div>
@@ -171,13 +173,13 @@ export function StepSelectPeople() {
 
         {/* Capacity Info */}
         <p className="text-center text-gray-400 dark:text-white/30 text-sm">
-          Maximum {maxCapacity} guests per tour
+          {fill(t.booking.people.capacity, { count: maxCapacity })}
         </p>
       </div>
 
       <div className="mt-6 flex justify-end">
         <button onClick={nextStep} className="btn-primary">
-          Continue →
+          {t.booking.continue}
         </button>
       </div>
     </div>

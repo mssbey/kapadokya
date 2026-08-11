@@ -1,41 +1,48 @@
 'use client';
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useI18n } from '@/components/I18nProvider';
 
 type Currency = 'EUR' | 'USD' | 'GBP' | 'TRY';
-type Locale = 'EN' | 'TR' | 'ES' | 'IT' | 'RU';
 
 const rates: Record<Currency, number> = { EUR: 1, USD: 1.09, GBP: 0.86, TRY: 38 };
-const symbols: Record<Currency, string> = { EUR: '€', USD: '$', GBP: '£', TRY: '₺' };
 
 type Preferences = {
   currency: Currency;
-  locale: Locale;
   setCurrency: (currency: Currency) => void;
-  setLocale: (locale: Locale) => void;
+  /** Formats a EUR amount in the visitor's currency and language. */
   price: (eur: number) => string;
 };
 
 const PreferencesContext = createContext<Preferences | null>(null);
 
+// Language now lives in the URL (see I18nProvider); this provider only owns currency.
 export function SitePreferences({ children }: { children: React.ReactNode }) {
+  const { tag } = useI18n();
   const [currency, setCurrency] = useState<Currency>('EUR');
-  const [locale, setLocale] = useState<Locale>('EN');
 
   useEffect(() => {
     const savedCurrency = localStorage.getItem('dc_currency') as Currency | null;
-    const savedLocale = localStorage.getItem('dc_locale') as Locale | null;
     if (savedCurrency && savedCurrency in rates) setCurrency(savedCurrency);
-    if (savedLocale && ['EN', 'TR', 'ES', 'IT', 'RU'].includes(savedLocale)) setLocale(savedLocale);
   }, []);
 
-  const value = useMemo<Preferences>(() => ({
-    currency,
-    locale,
-    setCurrency: (next) => { setCurrency(next); localStorage.setItem('dc_currency', next); },
-    setLocale: (next) => { setLocale(next); localStorage.setItem('dc_locale', next); },
-    price: (eur) => `${symbols[currency]}${Math.round(eur * rates[currency]).toLocaleString('en-US')}`,
-  }), [currency, locale]);
+  const value = useMemo<Preferences>(
+    () => ({
+      currency,
+      setCurrency: (next) => {
+        setCurrency(next);
+        localStorage.setItem('dc_currency', next);
+      },
+      price: (eur) =>
+        new Intl.NumberFormat(tag, {
+          style: 'currency',
+          currency,
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        }).format(Math.round(eur * rates[currency])),
+    }),
+    [currency, tag],
+  );
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
 }
@@ -45,4 +52,3 @@ export function useSitePreferences() {
   if (!value) throw new Error('useSitePreferences must be used within SitePreferences');
   return value;
 }
-

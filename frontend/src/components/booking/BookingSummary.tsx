@@ -3,7 +3,9 @@
 import { motion } from 'framer-motion';
 import { useBookingStore } from '@/store/bookingStore';
 import { formatPrice, formatDate, getCategoryIcon } from '@/lib/utils';
-import { Calendar, Users, Sparkles, MapPin } from 'lucide-react';
+import { Calendar, Users, Sparkles } from 'lucide-react';
+import { useI18n } from '@/components/I18nProvider';
+import { useGuestLabel } from '@/components/booking/useGuestLabel';
 
 export function BookingSummary() {
   const {
@@ -15,6 +17,8 @@ export function BookingSummary() {
     selectedUpsells,
     totalPrice,
   } = useBookingStore();
+  const { t, tag, fill } = useI18n();
+  const guestLabel = useGuestLabel();
 
   if (!selectedTour) return null;
 
@@ -28,7 +32,7 @@ export function BookingSummary() {
     >
       <h3 className="font-display text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
         <Sparkles className="w-5 h-5 text-emerald-400" />
-        Booking Summary
+        {t.booking.summary.title}
       </h3>
 
       {/* Tour */}
@@ -46,7 +50,7 @@ export function BookingSummary() {
       {selectedDate && (
         <div className="flex items-center gap-3 text-sm">
           <Calendar className="w-4 h-4 text-emerald-400" />
-          <span className="text-gray-600 dark:text-white/70">{formatDate(selectedDate)}</span>
+          <span className="text-gray-600 dark:text-white/70">{formatDate(selectedDate, tag)}</span>
         </div>
       )}
 
@@ -54,11 +58,7 @@ export function BookingSummary() {
       {(adults > 0 || children > 0) && (
         <div className="flex items-center gap-3 text-sm">
           <Users className="w-4 h-4 text-emerald-400" />
-          <span className="text-gray-600 dark:text-white/70">
-            {adults} Adult{adults > 1 ? 's' : ''}
-            {children > 0 && `, ${children} Child${children > 1 ? 'ren' : ''}`}
-            {isPrivate && ' (Private)'}
-          </span>
+          <span className="text-gray-600 dark:text-white/70">{guestLabel(adults, children, isPrivate)}</span>
         </div>
       )}
 
@@ -66,30 +66,30 @@ export function BookingSummary() {
       <div className="space-y-2 pt-4 border-t border-gray-200 dark:border-white/10">
         <div className="flex justify-between text-sm">
           <span className="text-gray-400 dark:text-white/50">
-            {adults}x Adult × {formatPrice(unitPrice)}
+            {fill(t.booking.summary.adultsLine, { count: adults, price: formatPrice(unitPrice, 'EUR', tag) })}
           </span>
-          <span className="text-gray-600 dark:text-white/70">{formatPrice(adults * unitPrice)}</span>
+          <span className="text-gray-600 dark:text-white/70">{formatPrice(adults * unitPrice, 'EUR', tag)}</span>
         </div>
         {children > 0 && (
           <div className="flex justify-between text-sm">
-            <span className="text-white/50">
-              {children}x Child × {formatPrice(unitPrice * 0.5)}
+            <span className="text-gray-400 dark:text-white/50">
+              {fill(t.booking.summary.childrenLine, { count: children, price: formatPrice(unitPrice * 0.5, 'EUR', tag) })}
             </span>
-            <span className="text-white/70">
-              {formatPrice(children * unitPrice * 0.5)}
+            <span className="text-gray-600 dark:text-white/70">
+              {formatPrice(children * unitPrice * 0.5, 'EUR', tag)}
             </span>
           </div>
         )}
         {isPrivate && (
           <div className="flex justify-between text-sm">
-            <span className="text-white/50">Private tour upgrade</span>
-            <span className="text-white/70">+50%</span>
+            <span className="text-gray-400 dark:text-white/50">{t.booking.summary.privateUpgrade}</span>
+            <span className="text-gray-600 dark:text-white/70">+50%</span>
           </div>
         )}
         {selectedUpsells.map((u) => (
           <div key={u.id} className="flex justify-between text-sm">
             <span className="text-gray-400 dark:text-white/50">{u.name}</span>
-            <span className="text-gray-600 dark:text-white/70">{formatPrice(u.price)}</span>
+            <span className="text-gray-600 dark:text-white/70">{formatPrice(u.price, 'EUR', tag)}</span>
           </div>
         ))}
       </div>
@@ -97,25 +97,25 @@ export function BookingSummary() {
       {/* Total */}
       <div className="pt-4 border-t border-gray-200 dark:border-white/10">
         <div className="flex justify-between items-center">
-          <span className="text-gray-500 dark:text-white/60 font-medium">Total</span>
+          <span className="text-gray-500 dark:text-white/60 font-medium">{t.booking.summary.total}</span>
           <motion.span
             key={totalPrice}
             initial={{ scale: 1.2, color: '#34d399' }}
             animate={{ scale: 1, color: 'currentColor' }}
             className="text-2xl font-bold text-gray-900 dark:text-white"
           >
-            {formatPrice(totalPrice)}
+            {formatPrice(totalPrice, 'EUR', tag)}
           </motion.span>
         </div>
-        <p className="text-gray-400 dark:text-white/30 text-xs mt-1 text-right">Taxes included</p>
+        <p className="text-gray-400 dark:text-white/30 text-xs mt-1 text-right">{t.booking.summary.taxesIncluded}</p>
       </div>
 
       {/* Mobile Summary Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-dark/90 backdrop-blur-xl border-t border-gray-200 dark:border-white/10 p-4">
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div>
-            <p className="text-gray-400 dark:text-white/50 text-xs">Total</p>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">{formatPrice(totalPrice)}</p>
+            <p className="text-gray-400 dark:text-white/50 text-xs">{t.booking.summary.total}</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-white">{formatPrice(totalPrice, 'EUR', tag)}</p>
           </div>
         </div>
       </div>

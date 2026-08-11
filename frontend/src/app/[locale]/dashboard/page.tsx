@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { useI18n } from '@/components/I18nProvider';
 import { api } from '@/lib/api';
 import { Booking } from '@/types';
 import { formatPrice, formatDate } from '@/lib/utils';
@@ -38,13 +39,17 @@ const statusIcons: Record<string, React.ReactNode> = {
 export default function DashboardPage() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const router = useRouter();
+  // Every push below goes through href() so the visitor keeps the language
+  // they were reading — a bare '/login' would bounce through the middleware
+  // and land on whatever the cookie/Accept-Language says instead.
+  const { href } = useI18n();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/login');
+      router.push(href('/login'));
       return;
     }
     loadBookings();
@@ -68,7 +73,7 @@ export default function DashboardPage() {
 
   function handleLogout() {
     logout();
-    router.push('/');
+    router.push(href('/'));
   }
 
   return (
@@ -88,7 +93,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.push('/booking')}
+              onClick={() => router.push(href('/booking'))}
               className="btn-primary text-sm !py-2"
             >
               Book New Tour
@@ -163,7 +168,7 @@ export default function DashboardPage() {
               </p>
               {activeTab === 'upcoming' && (
                 <button
-                  onClick={() => router.push('/tours')}
+                  onClick={() => router.push(href('/tours'))}
                   className="text-emerald-400 hover:text-emerald-300 text-sm"
                 >
                   Browse our experiences

@@ -6,13 +6,14 @@ import { useBookingStore } from '@/store/bookingStore';
 import { api } from '@/lib/api';
 import { formatPrice, cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { useI18n } from '@/components/I18nProvider';
 import type { Availability } from '@/types';
-
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 export function StepSelectDate() {
   const { selectedTour, selectedDate, setDate, nextStep, prevStep } = useBookingStore();
+  const { t, tag } = useI18n();
+  const DAYS = t.booking.date.days;
+  const MONTHS = t.booking.date.months;
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
@@ -101,11 +102,11 @@ export function StepSelectDate() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white">Select Date</h2>
-          <p className="text-gray-500 dark:text-white/50 text-sm mt-1">Choose your preferred travel date</p>
+          <h2 className="font-display text-2xl font-bold text-gray-900 dark:text-white">{t.booking.date.heading}</h2>
+          <p className="text-gray-500 dark:text-white/50 text-sm mt-1">{t.booking.date.subtitle}</p>
         </div>
         <button onClick={prevStep} className="glass-button text-sm">
-          ← Back
+          {t.booking.back}
         </button>
       </div>
 
@@ -191,7 +192,7 @@ export function StepSelectDate() {
                   <span className="font-medium">{day}</span>
                   {isAvailable && !isSelected && (
                     <span className="text-[9px] text-emerald-400/70 mt-0.5">
-                      {formatPrice(price)}
+                      {formatPrice(price, 'EUR', tag)}
                     </span>
                   )}
                   {isLow && !isSelected && (
@@ -207,11 +208,11 @@ export function StepSelectDate() {
         <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-white/10 text-xs text-gray-400 dark:text-white/40">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-emerald-500" />
-            Selected
+            {t.booking.date.selected}
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
-            Low availability
+            {t.booking.date.lowAvailability}
           </div>
         </div>
       </div>
@@ -226,7 +227,7 @@ export function StepSelectDate() {
             !selectedDate && 'opacity-50 cursor-not-allowed'
           )}
         >
-          Continue →
+          {t.booking.continue}
         </button>
       </div>
     </div>
