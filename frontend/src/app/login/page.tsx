@@ -10,6 +10,23 @@ import { cn } from '@/lib/utils';
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+/**
+ * Where to land after signing in. Pages that bounce a signed-out visitor here
+ * pass `?next=`, so an admin who asked for /admin gets /admin back instead of
+ * the home page. Read straight off the URL rather than via useSearchParams so
+ * this page keeps prerendering without a Suspense boundary.
+ *
+ * Only same-origin paths are honoured — anything else (a full URL, or the
+ * protocol-relative `//evil.com`) falls back home, so the param cannot be used
+ * to bounce someone off the site.
+ */
+function nextPath(): string {
+  if (typeof window === 'undefined') return '/';
+  const next = new URLSearchParams(window.location.search).get('next');
+  if (!next || !next.startsWith('/') || next.startsWith('//')) return '/';
+  return next;
+}
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +39,7 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast.success('Welcome back!');
-      router.push('/');
+      router.push(nextPath());
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Invalid credentials');
     }
@@ -111,13 +128,6 @@ export default function LoginPage() {
             )}
           </button>
 
-          {/* Admin hint */}
-          <div className="p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
-            <p className="text-gray-400 dark:text-white/40 text-xs text-center">
-              <strong className="text-gray-500 dark:text-white/60">Demo Admin:</strong>{' '}
-              admin@kapheratravel.com / Admin123!
-            </p>
-          </div>
         </form>
 
         <p className="text-center text-gray-400 dark:text-white/40 text-sm mt-6">

@@ -125,7 +125,9 @@ export default function AdminPage() {
   useEffect(() => {
     if (!checkedAuth) return;
     if (!user) {
-      router.replace('/login');
+      // Hand /admin to the login page so it comes back here afterwards; without
+      // this an admin signs in and lands on the home page.
+      router.replace('/login?next=/admin');
     } else if (user.role !== 'ADMIN') {
       toast.error('Admin access required');
       router.replace('/');
