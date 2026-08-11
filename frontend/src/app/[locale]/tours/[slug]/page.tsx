@@ -67,10 +67,13 @@ export default function TourPage({ params }: Props) {
   };
 
   return (
-    <div className="bg-[#f8f6f1] pb-28 pt-20 dark:bg-dark lg:pb-0">
+    <div className="bg-[#f8f6f1] pb-28 dark:bg-dark lg:pb-0">
       <TrackEvent name="tour_view" data={{ tour_slug: tour.slug, tour_name: tour.title }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
-      <section className="relative min-h-[500px] overflow-hidden bg-stone-900">
+      {/* No top padding on the wrapper: the hero has to run under the fixed
+          header, otherwise the header floats over the light page background
+          and its white text becomes unreadable. */}
+      <section className="relative min-h-[580px] overflow-hidden bg-stone-900 pt-20">
         <Image src={tour.image} alt={tour.title} fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/20" />
         <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl px-4 pb-12 text-white sm:px-6 lg:px-8">

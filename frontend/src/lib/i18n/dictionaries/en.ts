@@ -143,7 +143,7 @@ export const en = {
   map: {
     eyebrow: 'Explore the Region',
     heading: 'Tour Routes & Destinations',
-    subtitle: 'Discover the magical locations you’ll visit on our tours',
+    subtitle: 'Discover the magical locations you’ll visit on our tours.',
     stopsTitle: 'Tour Stops',
     directions: 'Get directions',
     fitAll: 'Show all stops',
@@ -330,7 +330,7 @@ export const en = {
       adults: 'Adults',
       adultsAge: 'Age 13+',
       children: 'Children',
-      childrenAge: 'Age 4-12 (50% discount)',
+      childrenAge: 'Age 4–12 (50% discount)',
       privateTitle: 'Private Experience',
       privateSubtitle: 'Exclusive tour just for your group (+50%)',
       capacity: 'Maximum {count} guests per tour',

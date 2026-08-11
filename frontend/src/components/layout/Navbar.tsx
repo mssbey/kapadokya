@@ -3,17 +3,33 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Menu, MessageCircle, X } from 'lucide-react';
 import { SITE, whatsappUrl } from '@/lib/site';
 import { useSitePreferences } from '@/components/SitePreferences';
 import { useI18n } from '@/components/I18nProvider';
 import { LOCALES, LOCALE_NAMES, type Locale } from '@/lib/i18n';
 
+/** Locale prefix (`/tr`, `/ru`…) so route checks work in every language. */
+const LOCALE_PREFIX = new RegExp(`^/(${LOCALES.join('|')})(?=/|$)`);
+
+/**
+ * Only these routes put a dark, full-bleed hero behind the fixed header. On
+ * every other page the header sits on the light `#f8f6f1` background, where
+ * white nav text is invisible — those get the solid treatment instead.
+ */
+function hasDarkHero(pathname: string) {
+  const route = pathname.replace(LOCALE_PREFIX, '') || '/';
+  return route === '/' || route === '/tours' || /^\/tours\/[^/]+$/.test(route);
+}
+
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { currency, setCurrency } = useSitePreferences();
   const { t, locale, href, switchLocale } = useI18n();
+  const pathname = usePathname() || '/';
+  const transparent = hasDarkHero(pathname) && !scrolled && !open;
 
   const links: [string, string][] = [
     [t.nav.experiences, href('/#experiences')],
@@ -31,11 +47,11 @@ export function Navbar() {
   }, []);
 
   return (
-    <header className={`fixed inset-x-0 top-0 z-50 border-b transition ${scrolled || open ? 'border-stone-200/70 bg-white/95 text-stone-900 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-[#08110f]/95 dark:text-white' : 'border-white/10 bg-black/10 text-white backdrop-blur-sm'}`}>
+    <header className={`fixed inset-x-0 top-0 z-50 border-b transition ${transparent ? 'border-transparent bg-gradient-to-b from-black/60 via-black/30 to-transparent text-white' : 'border-stone-200/70 bg-white/95 text-stone-900 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-[#08110f]/95 dark:text-white'}`}>
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href={href('/')} aria-label={t.nav.homeAria}><Image src="/logo.png" width={165} height={48} alt="Discovery Cappadocia" priority className="h-auto w-[150px] sm:w-[165px]" /></Link>
         <nav className="hidden items-center gap-1 lg:flex" aria-label={t.nav.primaryNavAria}>
-          {links.map(([label, target]) => <Link key={label} href={target} className="rounded-lg px-3 py-2 text-sm font-semibold opacity-80 transition hover:bg-white/10 hover:opacity-100">{label}</Link>)}
+          {links.map(([label, target]) => <Link key={label} href={target} className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${transparent ? 'text-white/85 hover:bg-white/10 hover:text-white' : 'text-stone-700 hover:bg-stone-100 hover:text-stone-900 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white'}`}>{label}</Link>)}
         </nav>
         <div className="hidden items-center gap-2 md:flex">
           <label className="sr-only" htmlFor="site-language">{t.nav.languageLabel}</label>

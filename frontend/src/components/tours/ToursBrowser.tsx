@@ -31,8 +31,9 @@ export function ToursBrowser() {
   }, [catalog, category, search]);
 
   return (
-    <div className="min-h-screen bg-[#f8f6f1] pb-24 pt-20 dark:bg-dark">
-      <section className="relative flex min-h-[410px] items-end overflow-hidden bg-stone-900 pb-14 text-white">
+    <div className="min-h-screen bg-[#f8f6f1] pb-24 dark:bg-dark">
+      {/* The hero runs under the fixed header on purpose — see Navbar. */}
+      <section className="relative flex min-h-[490px] items-end overflow-hidden bg-stone-900 pb-14 pt-20 text-white">
         <Image src="/images/cappadocia-tours-hero.png" alt={t.toursPage.heroAlt} fill priority sizes="100vw" className="object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/25" />
         <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
