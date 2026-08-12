@@ -2,9 +2,13 @@ import type { Tour } from '@/types';
 import type { Locale } from '@/lib/i18n';
 
 function apiBaseUrl(): string {
-  const configured = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+  const configured = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || '/api';
   if (/^https?:\/\//i.test(configured)) return configured.replace(/\/$/, '');
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  // Same-origin API (Vercel rewrites route /api to the backend service, or
+  // NEXT_PUBLIC_API_URL/API_INTERNAL_URL is a relative path): server-side
+  // fetch needs an absolute URL, so resolve it against the deployment's own
+  // host. VERCEL_URL is set automatically on every Vercel deployment.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
   return `${siteUrl.replace(/\/$/, '')}/${configured.replace(/^\//, '')}`;
 }
 
