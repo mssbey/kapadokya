@@ -4,6 +4,11 @@ import type { Locale } from '@/lib/i18n';
 function apiBaseUrl(): string {
   const configured = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || '/api';
   if (/^https?:\/\//i.test(configured)) return configured.replace(/\/$/, '');
+  // This module is also imported by a few 'use client' components. In the
+  // browser a relative path resolves fine against the current origin (and
+  // server env vars like VERCEL_URL aren't inlined into the client bundle
+  // anyway), so only server-side rendering needs an absolute URL.
+  if (typeof window !== 'undefined') return configured;
   // Same-origin API (Vercel rewrites route /api to the backend service, or
   // NEXT_PUBLIC_API_URL/API_INTERNAL_URL is a relative path): server-side
   // fetch needs an absolute URL, so resolve it against the deployment's own

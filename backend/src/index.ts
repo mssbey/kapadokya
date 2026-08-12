@@ -1,5 +1,12 @@
-import dotenv from 'dotenv';
-dotenv.config();
+// Vercel's serverless bundler for this entrypoint doesn't reliably include
+// dotenv in the deployed function, and it's only needed for local `.env`
+// loading anyway — Vercel (and Render) inject env vars directly.
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require('dotenv').config();
+} catch {
+  // Not available in this runtime; process.env is already populated.
+}
 
 import express from 'express';
 import cors from 'cors';
