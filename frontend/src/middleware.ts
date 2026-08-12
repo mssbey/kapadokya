@@ -37,4 +37,6 @@ export const config = {
   // Skip Next internals, the API proxy and anything with a file extension
   // (images, favicon, robots.txt, sitemap.xml) so static assets are untouched.
   matcher: ['/((?!_next|api|health|ws|.*\\..*).*)'],
+  // The Vercel "services" deploy doesn't support Edge Functions.
+  runtime: 'nodejs',
 };
