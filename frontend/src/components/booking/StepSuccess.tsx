@@ -15,7 +15,7 @@ export function StepSuccess() {
   const { t, tag, href, fill } = useI18n();
   const guestLabel = useGuestLabel();
   const [reservationNumber, setReservationNumber] = useState('');
-  useEffect(() => setReservationNumber(sessionStorage.getItem('dc_last_booking_id') || ''), []);
+  useEffect(() => setReservationNumber(sessionStorage.getItem('dc_last_booking_number') || sessionStorage.getItem('dc_last_booking_id') || ''), []);
 
   return (
     <div className="max-w-2xl mx-auto text-center">
@@ -81,7 +81,7 @@ export function StepSuccess() {
           <div className="flex justify-between py-3">
             <span className="text-gray-500 dark:text-white/50">{t.booking.success.totalPaid}</span>
             <span className="text-2xl font-bold text-emerald-400">
-              {formatPrice(totalPrice, 'EUR', tag)}
+              {formatPrice(totalPrice, selectedTour?.currency || 'EUR', tag)}
             </span>
           </div>
         </div>

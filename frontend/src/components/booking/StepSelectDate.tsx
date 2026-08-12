@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
 import { useBookingStore } from '@/store/bookingStore';
 import { api } from '@/lib/api';
 import { formatPrice, cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useI18n } from '@/components/I18nProvider';
 import type { Availability } from '@/types';
 
@@ -18,42 +17,22 @@ export function StepSelectDate() {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!selectedTour) return;
 
     async function fetchAvailability() {
       setLoading(true);
+      setError(false);
       try {
         const res = await api.get(`/availability/${selectedTour!.id}`, {
           params: { month: currentMonth + 1, year: currentYear },
         });
         setAvailabilities(res.data.data);
       } catch {
-        // Generate demo availability
-        const demoAvail: Availability[] = [];
-        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-        const today = new Date();
-
-        for (let d = 1; d <= daysInMonth; d++) {
-          const date = new Date(currentYear, currentMonth, d);
-          if (date < today) continue;
-
-          const seatsTotal = selectedTour!.maxCapacity;
-          const seatsAvailable = Math.floor(Math.random() * seatsTotal) + 1;
-          const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-
-          demoAvail.push({
-            id: `demo-${d}`,
-            tourId: selectedTour!.id,
-            date: date.toISOString().split('T')[0],
-            seatsAvailable,
-            seatsTotal,
-            priceOverride: isWeekend ? selectedTour!.basePrice * 1.2 : null,
-            isBlocked: false,
-          });
-        }
-        setAvailabilities(demoAvail);
+        setAvailabilities([]);
+        setError(true);
       } finally {
         setLoading(false);
       }
@@ -154,7 +133,9 @@ export function StepSelectDate() {
         </div>
 
         {/* Calendar Grid */}
-        {loading ? (
+        {error ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-center text-amber-700 dark:text-amber-300"><AlertTriangle className="h-8 w-8" /><p>Live availability could not be loaded. No estimated dates are shown.</p></div>
+        ) : loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
           </div>
@@ -172,7 +153,7 @@ export function StepSelectDate() {
               const isAvailable = avail && avail.seatsAvailable > 0 && !isPast;
               const isSelected = selectedDate === dateStr;
               const isLow = avail && avail.seatsAvailable <= 5 && avail.seatsAvailable > 0;
-              const price = avail?.priceOverride || selectedTour?.basePrice || 0;
+              const price = avail?.priceOverride ?? selectedTour?.basePrice ?? 0;
 
               return (
                 <button
@@ -192,7 +173,7 @@ export function StepSelectDate() {
                   <span className="font-medium">{day}</span>
                   {isAvailable && !isSelected && (
                     <span className="text-[9px] text-emerald-400/70 mt-0.5">
-                      {formatPrice(price, 'EUR', tag)}
+                      {formatPrice(price, selectedTour?.currency || 'EUR', tag)}
                     </span>
                   )}
                   {isLow && !isSelected && (

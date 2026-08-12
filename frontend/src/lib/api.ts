@@ -8,13 +8,25 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// Attach token to requests
+let inMemoryCsrfToken: string | undefined;
+
+export function setCsrfToken(token?: string) {
+  inMemoryCsrfToken = token;
+}
+
+function readCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const prefix = `${name}=`;
+  return document.cookie.split('; ').find((part) => part.startsWith(prefix))?.slice(prefix.length);
+}
+
+// Cookie authentication is automatic; mutation requests also carry the
+// double-submit CSRF value from the non-httpOnly companion cookie.
 api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('dc_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+  const method = config.method?.toUpperCase();
+  if (method && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    const csrf = inMemoryCsrfToken || readCookie('dc_csrf');
+    if (csrf) config.headers['X-CSRF-Token'] = decodeURIComponent(csrf);
   }
   return config;
 });
@@ -24,8 +36,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('dc_token');
-      localStorage.removeItem('dc_user');
+      window.dispatchEvent(new Event('dc-auth-expired'));
     }
     return Promise.reject(error);
   }

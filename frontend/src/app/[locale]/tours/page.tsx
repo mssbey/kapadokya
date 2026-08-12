@@ -9,10 +9,11 @@ import {
   type Locale,
 } from '@/lib/i18n';
 
-type Props = { params: { locale: string } };
+type Props = { params: Promise<{ locale: string }> };
 
-export function generateMetadata({ params }: Props): Metadata {
-  const locale: Locale = isLocale(params.locale) ? params.locale : DEFAULT_LOCALE;
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const resolved = await params;
+  const locale: Locale = isLocale(resolved.locale) ? resolved.locale : DEFAULT_LOCALE;
   const t = getDictionary(locale);
   return {
     title: t.toursPage.metaTitle,

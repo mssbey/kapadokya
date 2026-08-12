@@ -44,46 +44,119 @@ enum DiscountType {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  name      String
-  email     String    @unique
-  phone     String?
-  password  String
-  role      Role      @default(USER)
-  bookings  Booking[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id            String                 @id @default(uuid())
+  name          String
+  email         String                 @unique
+  phone         String?
+  password      String
+  role          Role                   @default(USER)
+  bookings      Booking[]
+  statusChanges BookingStatusHistory[] @relation("StatusChangedBy")
+  auditLogs     AuditLog[]
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
 
   @@index([email])
 }
 
 model Tour {
-  id            String         @id @default(uuid())
-  title         String
-  slug          String         @unique
-  description   String
-  shortDesc     String
-  category      TourCategory
-  basePrice     Float
-  currency      String         @default("EUR")
-  duration      String
-  maxCapacity   Int
-  images        String[]
-  videoUrl      String?
-  highlights    String[]
-  includes      String[]
-  excludes      String[]
-  isActive      Boolean        @default(true)
-  sortOrder     Int            @default(0)
-  availabilities Availability[]
-  bookings      Booking[]
-  upsells       TourUpsell[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id                     String            @id @default(uuid())
+  title                  String
+  slug                   String            @unique
+  description            String
+  shortDesc              String
+  category               TourCategory
+  basePrice              Float
+  discountedPrice        Float?
+  currency               String            @default("EUR")
+  tourType               String            @default("GROUP")
+  childPriceRate         Float             @default(0.5)
+  privatePriceMultiplier Float             @default(1.5)
+  duration               String
+  startTime              String?
+  endTime                String?
+  maxCapacity            Int
+  minParticipants        Int               @default(1)
+  defaultCapacity        Int               @default(20)
+  images                 String[]
+  videoUrl               String?
+  highlights             String[]
+  includes               String[]
+  excludes               String[]
+  isActive               Boolean           @default(true)
+  isFeatured             Boolean           @default(false)
+  isBookingEnabled       Boolean           @default(true)
+  deletedAt              DateTime?
+  sortOrder              Int               @default(0)
+  availabilities         Availability[]
+  bookings               Booking[]
+  upsells                TourUpsell[]
+  translations           TourTranslation[]
+  media                  TourImage[]
+  slugAliases            TourSlugAlias[]
+  promoCodes             PromoCode[]       @relation("PromoCodeTours")
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
 
   @@index([slug])
   @@index([category])
   @@index([isActive])
+  @@index([isFeatured])
+  @@index([deletedAt])
+}
+
+model TourTranslation {
+  id                 String   @id @default(uuid())
+  tourId             String
+  tour               Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  locale             String
+  title              String
+  shortDesc          String
+  description        String
+  highlights         String[]
+  includes           String[]
+  excludes           String[]
+  meetingPoint       String?
+  cancellationPolicy String?
+  seoTitle           String?
+  seoDescription     String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([tourId, locale])
+  @@index([locale])
+}
+
+model TourImage {
+  id         String   @id @default(uuid())
+  tourId     String
+  tour       Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  provider   String   @default("CLOUDINARY")
+  storageKey String?
+  assetId    String?
+  secureUrl  String
+  width      Int?
+  height     Int?
+  format     String?
+  bytes      Int?
+  altText    String?
+  sortOrder  Int      @default(0)
+  isCover    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([tourId, sortOrder])
+  @@index([storageKey])
+}
+
+model TourSlugAlias {
+  id        String   @id @default(uuid())
+  tourId    String
+  tour      Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([tourId])
 }
 
 model TourUpsell {
@@ -119,63 +192,125 @@ model Availability {
 }
 
 model Booking {
-  id           String        @id @default(uuid())
-  userId       String?
-  user         User?         @relation(fields: [userId], references: [id])
-  tourId       String
-  tour         Tour          @relation(fields: [tourId], references: [id])
-  date         DateTime      @db.Date
-  adults       Int           @default(1)
-  children     Int           @default(0)
-  isPrivate    Boolean       @default(false)
-  upsells      Json?
-  totalPrice   Float
-  currency     String        @default("EUR")
-  promoCodeId  String?
-  promoCode    PromoCode?    @relation(fields: [promoCodeId], references: [id])
-  status       BookingStatus @default(PENDING)
-  guestName    String?
-  guestEmail   String?
-  guestPhone   String?
-  notes        String?
-  payment      Payment?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id                     String                 @id @default(uuid())
+  bookingNumber          String                 @unique
+  userId                 String?
+  user                   User?                  @relation(fields: [userId], references: [id])
+  tourId                 String
+  tour                   Tour                   @relation(fields: [tourId], references: [id])
+  date                   DateTime               @db.Date
+  adults                 Int                    @default(1)
+  children               Int                    @default(0)
+  isPrivate              Boolean                @default(false)
+  upsells                Json?
+  totalPrice             Float
+  subtotal               Float                  @default(0)
+  discountAmount         Float                  @default(0)
+  currency               String                 @default("EUR")
+  promoCodeId            String?
+  promoCode              PromoCode?             @relation(fields: [promoCodeId], references: [id])
+  status                 BookingStatus          @default(PENDING)
+  guestName              String?
+  guestEmail             String?
+  guestPhone             String?
+  notes                  String?
+  adminNote              String?
+  paymentAccessTokenHash String?
+  paymentAccessExpiresAt DateTime?
+  promoClaimedAt         DateTime?
+  payment                Payment?
+  statusHistory          BookingStatusHistory[]
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
 
   @@index([userId])
   @@index([tourId])
   @@index([date])
   @@index([status])
+  @@index([bookingNumber])
+  @@index([guestEmail])
+  @@index([guestPhone])
+}
+
+model BookingStatusHistory {
+  id          String         @id @default(uuid())
+  bookingId   String
+  booking     Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fromStatus  BookingStatus?
+  toStatus    BookingStatus
+  note        String?
+  changedById String?
+  changedBy   User?          @relation("StatusChangedBy", fields: [changedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime       @default(now())
+
+  @@index([bookingId, createdAt])
 }
 
 model PromoCode {
-  id          String       @id @default(uuid())
-  code        String       @unique
-  type        DiscountType
-  value       Float
-  isActive    Boolean      @default(true)
-  startsAt    DateTime?
-  endsAt      DateTime?
-  maxUses     Int?
-  usedCount   Int          @default(0)
-  bookings    Booking[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id           String       @id @default(uuid())
+  code         String       @unique
+  type         DiscountType
+  value        Float
+  isActive     Boolean      @default(true)
+  startsAt     DateTime?
+  endsAt       DateTime?
+  maxUses      Int?
+  usedCount    Int          @default(0)
+  minCartTotal Float?
+  currency     String?
+  bookings     Booking[]
+  tours        Tour[]       @relation("PromoCodeTours")
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }
 
 model Payment {
-  id              String          @id @default(uuid())
-  bookingId       String          @unique
-  booking         Booking         @relation(fields: [bookingId], references: [id])
-  amount          Float
-  currency        String          @default("EUR")
-  status          PaymentStatus   @default(PENDING)
-  provider        PaymentProvider
+  id                String                @id @default(uuid())
+  bookingId         String                @unique
+  booking           Booking               @relation(fields: [bookingId], references: [id])
+  amount            Float
+  currency          String                @default("EUR")
+  status            PaymentStatus         @default(PENDING)
+  provider          PaymentProvider
   providerPaymentId String?
-  metadata        Json?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  metadata          Json?
+  failureMessage    String?
+  processedAt       DateTime?
+  events            PaymentWebhookEvent[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 
   @@index([bookingId])
   @@index([providerPaymentId])
+}
+
+model PaymentWebhookEvent {
+  id          String          @id @default(uuid())
+  paymentId   String?
+  payment     Payment?        @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  provider    PaymentProvider
+  eventId     String
+  payloadHash String
+  status      String          @default("RECEIVED")
+  processedAt DateTime?
+  createdAt   DateTime        @default(now())
+
+  @@unique([provider, eventId])
+  @@index([paymentId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId])
 }

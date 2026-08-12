@@ -1,18 +1,29 @@
 'use client';
 
-import Image from 'next/image';
+import { ResponsivePhoto } from '@/components/ResponsivePhoto';
 import Link from 'next/link';
 import { ArrowUpRight, CheckCircle2, Sunrise } from 'lucide-react';
 import { useI18n } from '@/components/I18nProvider';
+import { useEffect, useState } from 'react';
+import { getPublicTours } from '@/lib/catalogApi';
 
 export function BalloonFeature() {
-  const { t, href } = useI18n();
+  const { t, href, locale } = useI18n();
+  const [bookingSlug, setBookingSlug] = useState<string>();
+
+  useEffect(() => {
+    let active = true;
+    getPublicTours(locale, { category: 'BALLOON', featured: true })
+      .then((tours) => { if (active) setBookingSlug(tours[0]?.slug); })
+      .catch(() => { if (active) setBookingSlug(undefined); });
+    return () => { active = false; };
+  }, [locale]);
 
   return (
     <section className="bg-white py-20 dark:bg-dark md:py-28">
       <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[2rem] bg-[#112f2a] text-white shadow-2xl lg:grid-cols-2">
         <div className="relative min-h-[420px]">
-          <Image src="/images/cappadocia-sunrise-section.png" alt={t.balloon.imageAlt} fill sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
+          <ResponsivePhoto src="/images/cappadocia-sunrise-section.webp" alt={t.balloon.imageAlt} />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#112f2a]/30" />
           <span className="absolute left-6 top-6 rounded-full bg-amber-300 px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-stone-900">{t.balloon.badge}</span>
         </div>
@@ -28,7 +39,7 @@ export function BalloonFeature() {
               </div>
             ))}
           </div>
-          <Link href={href('/booking?tour=cappadocia-hot-air-balloon')} className="mt-8 inline-flex items-center gap-2 rounded-xl bg-amber-300 px-6 py-4 font-extrabold text-stone-900 transition hover:bg-amber-200">{t.balloon.cta} <ArrowUpRight className="h-5 w-5" /></Link>
+          <Link href={href(bookingSlug ? `/booking?tour=${encodeURIComponent(bookingSlug)}` : '/tours')} className="mt-8 inline-flex items-center gap-2 rounded-xl bg-amber-300 px-6 py-4 font-extrabold text-stone-900 transition hover:bg-amber-200">{t.balloon.cta} <ArrowUpRight className="h-5 w-5" /></Link>
         </div>
       </div>
     </section>

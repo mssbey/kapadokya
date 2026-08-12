@@ -89,12 +89,13 @@ export default function CappadociaMap({ stops, activeId, onSelect, fitAllToken, 
     }).addTo(map);
 
     L.control.zoom({ position: 'bottomright', zoomInTitle: labels.zoomIn, zoomOutTitle: labels.zoomOut }).addTo(map);
+    const markers = markersRef.current;
 
     return () => {
       map.remove();
       mapRef.current = null;
       tileRef.current = null;
-      markersRef.current.clear();
+      markers.clear();
     };
     // Labels only seed the zoom-button tooltips; re-creating the map on a
     // language switch would be far more disruptive than a stale tooltip.
@@ -129,6 +130,7 @@ export default function CappadociaMap({ stops, activeId, onSelect, fitAllToken, 
       );
     }
 
+    const markers = markersRef.current;
     stops.forEach((stop, index) => {
       const marker = L.marker([stop.lat, stop.lng], {
         icon: pinIcon(index + 1, false),
@@ -147,13 +149,13 @@ export default function CappadociaMap({ stops, activeId, onSelect, fitAllToken, 
       );
 
       marker.on('click', () => onSelectRef.current(stop.id));
-      markersRef.current.set(stop.id, marker);
+      markers.set(stop.id, marker);
       layers.push(marker);
     });
 
     return () => {
       layers.forEach((layer) => layer.remove());
-      markersRef.current.clear();
+      markers.clear();
     };
   }, [stops, labels.directions]);
 

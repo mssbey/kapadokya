@@ -10,8 +10,8 @@ const rates: Record<Currency, number> = { EUR: 1, USD: 1.09, GBP: 0.86, TRY: 38 
 type Preferences = {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
-  /** Formats a EUR amount in the visitor's currency and language. */
-  price: (eur: number) => string;
+  /** Converts a supported source currency and formats it for the visitor. */
+  price: (amount: number, sourceCurrency?: string) => string;
 };
 
 const PreferencesContext = createContext<Preferences | null>(null);
@@ -33,13 +33,13 @@ export function SitePreferences({ children }: { children: React.ReactNode }) {
         setCurrency(next);
         localStorage.setItem('dc_currency', next);
       },
-      price: (eur) =>
+      price: (amount, sourceCurrency = 'EUR') =>
         new Intl.NumberFormat(tag, {
           style: 'currency',
           currency,
           minimumFractionDigits: 0,
           maximumFractionDigits: 0,
-        }).format(Math.round(eur * rates[currency])),
+        }).format(Math.round((amount / (rates[sourceCurrency as Currency] || 1)) * rates[currency])),
     }),
     [currency, tag],
   );

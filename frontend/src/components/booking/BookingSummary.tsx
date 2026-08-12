@@ -11,6 +11,7 @@ export function BookingSummary() {
   const {
     selectedTour,
     selectedDate,
+    selectedAvailability,
     adults,
     children,
     isPrivate,
@@ -22,7 +23,8 @@ export function BookingSummary() {
 
   if (!selectedTour) return null;
 
-  const unitPrice = selectedTour.basePrice;
+  const unitPrice = selectedAvailability?.priceOverride ?? selectedTour.basePrice;
+  const currency = selectedTour.currency || 'EUR';
 
   return (
     <motion.div
@@ -66,30 +68,30 @@ export function BookingSummary() {
       <div className="space-y-2 pt-4 border-t border-gray-200 dark:border-white/10">
         <div className="flex justify-between text-sm">
           <span className="text-gray-400 dark:text-white/50">
-            {fill(t.booking.summary.adultsLine, { count: adults, price: formatPrice(unitPrice, 'EUR', tag) })}
+            {fill(t.booking.summary.adultsLine, { count: adults, price: formatPrice(unitPrice, currency, tag) })}
           </span>
-          <span className="text-gray-600 dark:text-white/70">{formatPrice(adults * unitPrice, 'EUR', tag)}</span>
+          <span className="text-gray-600 dark:text-white/70">{formatPrice(adults * unitPrice, currency, tag)}</span>
         </div>
         {children > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-400 dark:text-white/50">
-              {fill(t.booking.summary.childrenLine, { count: children, price: formatPrice(unitPrice * 0.5, 'EUR', tag) })}
+              {fill(t.booking.summary.childrenLine, { count: children, price: formatPrice(unitPrice * (selectedTour.childPriceRate ?? 0.5), currency, tag) })}
             </span>
             <span className="text-gray-600 dark:text-white/70">
-              {formatPrice(children * unitPrice * 0.5, 'EUR', tag)}
+              {formatPrice(children * unitPrice * (selectedTour.childPriceRate ?? 0.5), currency, tag)}
             </span>
           </div>
         )}
         {isPrivate && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-400 dark:text-white/50">{t.booking.summary.privateUpgrade}</span>
-            <span className="text-gray-600 dark:text-white/70">+50%</span>
+            <span className="text-gray-600 dark:text-white/70">×{selectedTour.privatePriceMultiplier ?? 1.5}</span>
           </div>
         )}
         {selectedUpsells.map((u) => (
           <div key={u.id} className="flex justify-between text-sm">
             <span className="text-gray-400 dark:text-white/50">{u.name}</span>
-            <span className="text-gray-600 dark:text-white/70">{formatPrice(u.price, 'EUR', tag)}</span>
+            <span className="text-gray-600 dark:text-white/70">{formatPrice(u.price, currency, tag)}</span>
           </div>
         ))}
       </div>
@@ -104,7 +106,7 @@ export function BookingSummary() {
             animate={{ scale: 1, color: 'currentColor' }}
             className="text-2xl font-bold text-gray-900 dark:text-white"
           >
-            {formatPrice(totalPrice, 'EUR', tag)}
+            {formatPrice(totalPrice, currency, tag)}
           </motion.span>
         </div>
         <p className="text-gray-400 dark:text-white/30 text-xs mt-1 text-right">{t.booking.summary.taxesIncluded}</p>
@@ -115,7 +117,7 @@ export function BookingSummary() {
         <div className="flex items-center justify-between max-w-lg mx-auto">
           <div>
             <p className="text-gray-400 dark:text-white/50 text-xs">{t.booking.summary.total}</p>
-            <p className="text-xl font-bold text-gray-900 dark:text-white">{formatPrice(totalPrice, 'EUR', tag)}</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-white">{formatPrice(totalPrice, currency, tag)}</p>
           </div>
         </div>
       </div>

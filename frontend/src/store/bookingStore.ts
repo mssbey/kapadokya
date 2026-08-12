@@ -25,6 +25,7 @@ interface BookingState {
   toggleUpsell: (upsell: SelectedUpsell) => void;
   setGuestInfo: (name: string, email: string, phone: string, notes?: string) => void;
   calculateTotal: () => void;
+  setTotalPrice: (totalPrice: number) => void;
   reset: () => void;
   getFormData: () => BookingFormData;
 }
@@ -83,12 +84,12 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     if (!state.selectedTour) return;
 
     const unitPrice = state.selectedAvailability?.priceOverride || state.selectedTour.basePrice;
-    const childDiscount = 0.5;
+    const childDiscount = state.selectedTour.childPriceRate ?? 0.5;
 
     let total = state.adults * unitPrice + state.children * unitPrice * childDiscount;
 
     if (state.isPrivate) {
-      total *= 1.5;
+      total *= state.selectedTour.privatePriceMultiplier ?? 1.5;
     }
 
     const totalPeople = state.adults + state.children;
@@ -97,6 +98,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
 
     set({ totalPrice: Math.round(total * 100) / 100 });
   },
+  setTotalPrice: (totalPrice) => set({ totalPrice }),
 
   reset: () =>
     set({

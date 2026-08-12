@@ -1,81 +1,89 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { getCached } from '../lib/redis';
 import { AppError } from '../middleware/errorHandler';
+import { findTourBySlug, normalizeLocale, presentTour, publicTourInclude } from '../lib/catalog';
 
 export const tourRouter = Router();
 
-// Get all active tours
-tourRouter.get('/', async (_req, res, next) => {
-  try {
-    const tours = await getCached('tours:active', 300, () =>
-      prisma.tour.findMany({
-        where: { isActive: true },
-        include: {
-          upsells: { where: { isActive: true } },
-        },
-        orderBy: { sortOrder: 'asc' },
-      })
-    );
-
-    res.json({ success: true, data: tours });
-  } catch (err) {
-    next(err);
-  }
+const listQuerySchema = z.object({
+  locale: z.string().optional(),
+  category: z.enum(['BALLOON', 'DAILY_TOUR', 'ADVENTURE', 'TRANSFER']).optional(),
+  featured: z.enum(['true', 'false']).optional(),
+  q: z.string().trim().max(100).optional(),
 });
-
-// Get tour by slug
-tourRouter.get('/:slug', async (req, res, next) => {
+tourRouter.get('/', async (req, res, next) => {
   try {
-    const { slug } = req.params;
-
-    const tour = await getCached(`tour:${slug}`, 300, () =>
-      prisma.tour.findUnique({
-        where: { slug },
-        include: {
-          upsells: { where: { isActive: true } },
-          availabilities: {
-            where: {
-              date: { gte: new Date() },
-              isBlocked: false,
-            },
-            orderBy: { date: 'asc' },
-            take: 90,
-          },
-        },
-      })
-    );
-
-    if (!tour) {
-      throw new AppError('Tour not found', 404);
-    }
-
-    res.json({ success: true, data: tour });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// Get tours by category
-tourRouter.get('/category/:category', async (req, res, next) => {
-  try {
-    const { category } = req.params;
-
-    const tours = await getCached(`tours:category:${category}`, 300, () =>
+    const query = listQuerySchema.parse(req.query);
+    const locale = normalizeLocale(query.locale);
+    const cacheKey = `tours:public:${locale}:${query.category || 'all'}:${query.featured || 'all'}:${query.q || ''}`;
+    const tours = await getCached(cacheKey, 60, () =>
       prisma.tour.findMany({
         where: {
           isActive: true,
-          category: category.toUpperCase() as any,
+          deletedAt: null,
+          ...(query.category ? { category: query.category } : {}),
+          ...(query.featured === 'true' ? { isFeatured: true } : {}),
+          ...(query.q
+            ? {
+                OR: [
+                  { slug: { contains: query.q, mode: 'insensitive' } },
+                  { translations: { some: { locale: { in: [locale, 'en'] }, OR: [
+                    { title: { contains: query.q, mode: 'insensitive' } },
+                    { shortDesc: { contains: query.q, mode: 'insensitive' } },
+                    { description: { contains: query.q, mode: 'insensitive' } },
+                  ] } } },
+                ],
+              }
+            : {}),
         },
-        include: {
-          upsells: { where: { isActive: true } },
-        },
-        orderBy: { sortOrder: 'asc' },
-      })
+        include: publicTourInclude,
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      }),
     );
+    res.json({ success: true, data: tours.map((tour) => presentTour(tour, locale)) });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
+});
 
-    res.json({ success: true, data: tours });
-  } catch (err) {
-    next(err);
+// Static routes must stay above /:slug so Express cannot treat "category" as a slug.
+tourRouter.get('/category/:category', async (req, res, next) => {
+  try {
+    const category = z.enum(['BALLOON', 'DAILY_TOUR', 'ADVENTURE', 'TRANSFER']).parse(req.params.category.toUpperCase());
+    const locale = normalizeLocale(req.query.locale);
+    const tours = await getCached(`tours:category:${category}:${locale}`, 60, () =>
+      prisma.tour.findMany({
+        where: { isActive: true, deletedAt: null, category },
+        include: publicTourInclude,
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      }),
+    );
+    res.json({ success: true, data: tours.map((tour) => presentTour(tour, locale)) });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError('Invalid tour category', 400));
+    next(error);
+  }
+});
+
+tourRouter.get('/:slug', async (req, res, next) => {
+  try {
+    const locale = normalizeLocale(req.query.locale);
+    const result = await findTourBySlug(req.params.slug);
+    if (!result || !result.tour.isActive) throw new AppError('Tour not found', 404);
+    const data = presentTour(result.tour, locale);
+    res.json({
+      success: true,
+      data,
+      meta: {
+        canonicalSlug: result.tour.slug,
+        redirectedFrom: result.redirectedFrom,
+        translationFallback: data.contentLocale !== locale,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
 });

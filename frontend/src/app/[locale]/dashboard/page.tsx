@@ -37,7 +37,7 @@ const statusIcons: Record<string, React.ReactNode> = {
 };
 
 export default function DashboardPage() {
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout, loadUser } = useAuthStore();
   const router = useRouter();
   // Every push below goes through href() so the visitor keeps the language
   // they were reading — a bare '/login' would bounce through the middleware
@@ -45,15 +45,21 @@ export default function DashboardPage() {
   const { href } = useI18n();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    loadUser().finally(() => setAuthChecked(true));
+  }, [loadUser]);
+
+  useEffect(() => {
+    if (!authChecked) return;
+    if (!isAuthenticated || !user) {
       router.push(href('/login'));
       return;
     }
     loadBookings();
-  }, [isAuthenticated]);
+  }, [authChecked, isAuthenticated, user, href, router]);
 
   async function loadBookings() {
     try {
@@ -71,8 +77,8 @@ export default function DashboardPage() {
   const past = bookings.filter((b) => new Date(b.date) < now || b.status === 'CANCELLED');
   const displayed = activeTab === 'upcoming' ? upcoming : past;
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     router.push(href('/'));
   }
 

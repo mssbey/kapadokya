@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { motion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { Loader2, Maximize2, Navigation } from 'lucide-react';
 import { useI18n } from '@/components/I18nProvider';
 import { TOUR_STOPS, directionsUrl } from '@/lib/tourStops';
@@ -21,6 +21,13 @@ export function MapSection() {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [fitAllToken, setFitAllToken] = useState(0);
   const { t } = useI18n();
+
+  // This section sits at the very bottom of the home page, but `dynamic` alone
+  // starts fetching Leaflet and a dozen map tiles as soon as the page hydrates
+  // — on a throttled mobile connection that competes with the hero for
+  // bandwidth. Hold the mount until the section is within a screen's reach.
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapNear = useInView(mapRef, { once: true, margin: '600px' });
 
   const stops = useMemo(
     () =>
@@ -63,19 +70,25 @@ export function MapSection() {
           className="mt-12 grid gap-6 lg:grid-cols-[1.65fr_1fr]"
         >
           {/* lg:h-auto lets the map stretch to the stop list's height so the two cards line up. */}
-          <div className="relative h-[420px] overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0f1f1b] shadow-[0_35px_90px_-45px_rgba(0,0,0,.9)] md:h-[540px] lg:h-auto lg:min-h-[540px]">
-            <CappadociaMap
-              stops={stops}
-              activeId={activeId}
-              onSelect={(id) => setActiveId(id)}
-              fitAllToken={fitAllToken}
-              labels={{
-                directions: t.map.directions,
-                ariaLabel: t.map.ariaLabel,
-                zoomIn: t.map.zoomIn,
-                zoomOut: t.map.zoomOut,
-              }}
-            />
+          <div ref={mapRef} className="relative h-[420px] overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0f1f1b] shadow-[0_35px_90px_-45px_rgba(0,0,0,.9)] md:h-[540px] lg:h-auto lg:min-h-[540px]">
+            {mapNear ? (
+              <CappadociaMap
+                stops={stops}
+                activeId={activeId}
+                onSelect={(id) => setActiveId(id)}
+                fitAllToken={fitAllToken}
+                labels={{
+                  directions: t.map.directions,
+                  ariaLabel: t.map.ariaLabel,
+                  zoomIn: t.map.zoomIn,
+                  zoomOut: t.map.zoomOut,
+                }}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-[#0f1f1b]">
+                <Loader2 className="h-6 w-6 animate-spin text-emerald-400/70" />
+              </div>
+            )}
 
             <button
               type="button"

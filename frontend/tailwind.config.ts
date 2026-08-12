@@ -47,9 +47,16 @@ const config: Config = {
           900: '#000000',
         },
       },
+      // next/font self-hosts under generated family names (__Inter_f367f3 and
+      // the like) and exposes them through these CSS variables, set on <html>
+      // in the locale layout. Asking for the plain names instead matched
+      // nothing installed, so every heading fell through to serif (Times) and
+      // all body copy to sans-serif (Arial) — the downloaded fonts were never
+      // actually used.
       fontFamily: {
-        display: ['Playfair Display', 'Cinzel', 'serif'],
-        body: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['var(--font-playfair)', 'Georgia', 'serif'],
+        body: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

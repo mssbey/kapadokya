@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
+import { SiteLogo } from '@/components/SiteLogo';
+import { ResponsivePhoto } from '@/components/ResponsivePhoto';
 import Link from 'next/link';
 import { ArrowRight, BadgeCheck, CalendarCheck, MessageCircle, ShieldCheck } from 'lucide-react';
 import { SITE, whatsappUrl } from '@/lib/site';
@@ -9,22 +11,51 @@ import { useI18n } from '@/components/I18nProvider';
 
 export function HeroSection() {
   const { t, href, fill } = useI18n();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      videoRef.current?.pause();
+    }
+  }, []);
 
   return (
     <section className="relative flex min-h-[780px] items-center overflow-hidden bg-[#07100f] pt-24 text-white lg:min-h-[860px]">
       <div className="absolute inset-0">
-        <motion.div initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 10 }} className="absolute inset-0 bg-cover bg-[60%_center] md:bg-center" style={{ backgroundImage: "url('/images/cappadocia-hero-signature.png')" }} />
+        {/* The poster doubles as the LCP paint: the preload scanner reads a
+            <video poster> attribute just like an <img src>, so the frame is
+            visible immediately while the clip itself streams in behind it.
+            Two encodes (1920w desktop, 960w mobile) picked via <source media>
+            keep phones off the heavier file. The plain <img> fallback only
+            renders in browsers that can't play <video> at all. */}
+        <motion.div initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 10 }} className="absolute inset-0">
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            poster="/images/hero-banner-poster.jpg"
+            className="absolute inset-0 h-full w-full object-cover object-[60%_center] md:object-center"
+          >
+            <source media="(max-width: 767px)" src="/videos/hero-banner-mobile.mp4" type="video/mp4" />
+            <source src="/videos/hero-banner.mp4" type="video/mp4" />
+            <ResponsivePhoto
+              src="/images/cappadocia-hero-signature.webp"
+              alt=""
+              priority
+              positionClassName="object-[60%_center] md:object-center"
+            />
+          </video>
+        </motion.div>
         <div className="absolute inset-0 bg-gradient-to-r from-[#07100f]/95 via-[#07100f]/68 to-[#07100f]/20" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#07100f] via-transparent to-black/30" />
       </div>
 
       <div className="relative mx-auto w-full max-w-7xl px-4 pb-24 pt-12 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7 }} className="max-w-3xl">
-          <Image
-            src="/logo.png"
-            width={640}
-            height={246}
-            alt="Discovery Cappadocia"
+          <SiteLogo
             priority
             className="mb-7 h-auto w-[260px] drop-shadow-[0_10px_40px_rgba(0,0,0,.55)] sm:w-[330px] lg:w-[400px]"
           />

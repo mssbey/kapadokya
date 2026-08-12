@@ -14,9 +14,11 @@ import { bookingRouter } from './routes/bookings';
 import { paymentRouter } from './routes/payments';
 import { availabilityRouter } from './routes/availability';
 import { adminRouter } from './routes/admin';
+import { adminMediaRouter } from './routes/adminMedia';
 import { errorHandler } from './middleware/errorHandler';
 import { setupWebSocket } from './websocket';
 import { prisma } from './lib/prisma';
+import { csrfProtection } from './lib/session';
 
 const app = express();
 const server = createServer(app);
@@ -24,15 +26,23 @@ const wss = new WebSocketServer({ server, path: '/ws' });
 
 // Security
 app.use(helmet({ contentSecurityPolicy: false }));
+const allowedOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || 'http://localhost:3000')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error('Origin is not allowed by CORS'));
+  },
   credentials: true,
 }));
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: process.env.NODE_ENV === 'production' ? 100 : 5000,
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -45,6 +55,7 @@ app.use('/api/payments/webhook/stripe', express.raw({ type: 'application/json' }
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use('/api', csrfProtection);
 
 // Health check
 app.get('/health', (_req, res) => {
@@ -57,6 +68,7 @@ app.use('/api/tours', tourRouter);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/payments', paymentRouter);
 app.use('/api/availability', availabilityRouter);
+app.use('/api/admin', adminMediaRouter);
 app.use('/api/admin', adminRouter);
 
 // Error handler

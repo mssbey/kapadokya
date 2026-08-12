@@ -1,15 +1,11 @@
 import { PrismaClient, TourCategory } from '@prisma/client';
-import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 /**
- * Slugs and prices here must stay in step with the frontend catalogue in
- * `frontend/src/lib/site.ts` — the booking funnel deep-links from a tour page
- * as `/booking?tour=<slug>` and matches on the slug.
- *
- * The frontend carries finer categories (private tours, cultural, packages)
- * than the `TourCategory` enum, so several of them collapse onto one value.
+ * Optional local/demo catalogue. The public website reads these records from
+ * PostgreSQL through the API; there is no second static frontend catalogue.
+ * Existing tours are never overwritten by this seed.
  */
 const tours = [
   // ── Balloon ────────────────────────────────────────────────────────────
@@ -23,7 +19,7 @@ const tours = [
     basePrice: 49,
     duration: '3–4 hours (about 60 minutes in the air)',
     maxCapacity: 20,
-    images: ['/images/cappadocia-hero-signature.png', '/images/cappadocia-sunrise-section.png'],
+    images: ['/images/cappadocia-hero-signature.webp', '/images/cappadocia-sunrise-section.webp'],
     highlights: [
       'Sunrise over the fairy chimneys',
       'Roughly 60 minutes of flight time',
@@ -44,7 +40,7 @@ const tours = [
     basePrice: 75,
     duration: '3–4 hours (about 60 minutes in the air)',
     maxCapacity: 16,
-    images: ['/images/cappadocia-sunrise-section.png'],
+    images: ['/images/cappadocia-sunrise-section.webp'],
     highlights: [
       'Smaller basket, fewer passengers',
       'More space at the basket edge for photos',
@@ -65,7 +61,7 @@ const tours = [
     basePrice: 750,
     duration: '3–4 hours (about 60 minutes in the air)',
     maxCapacity: 8,
-    images: ['/images/cappadocia-blue-hour-section.png'],
+    images: ['/images/cappadocia-blue-hour-section.webp'],
     highlights: [
       'Basket reserved for your group only',
       'Ideal for proposals and anniversaries',
@@ -86,7 +82,7 @@ const tours = [
     basePrice: 160,
     duration: '4–5 hours (about 60 minutes in the air)',
     maxCapacity: 16,
-    images: ['/images/cappadocia-rose-valley-section.png'],
+    images: ['/images/cappadocia-rose-valley-section.webp'],
     highlights: [
       'Quieter valley with fewer balloons in the sky',
       'Rock churches and cone formations from above',
@@ -107,7 +103,7 @@ const tours = [
     basePrice: 30,
     duration: '2 hours',
     maxCapacity: 15,
-    images: ['/images/cappadocia-sunrise-section.png'],
+    images: ['/images/cappadocia-sunrise-section.webp'],
     highlights: [
       'Viewpoint chosen for the morning’s wind direction',
       'Balloons rising with the sunrise',
@@ -130,7 +126,7 @@ const tours = [
     basePrice: 40,
     duration: '8–9 hours',
     maxCapacity: 15,
-    images: ['/images/cappadocia-tours-hero.png', '/images/cappadocia-routes-aerial.png'],
+    images: ['/images/cappadocia-tours-hero.webp', '/images/cappadocia-routes-aerial.webp'],
     highlights: [
       'Göreme Open Air Museum',
       'Uçhisar Castle panorama',
@@ -151,7 +147,7 @@ const tours = [
     basePrice: 50,
     duration: '9–10 hours',
     maxCapacity: 15,
-    images: ['/images/cappadocia-sunrise-section.png', '/images/cappadocia-routes-aerial.png'],
+    images: ['/images/cappadocia-sunrise-section.webp', '/images/cappadocia-routes-aerial.webp'],
     highlights: [
       'Derinkuyu Underground City',
       'Ihlara Valley walk (about 4 km)',
@@ -172,7 +168,7 @@ const tours = [
     basePrice: 110,
     duration: '8–9 hours',
     maxCapacity: 15,
-    images: ['/images/cappadocia-routes-aerial.png'],
+    images: ['/images/cappadocia-routes-aerial.webp'],
     highlights: [
       'Soğanlı Valley rock churches',
       'Keşlik Monastery',
@@ -193,7 +189,7 @@ const tours = [
     basePrice: 50,
     duration: '8–9 hours',
     maxCapacity: 15,
-    images: ['/images/cappadocia-rose-valley-section.png'],
+    images: ['/images/cappadocia-rose-valley-section.webp'],
     highlights: [
       'An underground city',
       'Fairy chimney valleys',
@@ -216,7 +212,7 @@ const tours = [
     basePrice: 140,
     duration: '8–9 hours',
     maxCapacity: 18,
-    images: ['/images/cappadocia-tours-hero.png'],
+    images: ['/images/cappadocia-tours-hero.webp'],
     highlights: [
       'Vehicle and guide for your group only',
       'Departure time and pace set by you',
@@ -237,7 +233,7 @@ const tours = [
     basePrice: 160,
     duration: '9–10 hours',
     maxCapacity: 18,
-    images: ['/images/cappadocia-sunrise-section.png'],
+    images: ['/images/cappadocia-sunrise-section.webp'],
     highlights: [
       'Vehicle and guide for your group only',
       'Ihlara walk shortened or extended as you like',
@@ -258,7 +254,7 @@ const tours = [
     basePrice: 150,
     duration: '8–9 hours',
     maxCapacity: 18,
-    images: ['/images/cappadocia-rose-valley-section.png'],
+    images: ['/images/cappadocia-rose-valley-section.webp'],
     highlights: [
       'Itinerary planned around your interests',
       'Vehicle and guide for your group only',
@@ -281,7 +277,7 @@ const tours = [
     basePrice: 20,
     duration: '2 hours',
     maxCapacity: 10,
-    images: ['/images/cappadocia-atv-tour.png'],
+    images: ['/images/cappadocia-atv-tour.webp'],
     highlights: [
       'Love, Rose and Sword valleys',
       'Sunset viewpoint stop',
@@ -302,7 +298,7 @@ const tours = [
     basePrice: 15,
     duration: '2 hours',
     maxCapacity: 10,
-    images: ['/images/cappadocia-blue-hour-section.png'],
+    images: ['/images/cappadocia-blue-hour-section.webp'],
     highlights: [
       'Quiet valley trails',
       'Horses matched to your experience',
@@ -323,7 +319,7 @@ const tours = [
     basePrice: 30,
     duration: '2–3 hours',
     maxCapacity: 16,
-    images: ['/images/cappadocia-routes-aerial.png'],
+    images: ['/images/cappadocia-routes-aerial.webp'],
     highlights: [
       'Off-road valley route',
       'Panoramic viewpoints away from the crowds',
@@ -344,7 +340,7 @@ const tours = [
     basePrice: 40,
     duration: '1–2 hours',
     maxCapacity: 12,
-    images: ['/images/cappadocia-rose-valley-section.png'],
+    images: ['/images/cappadocia-rose-valley-section.webp'],
     highlights: [
       'Ride among the fairy chimneys',
       'Handler walks alongside throughout',
@@ -365,7 +361,7 @@ const tours = [
     basePrice: 50,
     duration: '2 hours',
     maxCapacity: 4,
-    images: ['/images/cappadocia-tours-hero.png'],
+    images: ['/images/cappadocia-tours-hero.webp'],
     highlights: [
       'Vintage convertible with driver',
       'Sunrise slot puts balloons in the frame',
@@ -388,7 +384,7 @@ const tours = [
     basePrice: 45,
     duration: '3 hours',
     maxCapacity: 100,
-    images: ['/images/cappadocia-blue-hour-section.png'],
+    images: ['/images/cappadocia-blue-hour-section.webp'],
     highlights: [
       'Dinner in a cave restaurant',
       'Anatolian folk dances and live music',
@@ -409,7 +405,7 @@ const tours = [
     basePrice: 20,
     duration: '1 hour',
     maxCapacity: 60,
-    images: ['/images/cappadocia-blue-hour-section.png'],
+    images: ['/images/cappadocia-blue-hour-section.webp'],
     highlights: [
       'Authentic sema ceremony',
       'Held in a historic caravanserai',
@@ -430,7 +426,7 @@ const tours = [
     basePrice: 15,
     duration: '20–40 minutes',
     maxCapacity: 10,
-    images: ['/images/cappadocia-tours-hero.png'],
+    images: ['/images/cappadocia-tours-hero.webp'],
     highlights: [
       'Traditional kick wheel with a master potter',
       'Red Kızılırmak river clay',
@@ -451,7 +447,7 @@ const tours = [
     basePrice: 30,
     duration: '1–2 hours',
     maxCapacity: 20,
-    images: ['/images/cappadocia-blue-hour-section.png'],
+    images: ['/images/cappadocia-blue-hour-section.webp'],
     highlights: [
       'Heated marble slab and steam room',
       'Traditional scrub and foam wash',
@@ -472,7 +468,7 @@ const tours = [
     basePrice: 180,
     duration: '2 hours',
     maxCapacity: 6,
-    images: ['/images/cappadocia-rose-valley-section.png'],
+    images: ['/images/cappadocia-rose-valley-section.webp'],
     highlights: [
       'Professional photographer and driver',
       'Multiple locations in one session',
@@ -495,7 +491,7 @@ const tours = [
     basePrice: 300,
     duration: '2 days, 1 night',
     maxCapacity: 15,
-    images: ['/images/cappadocia-hero-signature.png'],
+    images: ['/images/cappadocia-hero-signature.webp'],
     highlights: [
       'One night in a cave hotel',
       'Sunrise balloon flight',
@@ -516,7 +512,7 @@ const tours = [
     basePrice: 495,
     duration: '3 days, 2 nights',
     maxCapacity: 15,
-    images: ['/images/cappadocia-routes-aerial.png'],
+    images: ['/images/cappadocia-routes-aerial.webp'],
     highlights: [
       'Two nights in a cave hotel',
       'Sunrise balloon flight',
@@ -539,7 +535,7 @@ const tours = [
     basePrice: 90,
     duration: '40–50 minutes',
     maxCapacity: 6,
-    images: ['/images/cappadocia-routes-aerial.png'],
+    images: ['/images/cappadocia-routes-aerial.webp'],
     highlights: [
       'Private vehicle for your group',
       'Meet and greet inside arrivals',
@@ -560,7 +556,7 @@ const tours = [
     basePrice: 100,
     duration: '70–90 minutes',
     maxCapacity: 6,
-    images: ['/images/cappadocia-routes-aerial.png'],
+    images: ['/images/cappadocia-routes-aerial.webp'],
     highlights: [
       'Private vehicle for your group',
       'Meet and greet inside arrivals',
@@ -581,7 +577,7 @@ const tours = [
     basePrice: 12.5,
     duration: '45–70 minutes',
     maxCapacity: 16,
-    images: ['/images/cappadocia-tours-hero.png'],
+    images: ['/images/cappadocia-tours-hero.webp'],
     highlights: [
       'Lowest-cost airport connection',
       'Serves Göreme, Ürgüp and Uçhisar hotels',
@@ -602,7 +598,7 @@ const tours = [
     basePrice: 12.5,
     duration: '75–100 minutes',
     maxCapacity: 16,
-    images: ['/images/cappadocia-tours-hero.png'],
+    images: ['/images/cappadocia-tours-hero.webp'],
     highlights: [
       'Lowest-cost connection from Kayseri',
       'Serves Göreme, Ürgüp and Uçhisar hotels',
@@ -616,30 +612,34 @@ const tours = [
 ];
 
 async function main() {
+  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PRODUCTION_SEED !== 'true') {
+    throw new Error('Production seed is disabled. Use migrations and the create-admin command instead.');
+  }
   console.log('🌱 Seeding database...');
-
-  // Create admin user
-  const adminPassword = await bcrypt.hash('Admin123!', 12);
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@kapheratravel.com' },
-    update: {},
-    create: {
-      name: 'Admin',
-      email: 'admin@kapheratravel.com',
-      password: adminPassword,
-      role: 'ADMIN',
-      phone: '+90 540 101 50 50',
-    },
-  });
-  console.log('✅ Admin user created:', admin.email);
 
   for (const tourData of tours) {
     const tour = await prisma.tour.upsert({
       where: { slug: tourData.slug },
-      update: tourData,
-      create: tourData,
+      // Admin-managed content is never overwritten by a repeated seed.
+      update: {},
+      create: { ...tourData, defaultCapacity: tourData.maxCapacity },
     });
     console.log(`✅ Tour created: ${tour.title}`);
+
+    await prisma.tourTranslation.upsert({
+      where: { tourId_locale: { tourId: tour.id, locale: 'en' } },
+      update: {},
+      create: {
+        tourId: tour.id,
+        locale: 'en',
+        title: tourData.title,
+        shortDesc: tourData.shortDesc,
+        description: tourData.description,
+        highlights: tourData.highlights,
+        includes: tourData.includes,
+        excludes: tourData.excludes,
+      },
+    });
 
     // Photography is the one add-on we sell on balloon flights; hotel transfer
     // and the celebration are included in the price, not upsold.
@@ -693,15 +693,6 @@ async function main() {
     }
     console.log(`  📅 90 days of availability created`);
   }
-
-  // Tours seeded under earlier slugs would otherwise linger in the listing
-  // alongside their replacements. Deactivate rather than delete: existing
-  // bookings still reference them.
-  const retired = await prisma.tour.updateMany({
-    where: { slug: { notIn: tours.map((tour) => tour.slug) }, isActive: true },
-    data: { isActive: false },
-  });
-  if (retired.count > 0) console.log(`🗄️  Deactivated ${retired.count} tour(s) no longer in the catalogue`);
 
   console.log('\n🎉 Seed completed successfully!');
 }

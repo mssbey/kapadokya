@@ -3,73 +3,35 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowRight, Clock, Loader2, MapPin } from 'lucide-react';
+import { ArrowRight, Clock, Loader2, MapPin, RefreshCw } from 'lucide-react';
 import { useBookingStore } from '@/store/bookingStore';
 import { api } from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
-import { getCatalog, type CategoryKey } from '@/lib/site';
 import { useI18n } from '@/components/I18nProvider';
-import type { Dictionary } from '@/lib/i18n';
-import type { Tour, TourCategory } from '@/types';
-
-// The catalogue carries finer categories than the backend enum, so several of
-// them collapse onto one value here.
-const BACKEND_CATEGORY: Record<CategoryKey, TourCategory> = {
-  Balloon: 'BALLOON',
-  'Daily Tour': 'DAILY_TOUR',
-  'Private Tour': 'DAILY_TOUR',
-  Adventure: 'ADVENTURE',
-  Cultural: 'ADVENTURE',
-  Package: 'DAILY_TOUR',
-  Transfer: 'TRANSFER',
-};
-
-// Used only when the booking API is unreachable; translated like the rest of
-// the catalogue. Live tours come from the backend and carry its own wording.
-const buildFallbackTours = (dict: Dictionary): Tour[] =>
-  getCatalog(dict).map((tour, index) => ({
-    id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, '0')}`,
-    title: tour.title, slug: tour.slug, description: tour.description, shortDesc: tour.description,
-    category: BACKEND_CATEGORY[tour.categoryKey],
-    basePrice: tour.price, currency: 'EUR', duration: tour.duration, maxCapacity: 20,
-    images: [tour.image], highlights: tour.highlights, includes: tour.included, excludes: tour.notIncluded,
-    isActive: true, sortOrder: index + 1, upsells: [],
-  }));
+import type { Tour } from '@/types';
 
 export function StepSelectTour() {
   const query = useSearchParams().get('tour');
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const autoSelected = useRef(false);
   const { setTour, nextStep, selectedTour } = useBookingStore();
-  const { t, tag } = useI18n();
+  const { t, tag, locale } = useI18n();
 
-  useEffect(() => {
-    api.get('/tours').then((res) => setTours(res.data.data)).catch(() => setTours(buildFallbackTours(t))).finally(() => setLoading(false));
-  }, [t]);
-
+  function load() {
+    setLoading(true); setError(false);
+    api.get('/tours', { params: { locale } }).then((response) => setTours(response.data.data)).catch(() => { setTours([]); setError(true); }).finally(() => setLoading(false));
+  }
+  useEffect(load, [locale]);
   useEffect(() => {
     if (loading || !query || autoSelected.current) return;
-    // The seed uses the same slugs as the frontend catalogue, so a deep link
-    // from a tour page resolves directly.
     const match = tours.find((tour) => tour.slug === query || tour.id === query);
     if (match) { autoSelected.current = true; setTour(match); nextStep(); }
   }, [loading, nextStep, query, setTour, tours]);
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>;
+  if (error) return <div className="glass-card p-10 text-center"><p className="text-amber-700">Live availability could not be loaded. Stale fallback prices are disabled.</p><button onClick={load} className="btn-primary mt-5 inline-flex items-center gap-2"><RefreshCw className="h-4 w-4" />Retry</button></div>;
 
-  return (
-    <div className="space-y-4">
-      <h2 className="mb-6 font-display text-2xl font-bold">{t.booking.selectTour.heading}</h2>
-      {tours.map((tour, index) => (
-        <motion.button key={tour.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * .04 }} onClick={() => { window.dataLayer?.push({ event: 'add_to_cart', tour_name: tour.title }); setTour(tour); nextStep(); }} className={`group flex w-full items-center gap-4 rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:border-emerald-500 dark:bg-white/5 md:p-5 ${selectedTour?.id === tour.id ? 'border-emerald-500' : 'border-stone-200 dark:border-white/10'}`}>
-          <div className="hidden h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-stone-100 sm:block"><img src={tour.images[0] || '/images/cappadocia-routes-aerial.png'} alt="" className="h-full w-full object-cover" /></div>
-          <div className="min-w-0 flex-1"><h3 className="font-display text-lg font-bold group-hover:text-emerald-700 dark:group-hover:text-emerald-400">{tour.title}</h3><p className="mt-1 line-clamp-1 text-sm text-stone-500 dark:text-white/50">{tour.shortDesc}</p><div className="mt-2 flex gap-4 text-xs text-stone-400"><span className="flex gap-1"><Clock className="h-3.5 w-3.5" />{tour.duration}</span><span className="flex gap-1"><MapPin className="h-3.5 w-3.5" />{t.booking.selectTour.pickupAvailable}</span></div></div>
-          <div className="shrink-0 text-right"><p className="text-xs text-stone-400">{t.booking.selectTour.from}</p><p className="text-xl font-extrabold">{formatPrice(tour.basePrice, tour.currency || 'EUR', tag)}</p></div>
-          <ArrowRight className="hidden h-5 w-5 text-stone-300 sm:block" />
-        </motion.button>
-      ))}
-      <p className="pt-2 text-xs text-stone-400">{t.booking.selectTour.note}</p>
-    </div>
-  );
+  return <div className="space-y-4"><h2 className="mb-6 font-display text-2xl font-bold">{t.booking.selectTour.heading}</h2>{tours.map((tour, index) => <motion.button key={tour.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * .04 }} onClick={() => { window.dataLayer?.push({ event: 'add_to_cart', tour_name: tour.title }); setTour(tour); nextStep(); }} className={`group flex w-full items-center gap-4 rounded-2xl border bg-white p-4 text-left shadow-sm hover:border-emerald-500 dark:bg-white/5 md:p-5 ${selectedTour?.id === tour.id ? 'border-emerald-500' : 'border-stone-200 dark:border-white/10'}`}><div className="hidden h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-stone-100 sm:block"><img src={tour.image || tour.images[0]} alt="" className="h-full w-full object-cover" /></div><div className="min-w-0 flex-1"><h3 className="font-display text-lg font-bold">{tour.title}</h3><p className="mt-1 line-clamp-1 text-sm text-stone-500">{tour.shortDesc}</p><div className="mt-2 flex gap-4 text-xs text-stone-400"><span className="flex gap-1"><Clock className="h-3.5 w-3.5" />{tour.duration}</span><span className="flex gap-1"><MapPin className="h-3.5 w-3.5" />{t.booking.selectTour.pickupAvailable}</span></div></div><div className="shrink-0 text-right"><p className="text-xs text-stone-400">{t.booking.selectTour.from}</p><p className="text-xl font-extrabold">{formatPrice(tour.basePrice, tour.currency, tag)}</p></div><ArrowRight className="hidden h-5 w-5 text-stone-300 sm:block" /></motion.button>)}{tours.length === 0 && <p className="glass-card p-10 text-center text-stone-500">No tours are currently open for booking.</p>}</div>;
 }

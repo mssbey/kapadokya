@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { SiteLogo } from '@/components/SiteLogo';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BadgeCheck, LockKeyhole, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
@@ -42,7 +42,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <Image src="/logo.png" width={180} height={50} alt="Discovery Cappadocia" className="h-auto w-44" />
+            <SiteLogo className="h-auto w-44" />
             <p className="mt-5 text-sm font-semibold text-white/80">{SITE.legalName}</p>
             <p className="mt-2 text-sm leading-7 text-white/55">{t.footer.blurb}</p>
             <div className="mt-5 flex gap-3 rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4"><BadgeCheck className="h-6 w-6 shrink-0 text-amber-300" /><div><p className="text-sm font-bold">{t.footer.licensedAgency}</p><p className="mt-1 text-xs text-white/45">{fill(t.trust.tursab, { number: SITE.tursabNumber })}</p></div></div>

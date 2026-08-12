@@ -3,11 +3,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import Image from 'next/image';
+import { SiteLogo } from '@/components/SiteLogo';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { useI18n } from '@/components/I18nProvider';
-import { cn } from '@/lib/utils';
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -60,12 +59,8 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <Link href={href('/')} className="inline-block mb-6">
-            <Image
-              src="/logo.png"
-              alt="DiscoveryCappadocia"
-              width={200}
-              height={55}
-              className="drop-shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:drop-shadow-[0_0_25px_rgba(16,185,129,0.35)] transition-all duration-500"
+            <SiteLogo
+              className="h-auto w-[200px] drop-shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:drop-shadow-[0_0_25px_rgba(16,185,129,0.35)] transition-all duration-500"
             />
           </Link>
           <h1 className="font-display text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome Back</h1>

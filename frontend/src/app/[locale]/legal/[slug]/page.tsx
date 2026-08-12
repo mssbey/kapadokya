@@ -362,7 +362,7 @@ const pages: Record<string, LegalPage> = {
   },
 };
 
-type Props = { params: { locale: string; slug: string } };
+type Props = { params: Promise<{ locale: string; slug: string }> };
 
 export function generateStaticParams() {
   return LOCALES.flatMap((locale) => Object.keys(pages).map((slug) => ({ locale, slug })));
@@ -371,24 +371,26 @@ export function generateStaticParams() {
 // NOTE: the legal texts themselves are intentionally left in English — they are
 // drafts pending review by Turkish counsel, and translating unreviewed legal
 // wording into five languages would multiply that risk.
-export function generateMetadata({ params }: Props): Metadata {
-  const page = pages[params.slug];
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const resolved = await params;
+  const page = pages[resolved.slug];
   if (!page) return {};
-  const locale: Locale = isLocale(params.locale) ? params.locale : DEFAULT_LOCALE;
+  const locale: Locale = isLocale(resolved.locale) ? resolved.locale : DEFAULT_LOCALE;
   return {
     title: page.title,
     description: page.intro,
     alternates: {
-      canonical: localePath(locale, `/legal/${params.slug}`),
-      languages: languageAlternates(`/legal/${params.slug}`),
+      canonical: localePath(locale, `/legal/${resolved.slug}`),
+      languages: languageAlternates(`/legal/${resolved.slug}`),
     },
   };
 }
 
-export default function LegalPage({ params }: Props) {
-  const page = pages[params.slug];
+export default async function LegalPage({ params }: Props) {
+  const resolved = await params;
+  const page = pages[resolved.slug];
   if (!page) notFound();
-  const locale: Locale = isLocale(params.locale) ? params.locale : DEFAULT_LOCALE;
+  const locale: Locale = isLocale(resolved.locale) ? resolved.locale : DEFAULT_LOCALE;
 
   return (
     <div className="min-h-screen bg-[#f8f6f1] px-4 pb-24 pt-32 dark:bg-dark">

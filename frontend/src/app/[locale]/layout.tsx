@@ -28,14 +28,16 @@ const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfa
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://discoverycappadocia.com';
 
-type Props = { children: React.ReactNode; params: { locale: string } };
+type LocaleParams = { locale: string };
+type Props = { children: React.ReactNode; params: Promise<LocaleParams> };
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }));
 }
 
-export function generateMetadata({ params }: { params: { locale: string } }): Metadata {
-  const locale: Locale = isLocale(params.locale) ? params.locale : DEFAULT_LOCALE;
+export async function generateMetadata({ params }: { params: Promise<LocaleParams> }): Promise<Metadata> {
+  const resolved = await params;
+  const locale: Locale = isLocale(resolved.locale) ? resolved.locale : DEFAULT_LOCALE;
   const t = getDictionary(locale);
 
   return {
@@ -48,7 +50,7 @@ export function generateMetadata({ params }: { params: { locale: string } }): Me
       description: t.meta.ogDescription,
       type: 'website',
       locale: OG_LOCALES[locale],
-      images: ['/images/cappadocia-hero-signature.png'],
+      images: ['/images/cappadocia-hero-signature.webp'],
     },
     alternates: {
       canonical: localePath(locale, '/'),
@@ -60,9 +62,10 @@ export function generateMetadata({ params }: { params: { locale: string } }): Me
 
 const themeScript = `(function(){try{var t=localStorage.getItem('dc_theme')||'light';var r=t;if(t==='system'){r=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}if(r==='dark'){document.documentElement.classList.add('dark')}else{document.documentElement.classList.remove('dark')}}catch(e){}})();`;
 
-export default function LocaleLayout({ children, params }: Props) {
-  if (!isLocale(params.locale)) notFound();
-  const locale = params.locale;
+export default async function LocaleLayout({ children, params }: Props) {
+  const resolved = await params;
+  if (!isLocale(resolved.locale)) notFound();
+  const locale = resolved.locale;
   const dictionary = getDictionary(locale);
 
   const schema = {

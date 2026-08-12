@@ -8,6 +8,9 @@ import { useI18n } from '@/components/I18nProvider';
 import { AdminLogin } from '@/components/admin/AdminLogin';
 import { AvailabilityBoard } from '@/components/admin/AvailabilityBoard';
 import { GapsPanel } from '@/components/admin/GapsPanel';
+import { TourEditor } from '@/components/admin/TourEditor';
+import { BookingsManager } from '@/components/admin/BookingsManager';
+import { PromoManager } from '@/components/admin/PromoManager';
 import { api } from '@/lib/api';
 import { formatPrice, cn, getStatusColor, getCategoryLabel } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -15,7 +18,7 @@ import {
   BarChart3, Users, Calendar, DollarSign, TrendingUp, MapPin,
   Package, ChevronRight, ChevronLeft, Eye, EyeOff, Edit2, Trash2,
   Plus, Loader2, CreditCard, Check, ExternalLink,
-  CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw, Tag
+  CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw, Tag, Search
 } from 'lucide-react';
 
 type Tab = 'dashboard' | 'tours' | 'bookings' | 'payments' | 'availability' | 'customers' | 'promos' | 'revenue';
@@ -32,7 +35,7 @@ function LoadingBlock() {
   );
 }
 
-function PromoCodesTab() {
+function LegacyPromoCodesTab() {
   const [codes, setCodes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ code: '', type: 'PERCENT', value: 10, maxUses: '' });
@@ -119,23 +122,25 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const { user, logout, loadUser } = useAuthStore();
   // Locale-aware so an admin working in /tr is not bounced into /en on sign-out.
-  const { href } = useI18n();
+  const { href, locale } = useI18n();
   const [checkedAuth, setCheckedAuth] = useState(false);
 
   useEffect(() => {
-    loadUser();
-    setCheckedAuth(true);
+    let active = true;
+    loadUser().finally(() => { if (active) setCheckedAuth(true); });
+    return () => { active = false; };
   }, [loadUser]);
 
+  const tr = locale === 'tr';
   const tabs: { id: Tab; label: string; icon: any }[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
-    { id: 'tours', label: 'Tours', icon: MapPin },
-    { id: 'bookings', label: 'Bookings', icon: Calendar },
-    { id: 'payments', label: 'Payments', icon: CreditCard },
-    { id: 'availability', label: 'Availability', icon: Package },
-    { id: 'customers', label: 'Customers', icon: Users },
-    { id: 'promos', label: 'Promo Codes', icon: Tag },
-    { id: 'revenue', label: 'Revenue', icon: DollarSign },
+    { id: 'dashboard', label: tr ? 'Genel Bakış' : 'Dashboard', icon: BarChart3 },
+    { id: 'tours', label: tr ? 'Turlar' : 'Tours', icon: MapPin },
+    { id: 'bookings', label: tr ? 'Rezervasyonlar' : 'Bookings', icon: Calendar },
+    { id: 'payments', label: tr ? 'Ödemeler' : 'Payments', icon: CreditCard },
+    { id: 'availability', label: tr ? 'Müsaitlik' : 'Availability', icon: Package },
+    { id: 'customers', label: tr ? 'Müşteriler' : 'Customers', icon: Users },
+    { id: 'promos', label: tr ? 'Promosyonlar' : 'Promo Codes', icon: Tag },
+    { id: 'revenue', label: tr ? 'Gelir' : 'Revenue', icon: DollarSign },
   ];
 
   if (!checkedAuth) {
@@ -157,14 +162,14 @@ export default function AdminPage() {
         {/* Sidebar */}
         <aside className="hidden lg:block w-64 min-h-[calc(100vh-5rem)] bg-white dark:bg-dark-50 border-r border-gray-200 dark:border-white/5 p-4 relative">
           <div className="mb-8 px-3">
-            <h2 className="font-display text-lg font-bold text-gray-900 dark:text-white">Admin Panel</h2>
+            <h2 className="font-display text-lg font-bold text-gray-900 dark:text-white">{tr ? 'Yönetim Paneli' : 'Admin Panel'}</h2>
             <p className="text-gray-400 dark:text-white/40 text-xs mt-1 truncate" title={user.email}>{user.email}</p>
             <Link
               href={href('/')}
               className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400"
             >
               <ExternalLink className="w-3.5 h-3.5" />
-              View site
+              {tr ? 'Siteyi görüntüle' : 'View site'}
             </Link>
           </div>
 
@@ -192,7 +197,7 @@ export default function AdminPage() {
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-all"
             >
               <LogOut className="w-4 h-4" />
-              Sign Out
+              {tr ? 'Çıkış yap' : 'Sign Out'}
             </button>
           </div>
         </aside>
@@ -222,11 +227,11 @@ export default function AdminPage() {
         <main className="flex-1 p-4 md:p-8 pb-20 lg:pb-8 min-w-0">
           {activeTab === 'dashboard' && <DashboardTab onOpenAvailability={() => setActiveTab('availability')} />}
           {activeTab === 'tours' && <ToursTab />}
-          {activeTab === 'bookings' && <BookingsTab />}
+          {activeTab === 'bookings' && <BookingsManager />}
           {activeTab === 'payments' && <PaymentsTab />}
           {activeTab === 'availability' && <AvailabilityBoard />}
           {activeTab === 'customers' && <CustomersTab />}
-          {activeTab === 'promos' && <PromoCodesTab />}
+          {activeTab === 'promos' && <PromoManager />}
           {activeTab === 'revenue' && <RevenueTab />}
         </main>
       </div>
@@ -269,7 +274,11 @@ function DashboardTab({ onOpenAvailability }: { onOpenAvailability: () => void }
   const cards = [
     { label: 'Total Revenue', value: formatPrice(stats?.totalRevenue || 0), icon: DollarSign },
     { label: 'Month Revenue', value: formatPrice(stats?.monthRevenue || 0), icon: TrendingUp },
-    { label: 'Total Bookings', value: stats?.totalBookings?.toLocaleString() || '0', icon: Calendar, change: `${stats?.bookingGrowth >= 0 ? '+' : ''}${stats?.bookingGrowth?.toFixed(0) || 0}%` },
+    { label: 'Today Bookings', value: stats?.todayBookings?.toLocaleString() || '0', icon: Calendar },
+    { label: 'Pending Bookings', value: stats?.pendingBookings?.toLocaleString() || '0', icon: Clock },
+    { label: 'Upcoming Bookings', value: stats?.upcomingBookings?.toLocaleString() || '0', icon: Calendar },
+    { label: 'Completed Payments', value: stats?.completedPayments?.toLocaleString() || '0', icon: CreditCard },
+    { label: 'Active Tours', value: stats?.activeTours?.toLocaleString() || '0', icon: MapPin },
     { label: 'Total Customers', value: stats?.totalUsers?.toLocaleString() || '0', icon: Users },
   ];
 
@@ -291,11 +300,6 @@ function DashboardTab({ onOpenAvailability }: { onOpenAvailability: () => void }
           >
             <div className="flex items-center justify-between mb-3">
               <card.icon className="w-5 h-5 text-emerald-400" />
-              {card.change && (
-                <span className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                  {card.change}
-                </span>
-              )}
             </div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</p>
             <p className="text-gray-400 dark:text-white/40 text-sm mt-1">{card.label}</p>
@@ -313,22 +317,20 @@ function DashboardTab({ onOpenAvailability }: { onOpenAvailability: () => void }
           <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Quick Overview</h3>
           <div className="space-y-3">
             <div className="flex justify-between py-2 border-b border-gray-100 dark:border-white/5">
-              <span className="text-gray-500 dark:text-white/50">Active Tours</span>
-              <span className="text-gray-900 dark:text-white font-medium">{stats?.activeTours}</span>
+              <span className="text-gray-500 dark:text-white/50">Today Revenue</span>
+              <span className="text-gray-900 dark:text-white font-medium">{formatPrice(stats?.todayRevenue || 0)}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-100 dark:border-white/5">
-              <span className="text-gray-500 dark:text-white/50">Upcoming Bookings</span>
-              <span className="text-gray-900 dark:text-white font-medium">{stats?.upcomingBookings}</span>
+              <span className="text-gray-500 dark:text-white/50">Confirmed / Cancelled</span>
+              <span className="text-gray-900 dark:text-white font-medium">{stats?.confirmedBookings} / {stats?.cancelledBookings}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-100 dark:border-white/5">
               <span className="text-gray-500 dark:text-white/50">This Month Bookings</span>
               <span className="text-gray-900 dark:text-white font-medium">{stats?.monthBookings}</span>
             </div>
             <div className="flex justify-between py-2">
-              <span className="text-gray-500 dark:text-white/50">Growth</span>
-              <span className={cn('font-medium', stats?.bookingGrowth >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                {stats?.bookingGrowth >= 0 ? '+' : ''}{stats?.bookingGrowth?.toFixed(1)}%
-              </span>
+              <span className="text-gray-500 dark:text-white/50">30d low / sold out / missing</span>
+              <span className="font-medium text-amber-500">{stats?.lowCapacityDates} / {stats?.soldOutDates} / {stats?.missingAvailabilityDates}</span>
             </div>
           </div>
         </div>
@@ -359,6 +361,10 @@ function DashboardTab({ onOpenAvailability }: { onOpenAvailability: () => void }
           )}
         </div>
       </div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="glass-card p-6"><h3 className="mb-4 font-semibold">Recent bookings</h3><div className="space-y-3">{stats?.recentBookings?.map((booking: any) => <div key={booking.id} className="flex justify-between border-b py-2 text-sm dark:border-white/5"><div><b>{booking.bookingNumber}</b><p className="text-gray-500">{booking.guestName} · {booking.tour?.title}</p></div><div className="text-right"><span>{booking.status}</span><p>{formatPrice(booking.totalPrice, booking.currency)}</p></div></div>)}</div></div>
+        <div className="glass-card p-6"><h3 className="mb-4 font-semibold">Best-selling tours</h3><div className="space-y-3">{stats?.topTours?.map((tour: any) => <div key={tour.tourId} className="flex justify-between border-b py-2 text-sm dark:border-white/5"><span>{tour.title}</span><span>{tour.bookings} bookings · {formatPrice(tour.revenue)}</span></div>)}</div></div>
+      </div>
     </div>
   );
 }
@@ -388,7 +394,7 @@ function linesToArray(text: string): string[] {
   return text.split('\n').map((s) => s.trim()).filter(Boolean);
 }
 
-function TourFormModal({
+function LegacyTourFormModal({
   tour,
   onClose,
   onSaved,
@@ -786,7 +792,7 @@ function ToursTab() {
       )}
 
       {modalTour && (
-        <TourFormModal
+        <TourEditor
           tour={modalTour === 'new' ? null : modalTour}
           onClose={() => setModalTour(null)}
           onSaved={(saved) => {
@@ -806,7 +812,7 @@ function ToursTab() {
 
 const BOOKING_STATUSES = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
 
-function BookingsTab() {
+function LegacyBookingsTab() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1100,12 +1106,16 @@ function CustomersTab() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
+  const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+  const [detail, setDetail] = useState<any>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const fetchCustomers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get('/admin/customers', { params: { limit: 20, page } });
+      const res = await api.get('/admin/customers', { params: { limit: 20, page, search: query || undefined } });
       setCustomers(res.data.data);
       setPages(res.data.pagination?.pages || 1);
     } catch (err: any) {
@@ -1113,15 +1123,35 @@ function CustomersTab() {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, query]);
 
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
 
+  const openDetail = async (email: string) => {
+    setDetailLoading(true);
+    try {
+      const response = await api.get('/admin/customers/detail', { params: { email } });
+      setDetail(response.data.data);
+    } catch (err) {
+      toast.error(extractError(err, 'Failed to load customer history.'));
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
   return (
     <div>
       <h1 className="font-display text-3xl font-bold text-gray-900 dark:text-white mb-8">Customers</h1>
+      <form className="mb-5 flex max-w-xl gap-2" onSubmit={(event) => { event.preventDefault(); setPage(1); setQuery(search.trim()); }}>
+        <label className="relative flex-1">
+          <span className="sr-only">Search customers</span>
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, email or phone" className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm dark:border-white/10 dark:bg-white/5" />
+        </label>
+        <button className="rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white">Search</button>
+      </form>
 
       {loading ? (
         <LoadingBlock />
@@ -1144,7 +1174,7 @@ function CustomersTab() {
               </thead>
               <tbody>
                 {customers.map((c) => (
-                  <tr key={c.id} className="border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+                  <tr key={c.id} onClick={() => openDetail(c.email)} className="cursor-pointer border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/[0.02]" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter') openDetail(c.email); }}>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-xs font-bold text-white">
@@ -1165,6 +1195,8 @@ function CustomersTab() {
           <Pagination page={page} pages={pages} onChange={setPage} />
         </div>
       )}
+      {detailLoading && <div className="fixed inset-0 z-50 grid place-items-center bg-black/60"><Loader2 className="h-8 w-8 animate-spin text-emerald-400" /></div>}
+      {detail && <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Customer detail"><div className="mx-auto mt-16 max-w-3xl rounded-3xl bg-white p-6 shadow-2xl dark:bg-dark-50"><div className="flex items-start justify-between"><div><h2 className="font-display text-2xl font-bold">{detail.customer.name || detail.customer.email}</h2><p className="mt-1 text-sm text-gray-500 dark:text-white/50">{detail.customer.email}{detail.customer.phone ? ` · ${detail.customer.phone}` : ''}</p></div><button onClick={() => setDetail(null)} aria-label="Close"><X className="h-6 w-6" /></button></div><h3 className="mt-8 text-sm font-bold uppercase tracking-wider text-gray-400">Booking history</h3><div className="mt-3 space-y-3">{detail.bookings.length === 0 ? <p className="text-sm text-gray-400">No bookings found.</p> : detail.bookings.map((booking: any) => <div key={booking.id} className="grid gap-2 rounded-2xl border p-4 text-sm dark:border-white/10 sm:grid-cols-4"><div><p className="font-bold">{booking.bookingNumber}</p><p className="text-gray-500">{booking.tour.title}</p></div><p>{new Date(booking.date).toLocaleDateString()}</p><p>{booking.totalPrice} {booking.currency}</p><div><span className={cn('rounded-full px-2 py-1 text-xs', getStatusColor(booking.status))}>{booking.status}</span><p className="mt-2 text-xs text-gray-400">{booking.payment?.status || 'UNPAID'}</p></div></div>)}</div></div></div>}
     </div>
   );
 }

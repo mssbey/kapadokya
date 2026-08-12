@@ -6,18 +6,46 @@ export interface Tour {
   shortDesc: string;
   category: TourCategory;
   basePrice: number;
+  regularPrice?: number;
+  discountedPrice?: number | null;
   currency: string;
+  tourType?: 'GROUP' | 'PRIVATE' | 'PACKAGE' | 'TRANSFER' | 'ACTIVITY';
+  childPriceRate?: number;
+  privatePriceMultiplier?: number;
   duration: string;
+  startTime?: string | null;
+  endTime?: string | null;
   maxCapacity: number;
+  minParticipants?: number;
+  defaultCapacity?: number;
   images: string[];
+  image?: string | null;
+  media?: TourImage[];
   videoUrl?: string;
   highlights: string[];
   includes: string[];
   excludes: string[];
   isActive: boolean;
+  isFeatured?: boolean;
+  isBookingEnabled?: boolean;
+  meetingPoint?: string | null;
+  cancellationPolicy?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  contentLocale?: string;
   sortOrder: number;
   upsells: TourUpsell[];
   availabilities?: Availability[];
+}
+
+export interface TourImage {
+  id: string;
+  secureUrl: string;
+  altText?: string | null;
+  isCover: boolean;
+  sortOrder: number;
+  width?: number | null;
+  height?: number | null;
 }
 
 export interface TourUpsell {
@@ -115,6 +143,7 @@ export interface PaginatedResponse<T> extends ApiResponse<T> {
     page: number;
     limit: number;
     total: number;
+    totalPages: number;
     pages: number;
   };
 }

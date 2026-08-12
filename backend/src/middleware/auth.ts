@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
 import { AppError } from './errorHandler';
+import { SESSION_COOKIE } from '../lib/session';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -10,11 +11,13 @@ export interface AuthRequest extends Request {
     role: string;
     name: string;
   };
+  authSource?: 'bearer' | 'cookie';
 }
 
 export function authenticate(req: AuthRequest, _res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = bearer || req.cookies?.[SESSION_COOKIE] || null;
 
   if (!token) {
     return next(new AppError('Authentication required', 401));
@@ -32,6 +35,7 @@ export function authenticate(req: AuthRequest, _res: Response, next: NextFunctio
     };
 
     req.user = decoded;
+    req.authSource = bearer ? 'bearer' : 'cookie';
     next();
   } catch {
     return next(new AppError('Invalid or expired token', 401));
@@ -47,7 +51,8 @@ export function requireAdmin(req: AuthRequest, _res: Response, next: NextFunctio
 
 export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const token = bearer || req.cookies?.[SESSION_COOKIE] || null;
 
   if (!token) return next();
 
@@ -63,6 +68,7 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
     };
 
     req.user = decoded;
+    req.authSource = bearer ? 'bearer' : 'cookie';
   } catch {
     // Invalid token, continue without auth
   }

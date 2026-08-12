@@ -1,11 +1,21 @@
 import { Router } from 'express';
+import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { generateToken, authenticate, AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
+import { clearSessionCookies, CSRF_COOKIE, setSessionCookies } from '../lib/session';
 
 export const authRouter = Router();
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many sign-in attempts. Try again later.' },
+});
 
 const registerSchema = z.object({
   name: z.string().min(2).max(100),
@@ -42,10 +52,11 @@ authRouter.post('/register', async (req, res, next) => {
     });
 
     const token = generateToken(user);
+    const csrfToken = setSessionCookies(res, token);
 
     res.status(201).json({
       success: true,
-      data: { user, token },
+      data: { user, csrfToken },
     });
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -56,7 +67,7 @@ authRouter.post('/register', async (req, res, next) => {
 });
 
 // Login
-authRouter.post('/login', async (req, res, next) => {
+authRouter.post('/login', loginLimiter, async (req, res, next) => {
   try {
     const data = loginSchema.parse(req.body);
 
@@ -76,12 +87,13 @@ authRouter.post('/login', async (req, res, next) => {
       role: user.role,
       name: user.name,
     });
+    const csrfToken = setSessionCookies(res, token);
 
     res.json({
       success: true,
       data: {
         user: { id: user.id, name: user.name, email: user.email, role: user.role },
-        token,
+        csrfToken,
       },
     });
   } catch (err) {
@@ -90,6 +102,11 @@ authRouter.post('/login', async (req, res, next) => {
     }
     next(err);
   }
+});
+
+authRouter.post('/logout', (_req, res) => {
+  clearSessionCookies(res);
+  res.json({ success: true, message: 'Signed out' });
 });
 
 // Get current user
@@ -104,7 +121,7 @@ authRouter.get('/me', authenticate, async (req: AuthRequest, res, next) => {
       throw new AppError('User not found', 404);
     }
 
-    res.json({ success: true, data: user });
+    res.json({ success: true, data: { user, csrfToken: req.cookies?.[CSRF_COOKIE] } });
   } catch (err) {
     next(err);
   }

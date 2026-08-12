@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { SiteLogo } from '@/components/SiteLogo';
 import { Menu, MessageCircle, X } from 'lucide-react';
 import { SITE, whatsappUrl } from '@/lib/site';
 import { useSitePreferences } from '@/components/SitePreferences';
@@ -49,7 +49,7 @@ export function Navbar() {
   return (
     <header className={`fixed inset-x-0 top-0 z-50 border-b transition ${transparent ? 'border-transparent bg-gradient-to-b from-black/60 via-black/30 to-transparent text-white' : 'border-stone-200/70 bg-white/95 text-stone-900 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-[#08110f]/95 dark:text-white'}`}>
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href={href('/')} aria-label={t.nav.homeAria}><Image src="/logo.png" width={165} height={48} alt="Discovery Cappadocia" priority className="h-auto w-[150px] sm:w-[165px]" /></Link>
+        <Link href={href('/')} aria-label={t.nav.homeAria}><SiteLogo priority className="h-auto w-[150px] sm:w-[165px]" /></Link>
         <nav className="hidden items-center gap-1 lg:flex" aria-label={t.nav.primaryNavAria}>
           {links.map(([label, target]) => <Link key={label} href={target} className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${transparent ? 'text-white/85 hover:bg-white/10 hover:text-white' : 'text-stone-700 hover:bg-stone-100 hover:text-stone-900 dark:text-white/80 dark:hover:bg-white/10 dark:hover:text-white'}`}>{label}</Link>)}
         </nav>

@@ -36,6 +36,15 @@
     scroll-behavior: smooth;
   }
 
+  /* Jump links (#about, #experiences, #faq, #contact, #map) align the target's
+     top edge with the top of the viewport — which is behind the 80px fixed
+     header, so the section's heading landed half-covered. Clear the header
+     plus a little breathing room. */
+  section[id],
+  footer[id] {
+    scroll-margin-top: 7rem;
+  }
+
   body {
     @apply bg-white dark:bg-dark text-gray-900 dark:text-white font-body antialiased;
     overflow-x: hidden;
@@ -301,6 +310,11 @@ div.leaflet-container {
   color: #fff;
   border-bottom-color: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(8px);
+  /* Leaflet puts `font: bold 18px 'Lucida Console', Monaco, monospace` on the
+     zoom buttons, which the container's `font-family: inherit` cannot undo —
+     the shorthand lands on the anchor itself. These were the only glyphs on
+     the page not set in the site's own faces. */
+  font-family: inherit;
 }
 
 .leaflet-container .leaflet-bar a:hover {

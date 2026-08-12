@@ -13,7 +13,7 @@ import { useI18n } from '@/components/I18nProvider';
 const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
 
-function StripeForm({ amount, onSuccess }: { amount: number; onSuccess: () => void }) {
+function StripeForm({ amount, currency, onSuccess }: { amount: number; currency: string; onSuccess: () => void }) {
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
@@ -25,15 +25,15 @@ function StripeForm({ amount, onSuccess }: { amount: number; onSuccess: () => vo
     const result = await stripe.confirmPayment({ elements, confirmParams: { return_url: `${window.location.origin}/booking?payment=return` }, redirect: 'if_required' });
     setProcessing(false);
     if (result.error) return toast.error(result.error.message || t.booking.payment.errorGeneric);
-    if (result.paymentIntent?.status === 'succeeded') { window.dataLayer?.push({ event: 'purchase', value: amount, currency: 'EUR' }); onSuccess(); }
+    if (result.paymentIntent?.status === 'succeeded') { window.dataLayer?.push({ event: 'purchase', value: amount, currency }); onSuccess(); }
     else toast(t.booking.payment.pending);
   }
 
-  return <div className="space-y-5"><div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/5"><PaymentElement /></div><button onClick={submit} disabled={!stripe || processing} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-4 font-bold text-white disabled:opacity-60">{processing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Lock className="h-5 w-5" />} {fill(t.booking.payment.payButton, { amount: formatPrice(amount, 'EUR', tag) })}</button></div>;
+  return <div className="space-y-5"><div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-white/10 dark:bg-white/5"><PaymentElement /></div><button onClick={submit} disabled={!stripe || processing} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-4 font-bold text-white disabled:opacity-60">{processing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Lock className="h-5 w-5" />} {fill(t.booking.payment.payButton, { amount: formatPrice(amount, currency, tag) })}</button></div>;
 }
 
 export function StepPayment() {
-  const { totalPrice, getFormData, nextStep, prevStep } = useBookingStore();
+  const { totalPrice, selectedTour, getFormData, setTotalPrice, nextStep, prevStep } = useBookingStore();
   const { t, tag } = useI18n();
   const [paymentMethod, setPaymentMethod] = useState<'STRIPE' | 'IYZICO'>('STRIPE');
   const [preparing, setPreparing] = useState(false);
@@ -47,8 +47,12 @@ export function StepPayment() {
       window.dataLayer?.push({ event: 'begin_checkout', value: totalPrice, currency: 'EUR' });
       const bookingRes = await api.post('/bookings', { ...getFormData(), promoCode: promoCode.trim() || undefined });
       const booking = bookingRes.data.data.booking;
+      const serverTotal = bookingRes.data.data.pricing.totalPrice;
+      const paymentAccessToken = bookingRes.data.data.paymentAccessToken;
+      setTotalPrice(serverTotal);
       sessionStorage.setItem('dc_last_booking_id', booking.id);
-      const paymentRes = await api.post('/payments/create-intent', { bookingId: booking.id, provider: paymentMethod });
+      sessionStorage.setItem('dc_last_booking_number', booking.bookingNumber);
+      const paymentRes = await api.post('/payments/create-intent', { bookingId: booking.id, provider: paymentMethod, paymentAccessToken });
       if (paymentMethod === 'STRIPE') {
         if (!paymentRes.data.data.clientSecret) throw new Error(t.booking.payment.errorSession);
         setClientSecret(paymentRes.data.data.clientSecret);
@@ -61,7 +65,7 @@ export function StepPayment() {
     } finally { setPreparing(false); }
   }
 
-  if (clientSecret && stripePromise) return <div><h2 className="mb-6 font-display text-2xl font-bold">{t.booking.payment.secureCardHeading}</h2><Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}><StripeForm amount={totalPrice} onSuccess={nextStep} /></Elements></div>;
+  if (clientSecret && stripePromise) return <div><h2 className="mb-6 font-display text-2xl font-bold">{t.booking.payment.secureCardHeading}</h2><Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}><StripeForm amount={totalPrice} currency={selectedTour?.currency || 'EUR'} onSuccess={nextStep} /></Elements></div>;
   if (iyzicoForm) return <div><h2 className="mb-6 font-display text-2xl font-bold">{t.booking.payment.secureIyzicoHeading}</h2><div className="rounded-2xl bg-white p-5" dangerouslySetInnerHTML={{ __html: iyzicoForm }} /></div>;
 
   return (
@@ -72,7 +76,7 @@ export function StepPayment() {
         <div className="glass-card p-6"><label className="text-sm font-semibold" htmlFor="promo">{t.booking.payment.promoLabel}</label><div className="mt-2 flex gap-2"><input id="promo" value={promoCode} onChange={(event) => setPromoCode(event.target.value.toUpperCase())} placeholder={t.booking.payment.promoPlaceholder} className="input-glass uppercase" /><span className="self-center text-xs text-gray-400">{t.booking.payment.promoNote}</span></div></div>
         <div className="flex flex-wrap justify-center gap-5 text-xs text-gray-400"><span className="flex gap-1"><ShieldCheck className="h-4 w-4" /> {t.booking.payment.ssl}</span><span className="flex gap-1"><Lock className="h-4 w-4" /> {t.booking.payment.secure3d}</span><span>{t.booking.payment.cardHandled}</span></div>
         {!publishableKey && paymentMethod === 'STRIPE' && <p className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800 dark:bg-amber-300/10 dark:text-amber-200">{t.booking.payment.stripeDisabled}</p>}
-        <button onClick={preparePayment} disabled={preparing || (paymentMethod === 'STRIPE' && !publishableKey)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-4 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">{preparing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Lock className="h-5 w-5" />} {t.booking.payment.continueToSecure} · {formatPrice(totalPrice, 'EUR', tag)}</button>
+        <button onClick={preparePayment} disabled={preparing || (paymentMethod === 'STRIPE' && !publishableKey)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-4 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">{preparing ? <Loader2 className="h-5 w-5 animate-spin" /> : <Lock className="h-5 w-5" />} {t.booking.payment.continueToSecure} · {formatPrice(totalPrice, selectedTour?.currency || 'EUR', tag)}</button>
       </div>
     </div>
   );
