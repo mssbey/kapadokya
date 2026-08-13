@@ -4,7 +4,7 @@ export const SITE = {
   legalName: 'Cappadocia Kaphera Travel Agency',
   phoneDisplay: '+90 540 101 50 50',
   phone: '+905401015050',
-  email: 'iletisim@kapheratravel.com',
+  email: 'info@kapheratravel.com',
   address: 'Cappadocia, Nevşehir, Türkiye',
   tursabNumber: '18577',
 } as const;
