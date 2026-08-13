@@ -168,6 +168,17 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Horizontal carousels (e.g. PopularExperiences) scroll via arrow buttons and
+     touch/trackpad drag, not a visible scrollbar. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Navbar gradient border animation */

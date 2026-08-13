@@ -81,6 +81,8 @@ export const en = {
       'Displayed currency conversions are indicative. Your final checkout total is confirmed before payment.',
     addWishlist: 'Add to wishlist',
     removeWishlist: 'Remove from wishlist',
+    scrollLeft: 'Scroll left',
+    scrollRight: 'Scroll right',
   },
 
   balloon: {

@@ -78,6 +78,8 @@ export const it: Dictionary = {
       'Le conversioni di valuta mostrate sono indicative. Il totale finale viene confermato prima del pagamento.',
     addWishlist: 'Aggiungi ai preferiti',
     removeWishlist: 'Rimuovi dai preferiti',
+    scrollLeft: 'Scorri a sinistra',
+    scrollRight: 'Scorri a destra',
   },
 
   balloon: {

@@ -78,6 +78,8 @@ export const tr: Dictionary = {
       'Gösterilen döviz çevrimleri bilgi amaçlıdır. Nihai ödeme tutarınız ödeme öncesinde teyit edilir.',
     addWishlist: 'Favorilere ekle',
     removeWishlist: 'Favorilerden çıkar',
+    scrollLeft: 'Sola kaydır',
+    scrollRight: 'Sağa kaydır',
   },
 
   balloon: {

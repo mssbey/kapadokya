@@ -78,6 +78,8 @@ export const es: Dictionary = {
       'Las conversiones de moneda mostradas son orientativas. El total final se confirma antes del pago.',
     addWishlist: 'Añadir a favoritos',
     removeWishlist: 'Quitar de favoritos',
+    scrollLeft: 'Desplazar a la izquierda',
+    scrollRight: 'Desplazar a la derecha',
   },
 
   balloon: {
