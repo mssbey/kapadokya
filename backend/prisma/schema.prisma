@@ -315,6 +315,16 @@ model PaymentWebhookEvent {
   @@index([paymentId])
 }
 
+model LegalPage {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  title     String
+  intro     String
+  sections  Json
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
 model AuditLog {
   id         String   @id @default(uuid())
   actorId    String?

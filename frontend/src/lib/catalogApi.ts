@@ -41,6 +41,36 @@ export async function getPublicTour(slug: string, locale: Locale) {
   return request<Tour>(`/tours/${encodeURIComponent(slug)}?locale=${locale}`);
 }
 
+export type LegalSection = {
+  title: string;
+  body?: string | null;
+  list?: string[];
+  table?: { head: string[]; rows: string[][] };
+  footnote?: string | null;
+};
+
+export type LegalPage = {
+  id: string;
+  slug: string;
+  title: string;
+  intro: string;
+  sections: LegalSection[];
+  updatedAt: string;
+};
+
+// Legal content is edited live from the admin panel, so this bypasses the
+// shared `request()` helper's 60s ISR cache — an edit should be visible on
+// the next page load, not up to a minute later.
+export async function getLegalPage(slug: string): Promise<LegalPage> {
+  const response = await fetch(`${apiBaseUrl()}/legal/${encodeURIComponent(slug)}`, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error(`Legal API returned ${response.status}`);
+  const envelope: ApiEnvelope<LegalPage> = await response.json();
+  return envelope.data;
+}
+
 export function categoryLabel(category: Tour['category'], locale: Locale): string {
   const labels: Record<Locale, Record<Tour['category'], string>> = {
     en: { BALLOON: 'Balloon', DAILY_TOUR: 'Daily Tour', ADVENTURE: 'Adventure', TRANSFER: 'Transfer' },

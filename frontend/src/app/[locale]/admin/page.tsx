@@ -11,6 +11,7 @@ import { GapsPanel } from '@/components/admin/GapsPanel';
 import { TourEditor } from '@/components/admin/TourEditor';
 import { BookingsManager } from '@/components/admin/BookingsManager';
 import { PromoManager } from '@/components/admin/PromoManager';
+import { LegalPagesManager } from '@/components/admin/LegalPagesManager';
 import { api } from '@/lib/api';
 import { formatPrice, cn, getStatusColor, getCategoryLabel } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -18,10 +19,10 @@ import {
   BarChart3, Users, Calendar, DollarSign, TrendingUp, MapPin,
   Package, ChevronRight, ChevronLeft, Eye, EyeOff, Edit2, Trash2,
   Plus, Loader2, CreditCard, Check, ExternalLink,
-  CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw, Tag, Search
+  CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw, Tag, Search, FileText
 } from 'lucide-react';
 
-type Tab = 'dashboard' | 'tours' | 'bookings' | 'payments' | 'availability' | 'customers' | 'promos' | 'revenue';
+type Tab = 'dashboard' | 'tours' | 'bookings' | 'payments' | 'availability' | 'customers' | 'promos' | 'revenue' | 'legal';
 
 function extractError(err: any, fallback: string): string {
   return err?.response?.data?.message || fallback;
@@ -141,6 +142,7 @@ export default function AdminPage() {
     { id: 'customers', label: tr ? 'Müşteriler' : 'Customers', icon: Users },
     { id: 'promos', label: tr ? 'Promosyonlar' : 'Promo Codes', icon: Tag },
     { id: 'revenue', label: tr ? 'Gelir' : 'Revenue', icon: DollarSign },
+    { id: 'legal', label: tr ? 'Yasal Sayfalar' : 'Legal Pages', icon: FileText },
   ];
 
   if (!checkedAuth) {
@@ -233,6 +235,7 @@ export default function AdminPage() {
           {activeTab === 'customers' && <CustomersTab />}
           {activeTab === 'promos' && <PromoManager />}
           {activeTab === 'revenue' && <RevenueTab />}
+          {activeTab === 'legal' && <LegalPagesManager />}
         </main>
       </div>
     </div>

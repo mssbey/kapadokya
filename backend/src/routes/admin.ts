@@ -894,6 +894,59 @@ adminRouter.patch('/promo-codes/:id', async (req: AuthRequest, res, next) => {
   }
 });
 
+// =================== LEGAL PAGES ===================
+
+const legalSectionSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  body: z.string().trim().max(6000).nullable().optional(),
+  list: z.array(z.string().trim().min(1).max(1000)).max(50).optional(),
+  table: z
+    .object({
+      head: z.array(z.string().trim().max(200)).max(10),
+      rows: z.array(z.array(z.string().trim().max(500)).max(10)).max(100),
+    })
+    .optional(),
+  footnote: z.string().trim().max(2000).nullable().optional(),
+});
+
+const legalPageMutationSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  intro: z.string().trim().min(1).max(2000),
+  sections: z.array(legalSectionSchema).min(1).max(50),
+});
+
+adminRouter.get('/legal', async (_req, res, next) => {
+  try {
+    const pages = await prisma.legalPage.findMany({ orderBy: { slug: 'asc' } });
+    res.json({ success: true, data: pages });
+  } catch (error) { next(error); }
+});
+
+adminRouter.get('/legal/:slug', async (req, res, next) => {
+  try {
+    const page = await prisma.legalPage.findUnique({ where: { slug: req.params.slug } });
+    if (!page) throw new AppError('Legal page not found', 404);
+    res.json({ success: true, data: page });
+  } catch (error) { next(error); }
+});
+
+adminRouter.put('/legal/:slug', async (req: AuthRequest, res, next) => {
+  try {
+    const data = legalPageMutationSchema.parse(req.body);
+    const page = await prisma.legalPage.upsert({
+      where: { slug: req.params.slug },
+      update: { title: data.title, intro: data.intro, sections: data.sections as any },
+      create: { slug: req.params.slug, title: data.title, intro: data.intro, sections: data.sections as any },
+    });
+    await invalidateCache(`legal:${req.params.slug}`);
+    await writeAudit(req, 'LEGAL_PAGE_UPDATED', 'LegalPage', page.id, { slug: page.slug });
+    res.json({ success: true, data: page });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
+});
+
 adminRouter.get('/audit-logs', async (req, res, next) => {
   try {
     const { page, limit } = paginationSchema.parse(req.query);

@@ -20,6 +20,7 @@ import { tourRouter } from './routes/tours';
 import { bookingRouter } from './routes/bookings';
 import { paymentRouter } from './routes/payments';
 import { availabilityRouter } from './routes/availability';
+import { legalRouter } from './routes/legal';
 import { adminRouter } from './routes/admin';
 import { adminMediaRouter } from './routes/adminMedia';
 import { errorHandler } from './middleware/errorHandler';
@@ -75,6 +76,7 @@ app.use('/api/tours', tourRouter);
 app.use('/api/bookings', bookingRouter);
 app.use('/api/payments', paymentRouter);
 app.use('/api/availability', availabilityRouter);
+app.use('/api/legal', legalRouter);
 app.use('/api/admin', adminMediaRouter);
 app.use('/api/admin', adminRouter);
 
