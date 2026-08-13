@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Flame } from 'lucide-react';
 import { api } from '@/lib/api';
-import { formatPrice } from '@/lib/utils';
 import { useI18n } from '@/components/I18nProvider';
+import { useSitePreferences } from '@/components/SitePreferences';
 
 type Row = { id: string; date: string; seatsAvailable: number; priceOverride: number | null; tour: { title: string; slug: string; basePrice: number; currency: string } };
 
 export function LastMinuteAvailability() {
   const { t, tag, href, fill } = useI18n();
+  const { price } = useSitePreferences();
   const [rows, setRows] = useState<Row[]>([]);
   useEffect(() => { api.get('/availability/last-minute/list').then((response) => setRows(response.data.data)).catch(() => setRows([])); }, []);
   if (!rows.length) return null;
@@ -34,7 +35,7 @@ export function LastMinuteAvailability() {
                   {new Date(row.date).toLocaleDateString(tag, { weekday: 'long', month: 'short', day: 'numeric' })} · {fill(t.lastMinute.seatsAvailable, { count: row.seatsAvailable })}
                 </p>
               </div>
-              <p className="ml-3 font-extrabold">{formatPrice(row.priceOverride || row.tour.basePrice, row.tour.currency, tag)}</p>
+              <p className="ml-3 font-extrabold">{price(row.priceOverride || row.tour.basePrice, row.tour.currency)}</p>
             </Link>
           ))}
         </div>
