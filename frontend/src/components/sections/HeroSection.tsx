@@ -44,7 +44,6 @@ export function HeroSection() {
             <ResponsivePhoto
               src="/images/cappadocia-hero-signature.webp"
               alt=""
-              priority
               positionClassName="object-[60%_center] md:object-center"
             />
           </video>
@@ -54,11 +53,17 @@ export function HeroSection() {
       </div>
 
       <div className="relative mx-auto w-full max-w-7xl px-4 pb-24 pt-12 sm:px-6 lg:px-8">
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7 }} className="max-w-3xl">
+        <div className="max-w-3xl">
+          {/* Outside the fade-in below on purpose: this is the page's LCP
+              element (measured), and animating its opacity in with the rest
+              of the copy pushed LCP behind the JS bundle load + hydration +
+              animation delay. It now paints as soon as the image is ready. */}
           <SiteLogo
             priority
             className="mb-7 h-auto w-[260px] drop-shadow-[0_10px_40px_rgba(0,0,0,.55)] sm:w-[330px] lg:w-[400px]"
           />
+        </div>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7 }} className="max-w-3xl">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/25 px-4 py-2 text-sm backdrop-blur-xl">
             <BadgeCheck className="h-4 w-4 text-amber-300" /> {t.hero.badge}
           </div>

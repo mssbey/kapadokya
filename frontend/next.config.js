@@ -10,6 +10,24 @@ const nextConfig = {
   experimental: {
     nodeMiddleware: true,
   },
+  async headers() {
+    // Filenames under public/images and public/videos aren't content-hashed
+    // (unlike _next/static, which Next already serves immutable for a year),
+    // so a full year would risk stale assets after a content update. A week
+    // of real caching plus a month of background revalidation still turns
+    // every repeat view/navigation into a cache hit instead of a
+    // max-age=0/must-revalidate round trip on every request.
+    return [
+      {
+        source: '/images/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }],
+      },
+      {
+        source: '/videos/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
