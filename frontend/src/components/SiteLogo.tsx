@@ -24,6 +24,11 @@ export function SiteLogo({ className, priority = false }: Props) {
       width={INTRINSIC.width}
       height={INTRINSIC.height}
       priority={priority}
+      // `priority` alone doesn't reliably add fetchpriority="high" when
+      // images.unoptimized is on (confirmed on production: the preload link
+      // Next emits for this image had no fetchPriority), so it's set
+      // explicitly for the one call site that's the actual LCP element.
+      fetchPriority={priority ? 'high' : undefined}
       className={className}
     />
   );
