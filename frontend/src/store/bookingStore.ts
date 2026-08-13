@@ -13,6 +13,7 @@ interface BookingState {
   guestName: string;
   guestEmail: string;
   guestPhone: string;
+  hotelName: string;
   notes: string;
   totalPrice: number;
 
@@ -21,9 +22,9 @@ interface BookingState {
   prevStep: () => void;
   setTour: (tour: Tour) => void;
   setDate: (date: string, availability: Availability) => void;
-  setPeople: (adults: number, children: number, isPrivate: boolean) => void;
+  setPeople: (guests: number, isPrivate: boolean) => void;
   toggleUpsell: (upsell: SelectedUpsell) => void;
-  setGuestInfo: (name: string, email: string, phone: string, notes?: string) => void;
+  setGuestInfo: (name: string, email: string, phone: string, hotelName: string, notes?: string) => void;
   calculateTotal: () => void;
   setTotalPrice: (totalPrice: number) => void;
   reset: () => void;
@@ -42,6 +43,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   guestName: '',
   guestEmail: '',
   guestPhone: '',
+  hotelName: '',
   notes: '',
   totalPrice: 0,
 
@@ -59,8 +61,8 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     get().calculateTotal();
   },
 
-  setPeople: (adults, children, isPrivate) => {
-    set({ adults, children, isPrivate });
+  setPeople: (adults, isPrivate) => {
+    set({ adults, children: 0, isPrivate });
     get().calculateTotal();
   },
 
@@ -75,8 +77,8 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     get().calculateTotal();
   },
 
-  setGuestInfo: (guestName, guestEmail, guestPhone, notes = '') => {
-    set({ guestName, guestEmail, guestPhone, notes });
+  setGuestInfo: (guestName, guestEmail, guestPhone, hotelName, notes = '') => {
+    set({ guestName, guestEmail, guestPhone, hotelName, notes });
   },
 
   calculateTotal: () => {
@@ -84,17 +86,14 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     if (!state.selectedTour) return;
 
     const unitPrice = state.selectedAvailability?.priceOverride || state.selectedTour.basePrice;
-    const childDiscount = state.selectedTour.childPriceRate ?? 0.5;
-
-    let total = state.adults * unitPrice + state.children * unitPrice * childDiscount;
+    let total = state.adults * unitPrice;
 
     if (state.isPrivate) {
       total *= state.selectedTour.privatePriceMultiplier ?? 1.5;
     }
 
-    const totalPeople = state.adults + state.children;
     const upsellTotal = state.selectedUpsells.reduce((sum, u) => sum + u.price, 0);
-    total += upsellTotal * totalPeople;
+    total += upsellTotal * state.adults;
 
     set({ totalPrice: Math.round(total * 100) / 100 });
   },
@@ -113,6 +112,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
       guestName: '',
       guestEmail: '',
       guestPhone: '',
+      hotelName: '',
       notes: '',
       totalPrice: 0,
     }),
@@ -129,6 +129,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
       guestName: s.guestName,
       guestEmail: s.guestEmail,
       guestPhone: s.guestPhone,
+      hotelName: s.hotelName,
       notes: s.notes || undefined,
     };
   },

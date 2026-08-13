@@ -36,7 +36,7 @@ export const tr: Dictionary = {
   },
 
   hero: {
-    badge: 'Belgeli yerel seyahat acentesi · Kapadokya',
+    badge: 'Cappadocia Kaphera Travel Agency',
     titleLead: 'Kapadokya’nın',
     titleAccent: 'Büyüsünü Keşfedin',
     subtitle:
@@ -323,8 +323,8 @@ export const tr: Dictionary = {
     people: {
       heading: 'Kişi Sayısı',
       subtitle: 'Kaç kişi katılıyor?',
-      adults: 'Yetişkin',
-      adultsAge: '13 yaş ve üzeri',
+      adults: 'Misafir',
+      adultsAge: 'Her misafir için tek fiyat',
       children: 'Çocuk',
       childrenAge: '4-12 yaş (%50 indirim)',
       privateTitle: 'Özel Deneyim',
@@ -351,6 +351,8 @@ export const tr: Dictionary = {
       emailPlaceholder: 'ornek@eposta.com',
       phone: 'Telefon Numarası *',
       phonePlaceholder: '+90 555 000 0000',
+      hotelName: 'Otel Adı *',
+      hotelNamePlaceholder: 'Konakladığınız otelin adını girin',
       notes: 'Özel İstekler (İsteğe bağlı)',
       notesPlaceholder: 'Özel bir ihtiyaç veya isteğiniz varsa yazın...',
       requiredNote:
@@ -363,6 +365,7 @@ export const tr: Dictionary = {
       errorName: 'Lütfen ad ve soyadınızı girin',
       errorEmail: 'Lütfen geçerli bir e-posta adresi girin',
       errorPhone: 'Lütfen geçerli bir telefon numarası girin',
+      errorHotelName: 'Lütfen otel adını girin',
       errorConsent: 'Lütfen gizlilik bildirimini ve rezervasyon koşullarını onaylayın',
       continueToPayment: 'Ödemeye Devam →',
     },
@@ -417,13 +420,13 @@ export const tr: Dictionary = {
       privateUpgrade: 'Özel tur yükseltmesi',
       total: 'Toplam',
       taxesIncluded: 'Vergiler dahil',
-      adultsLine: '{count}x Yetişkin × {price}',
+      adultsLine: '{count}x Misafir × {price}',
       childrenLine: '{count}x Çocuk × {price}',
     },
 
     guests: {
-      adults: '{count} Yetişkin',
-      adultsPlural: '{count} Yetişkin',
+      adults: '{count} Misafir',
+      adultsPlural: '{count} Misafir',
       children: '{count} Çocuk',
       childrenPlural: '{count} Çocuk',
       private: '(Özel)',

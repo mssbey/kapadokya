@@ -10,20 +10,171 @@ const STATUSES = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
 const PAYMENT_STATUSES = ['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'];
 
 export function BookingsManager() {
-  const [rows, setRows] = useState<any[]>([]); const [tours, setTours] = useState<any[]>([]); const [selected, setSelected] = useState<any>(null);
-  const [loading, setLoading] = useState(true); const [page, setPage] = useState(1); const [totalPages, setTotalPages] = useState(1);
+  const [rows, setRows] = useState<any[]>([]);
+  const [tours, setTours] = useState<any[]>([]);
+  const [selected, setSelected] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [filters, setFilters] = useState({ search: '', status: '', paymentStatus: '', tourId: '', from: '', to: '', sort: 'newest' });
-  const load = useCallback(async () => { setLoading(true); try { const params = { page, limit: 20, ...Object.fromEntries(Object.entries(filters).filter(([, value]) => value)) }; const response = await api.get('/admin/bookings', { params }); setRows(response.data.data); setTotalPages(response.data.pagination.totalPages || response.data.pagination.pages || 1); } catch (error: any) { toast.error(error.response?.data?.message || 'Bookings could not be loaded'); } finally { setLoading(false); } }, [page, filters]);
-  useEffect(() => { load(); }, [load]);
-  useEffect(() => { api.get('/admin/tours').then((response) => setTours(response.data.data)).catch(() => setTours([])); }, []);
-  function filter(key: string, value: string) { setFilters((previous) => ({ ...previous, [key]: value })); setPage(1); }
-  async function open(id: string) { try { const response = await api.get(`/admin/bookings/${id}`); setSelected(response.data.data); } catch { toast.error('Booking details could not be loaded'); } }
-  async function status(id: string, value: string) { try { await api.patch(`/admin/bookings/${id}/status`, { status: value }); toast.success('Booking status updated'); await load(); if (selected?.id === id) open(id); } catch (error: any) { toast.error(error.response?.data?.message || 'Status could not be updated'); } }
-  async function note(id: string, adminNote: string) { try { await api.patch(`/admin/bookings/${id}/note`, { adminNote }); toast.success('Internal note saved'); } catch (error: any) { toast.error(error.response?.data?.message || 'Note could not be saved'); } }
-  async function downloadCsv() { try { const response = await api.get('/admin/bookings/export.csv', { params: filters, responseType: 'blob' }); const url = URL.createObjectURL(response.data); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `bookings-${new Date().toISOString().slice(0,10)}.csv`; anchor.click(); URL.revokeObjectURL(url); } catch { toast.error('CSV export failed'); } }
 
-  return <div><div className="mb-6 flex flex-wrap items-center justify-between gap-4"><div><h1 className="font-display text-3xl font-bold">Bookings</h1><p className="text-sm text-gray-500">Search, filter, audit and export live reservations.</p></div><button onClick={downloadCsv} className="rounded-xl border px-4 py-2.5 text-sm"><Download className="mr-2 inline h-4 w-4" />CSV export</button></div><div className="glass-card mb-6 grid gap-3 p-4 md:grid-cols-4"><label className="relative md:col-span-2"><Search className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" /><input value={filters.search} onChange={(event) => filter('search',event.target.value)} placeholder="Booking no, guest, email, phone or tour" className="input-glass !pl-10" /></label><select value={filters.status} onChange={(event) => filter('status',event.target.value)} className="input-glass"><option value="">All booking statuses</option>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select><select value={filters.paymentStatus} onChange={(event) => filter('paymentStatus',event.target.value)} className="input-glass"><option value="">All payment statuses</option>{PAYMENT_STATUSES.map((item) => <option key={item}>{item}</option>)}</select><select value={filters.tourId} onChange={(event) => filter('tourId',event.target.value)} className="input-glass"><option value="">All tours</option>{tours.map((tour) => <option value={tour.id} key={tour.id}>{tour.title}</option>)}</select><input type="date" value={filters.from} onChange={(event) => filter('from',event.target.value)} className="input-glass" aria-label="From date" /><input type="date" value={filters.to} onChange={(event) => filter('to',event.target.value)} className="input-glass" aria-label="To date" /><select value={filters.sort} onChange={(event) => filter('sort',event.target.value)} className="input-glass"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></div>
-  {loading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div> : <><div className="hidden overflow-x-auto rounded-2xl border bg-white dark:border-white/10 dark:bg-white/5 md:block"><table className="w-full text-sm"><thead><tr className="border-b text-left text-xs text-gray-400 dark:border-white/10">{['Booking','Created','Tour / date','Guest','People','Total','Payment','Status',''].map((item) => <th key={item} className="p-4">{item}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={row.id} className="border-b dark:border-white/5"><td className="p-4 font-mono text-xs">{row.bookingNumber}</td><td className="p-4">{new Date(row.createdAt).toLocaleString()}</td><td className="p-4"><b>{row.tour.title}</b><br />{new Date(row.date).toLocaleDateString()} {row.tour.startTime}</td><td className="p-4">{row.guestName}<br /><span className="text-xs text-gray-400">{row.guestEmail}<br />{row.guestPhone}</span></td><td className="p-4">{row.adults + row.children}{row.isPrivate ? ' · Private' : ''}</td><td className="p-4">{formatPrice(row.totalPrice,row.currency)}</td><td className="p-4">{row.payment?.provider || '—'}<br /><span className="text-xs">{row.payment?.status || 'UNPAID'}</span></td><td className="p-4"><select value={row.status} onChange={(event) => status(row.id,event.target.value)} className="rounded-lg border bg-transparent p-2 dark:border-white/10">{STATUSES.map((item) => <option key={item}>{item}</option>)}</select></td><td className="p-4"><button onClick={() => open(row.id)} aria-label="Details"><Eye className="h-5 w-5" /></button></td></tr>)}</tbody></table></div><div className="space-y-3 md:hidden">{rows.map((row) => <button key={row.id} onClick={() => open(row.id)} className="glass-card w-full p-4 text-left"><div className="flex justify-between"><b>{row.bookingNumber}</b><span>{row.status}</span></div><p className="mt-2">{row.tour.title} · {new Date(row.date).toLocaleDateString()}</p><p className="text-sm text-gray-500">{row.guestName} · {row.adults + row.children} guests · {formatPrice(row.totalPrice,row.currency)}</p></button>)}</div>{rows.length === 0 && <p className="py-16 text-center text-gray-500">No bookings match these filters.</p>}<div className="mt-5 flex items-center justify-center gap-4"><button disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded-lg border px-3 py-2">Previous</button><span>{page} / {totalPages}</span><button disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="rounded-lg border px-3 py-2">Next</button></div></>}
-  {selected && <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={() => setSelected(null)}><div id="booking-print" className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-6 dark:bg-dark-50" onClick={(event) => event.stopPropagation()}><div className="flex justify-between"><div><h2 className="text-2xl font-bold">{selected.bookingNumber}</h2><p className="text-sm text-gray-500">Created {new Date(selected.createdAt).toLocaleString()} · {selected.userId ? 'Registered user' : 'Guest checkout'}</p></div><button onClick={() => setSelected(null)}><X /></button></div><div className="mt-6 grid gap-4 sm:grid-cols-2">{[['Tour',selected.tour.title],['Tour date',`${formatDate(selected.date)} ${selected.tour.startTime || ''}`],['Guest',selected.guestName],['Email',selected.guestEmail],['Phone',selected.guestPhone],['Guests',`${selected.adults} adult · ${selected.children} child${selected.isPrivate ? ' · Private' : ''}`],['Subtotal',formatPrice(selected.subtotal,selected.currency)],['Discount',formatPrice(selected.discountAmount,selected.currency)],['Total',formatPrice(selected.totalPrice,selected.currency)],['Promo',selected.promoCode?.code || '—'],['Payment',`${selected.payment?.provider || '—'} · ${selected.payment?.status || 'UNPAID'}`],['Provider ref',selected.payment?.providerPaymentId || '—']].map(([label,value]) => <div key={label} className="rounded-xl bg-gray-50 p-3 dark:bg-white/5"><p className="text-xs text-gray-400">{label}</p><p className="mt-1 break-all font-medium">{value}</p></div>)}</div>{selected.upsells && <div className="mt-5"><h3 className="font-bold">Add-ons</h3><pre className="mt-2 whitespace-pre-wrap rounded-xl bg-gray-50 p-3 text-sm dark:bg-white/5">{JSON.stringify(selected.upsells,null,2)}</pre></div>}<div className="mt-5 grid gap-4 sm:grid-cols-2"><div><h3 className="font-bold">Customer note</h3><p className="mt-2 rounded-xl bg-gray-50 p-3 text-sm dark:bg-white/5">{selected.notes || '—'}</p></div><div><h3 className="font-bold">Internal admin note</h3><textarea defaultValue={selected.adminNote || ''} onBlur={(event) => { setSelected({...selected,adminNote:event.target.value}); note(selected.id,event.target.value); }} className="input-glass mt-2" rows={4} /></div></div><div className="mt-5"><h3 className="font-bold">Status history</h3><ol className="mt-2 space-y-2">{selected.statusHistory?.map((item:any) => <li key={item.id} className="rounded-xl border p-3 text-sm dark:border-white/10"><b>{item.fromStatus || 'NEW'} → {item.toStatus}</b> · {new Date(item.createdAt).toLocaleString()}<br /><span className="text-gray-500">{item.note || ''} {item.changedBy ? `· ${item.changedBy.name}` : ''}</span></li>)}</ol></div><div className="mt-6 flex justify-end"><button onClick={() => window.print()} className="rounded-xl border px-4 py-3"><Printer className="mr-2 inline h-4 w-4" />Print summary</button></div></div></div>}
-  </div>;
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = { page, limit: 20, ...Object.fromEntries(Object.entries(filters).filter(([, value]) => value)) };
+      const response = await api.get('/admin/bookings', { params });
+      setRows(response.data.data);
+      setTotalPages(response.data.pagination.totalPages || response.data.pagination.pages || 1);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Bookings could not be loaded');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, filters]);
+
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    api.get('/admin/tours').then((response) => setTours(response.data.data)).catch(() => setTours([]));
+  }, []);
+
+  function filter(key: string, value: string) {
+    setFilters((previous) => ({ ...previous, [key]: value }));
+    setPage(1);
+  }
+
+  async function open(id: string) {
+    try {
+      const response = await api.get(`/admin/bookings/${id}`);
+      setSelected(response.data.data);
+    } catch {
+      toast.error('Booking details could not be loaded');
+    }
+  }
+
+  async function updateStatus(id: string, value: string) {
+    try {
+      await api.patch(`/admin/bookings/${id}/status`, { status: value });
+      toast.success('Booking status updated');
+      await load();
+      if (selected?.id === id) open(id);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Status could not be updated');
+    }
+  }
+
+  async function saveNote(id: string, adminNote: string) {
+    try {
+      await api.patch(`/admin/bookings/${id}/note`, { adminNote });
+      toast.success('Internal note saved');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Note could not be saved');
+    }
+  }
+
+  async function downloadCsv() {
+    try {
+      const response = await api.get('/admin/bookings/export.csv', { params: filters, responseType: 'blob' });
+      const url = URL.createObjectURL(response.data);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `bookings-${new Date().toISOString().slice(0, 10)}.csv`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('CSV export failed');
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl font-bold">Bookings</h1>
+          <p className="text-sm text-gray-500">Search, filter, audit and export live reservations.</p>
+        </div>
+        <button onClick={downloadCsv} className="rounded-xl border px-4 py-2.5 text-sm">
+          <Download className="mr-2 inline h-4 w-4" />CSV export
+        </button>
+      </div>
+
+      <div className="glass-card mb-6 grid gap-3 p-4 md:grid-cols-4">
+        <label className="relative md:col-span-2">
+          <Search className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+          <input value={filters.search} onChange={(event) => filter('search', event.target.value)} placeholder="Booking no, guest, hotel, email, phone or tour" className="input-glass !pl-10" />
+        </label>
+        <select value={filters.status} onChange={(event) => filter('status', event.target.value)} className="input-glass"><option value="">All booking statuses</option>{STATUSES.map((item) => <option key={item}>{item}</option>)}</select>
+        <select value={filters.paymentStatus} onChange={(event) => filter('paymentStatus', event.target.value)} className="input-glass"><option value="">All payment statuses</option>{PAYMENT_STATUSES.map((item) => <option key={item}>{item}</option>)}</select>
+        <select value={filters.tourId} onChange={(event) => filter('tourId', event.target.value)} className="input-glass"><option value="">All tours</option>{tours.map((tour) => <option value={tour.id} key={tour.id}>{tour.title}</option>)}</select>
+        <input type="date" value={filters.from} onChange={(event) => filter('from', event.target.value)} className="input-glass" aria-label="From date" />
+        <input type="date" value={filters.to} onChange={(event) => filter('to', event.target.value)} className="input-glass" aria-label="To date" />
+        <select value={filters.sort} onChange={(event) => filter('sort', event.target.value)} className="input-glass"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>
+      ) : (
+        <>
+          <div className="hidden overflow-x-auto rounded-2xl border bg-white dark:border-white/10 dark:bg-white/5 md:block">
+            <table className="w-full text-sm">
+              <thead><tr className="border-b text-left text-xs text-gray-400 dark:border-white/10">{['Booking', 'Created', 'Tour / date', 'Guest', 'Guests', 'Total', 'Payment', 'Status', ''].map((item) => <th key={item} className="p-4">{item}</th>)}</tr></thead>
+              <tbody>{rows.map((row) => (
+                <tr key={row.id} className="border-b dark:border-white/5">
+                  <td className="p-4 font-mono text-xs">{row.bookingNumber}</td>
+                  <td className="p-4">{new Date(row.createdAt).toLocaleString()}</td>
+                  <td className="p-4"><b>{row.tour.title}</b><br />{new Date(row.date).toLocaleDateString()} {row.tour.startTime}</td>
+                  <td className="p-4">{row.guestName}<br /><span className="text-xs text-gray-400">{row.hotelName || 'Hotel not recorded'}<br />{row.guestEmail}<br />{row.guestPhone}</span></td>
+                  <td className="p-4">{row.adults + row.children}{row.isPrivate ? ' · Private' : ''}</td>
+                  <td className="p-4">{formatPrice(row.totalPrice, row.currency)}</td>
+                  <td className="p-4">{row.payment?.provider || '—'}<br /><span className="text-xs">{row.payment?.status || 'UNPAID'}</span></td>
+                  <td className="p-4"><select value={row.status} onChange={(event) => updateStatus(row.id, event.target.value)} className="rounded-lg border bg-transparent p-2 dark:border-white/10">{STATUSES.map((item) => <option key={item}>{item}</option>)}</select></td>
+                  <td className="p-4"><button onClick={() => open(row.id)} aria-label="Details"><Eye className="h-5 w-5" /></button></td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+
+          <div className="space-y-3 md:hidden">{rows.map((row) => (
+            <button key={row.id} onClick={() => open(row.id)} className="glass-card w-full p-4 text-left">
+              <div className="flex justify-between"><b>{row.bookingNumber}</b><span>{row.status}</span></div>
+              <p className="mt-2">{row.tour.title} · {new Date(row.date).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-500">{row.guestName} · {row.adults + row.children} guests · {formatPrice(row.totalPrice, row.currency)}</p>
+              <p className="text-xs text-gray-400">{row.hotelName || 'Hotel not recorded'}</p>
+            </button>
+          ))}</div>
+
+          {rows.length === 0 && <p className="py-16 text-center text-gray-500">No bookings match these filters.</p>}
+          <div className="mt-5 flex items-center justify-center gap-4"><button disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded-lg border px-3 py-2">Previous</button><span>{page} / {totalPages}</span><button disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="rounded-lg border px-3 py-2">Next</button></div>
+        </>
+      )}
+
+      {selected && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={() => setSelected(null)}>
+          <div id="booking-print" className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-white p-6 dark:bg-dark-50" onClick={(event) => event.stopPropagation()}>
+            <div className="flex justify-between"><div><h2 className="text-2xl font-bold">{selected.bookingNumber}</h2><p className="text-sm text-gray-500">Created {new Date(selected.createdAt).toLocaleString()} · {selected.userId ? 'Registered user' : 'Guest checkout'}</p></div><button onClick={() => setSelected(null)} aria-label="Close"><X /></button></div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              {[
+                ['Tour', selected.tour.title],
+                ['Tour date', `${formatDate(selected.date)} ${selected.tour.startTime || ''}`],
+                ['Guest', selected.guestName],
+                ['Email', selected.guestEmail],
+                ['Phone', selected.guestPhone],
+                ['Hotel name', selected.hotelName || '—'],
+                ['Guests', `${selected.adults + selected.children} guest${selected.adults + selected.children === 1 ? '' : 's'}${selected.isPrivate ? ' · Private' : ''}`],
+                ['Subtotal', formatPrice(selected.subtotal, selected.currency)],
+                ['Discount', formatPrice(selected.discountAmount, selected.currency)],
+                ['Total', formatPrice(selected.totalPrice, selected.currency)],
+                ['Promo', selected.promoCode?.code || '—'],
+                ['Payment', `${selected.payment?.provider || '—'} · ${selected.payment?.status || 'UNPAID'}`],
+                ['Provider ref', selected.payment?.providerPaymentId || '—'],
+              ].map(([label, value]) => <div key={label} className="rounded-xl bg-gray-50 p-3 dark:bg-white/5"><p className="text-xs text-gray-400">{label}</p><p className="mt-1 break-all font-medium">{value}</p></div>)}
+            </div>
+            {selected.upsells && <div className="mt-5"><h3 className="font-bold">Add-ons</h3><pre className="mt-2 whitespace-pre-wrap rounded-xl bg-gray-50 p-3 text-sm dark:bg-white/5">{JSON.stringify(selected.upsells, null, 2)}</pre></div>}
+            <div className="mt-5 grid gap-4 sm:grid-cols-2"><div><h3 className="font-bold">Customer note</h3><p className="mt-2 rounded-xl bg-gray-50 p-3 text-sm dark:bg-white/5">{selected.notes || '—'}</p></div><div><h3 className="font-bold">Internal admin note</h3><textarea defaultValue={selected.adminNote || ''} onBlur={(event) => { setSelected({ ...selected, adminNote: event.target.value }); saveNote(selected.id, event.target.value); }} className="input-glass mt-2" rows={4} /></div></div>
+            <div className="mt-5"><h3 className="font-bold">Status history</h3><ol className="mt-2 space-y-2">{selected.statusHistory?.map((item: any) => <li key={item.id} className="rounded-xl border p-3 text-sm dark:border-white/10"><b>{item.fromStatus || 'NEW'} → {item.toStatus}</b> · {new Date(item.createdAt).toLocaleString()}<br /><span className="text-gray-500">{item.note || ''} {item.changedBy ? `· ${item.changedBy.name}` : ''}</span></li>)}</ol></div>
+            <div className="mt-6 flex justify-end"><button onClick={() => window.print()} className="rounded-xl border px-4 py-3"><Printer className="mr-2 inline h-4 w-4" />Print summary</button></div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

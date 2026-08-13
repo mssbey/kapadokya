@@ -11,7 +11,7 @@ import { useI18n } from '@/components/I18nProvider';
 import { useGuestLabel } from '@/components/booking/useGuestLabel';
 
 export function StepSuccess() {
-  const { selectedTour, selectedDate, adults, children, totalPrice, reset } = useBookingStore();
+  const { selectedTour, selectedDate, adults, totalPrice, reset } = useBookingStore();
   const { t, tag, href, fill } = useI18n();
   const guestLabel = useGuestLabel();
   const [reservationNumber, setReservationNumber] = useState('');
@@ -76,7 +76,7 @@ export function StepSuccess() {
           </div>
           <div className="flex justify-between py-3 border-b border-gray-200 dark:border-white/10">
             <span className="text-gray-500 dark:text-white/50">{t.booking.success.guests}</span>
-            <span className="text-gray-900 dark:text-white font-medium">{guestLabel(adults, children)}</span>
+            <span className="text-gray-900 dark:text-white font-medium">{guestLabel(adults)}</span>
           </div>
           <div className="flex justify-between py-3">
             <span className="text-gray-500 dark:text-white/50">{t.booking.success.totalPaid}</span>

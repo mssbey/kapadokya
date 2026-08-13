@@ -8,6 +8,7 @@ export interface Tour {
   basePrice: number;
   regularPrice?: number;
   discountedPrice?: number | null;
+  scheduledPriceDate?: string | null;
   currency: string;
   tourType?: 'GROUP' | 'PRIVATE' | 'PACKAGE' | 'TRANSFER' | 'ACTIVITY';
   childPriceRate?: number;
@@ -83,6 +84,7 @@ export interface Booking {
   guestName?: string;
   guestEmail?: string;
   guestPhone?: string;
+  hotelName?: string;
   notes?: string;
   tour: Tour;
   payment?: Payment;
@@ -129,6 +131,7 @@ export interface BookingFormData {
   guestName: string;
   guestEmail: string;
   guestPhone: string;
+  hotelName: string;
   notes?: string;
 }
 

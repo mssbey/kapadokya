@@ -39,7 +39,7 @@ export const en = {
   },
 
   hero: {
-    badge: 'Licensed local travel agency · Cappadocia',
+    badge: 'Cappadocia Kaphera Travel Agency',
     titleLead: 'Discover the Magic of',
     titleAccent: 'Cappadocia',
     subtitle:
@@ -327,8 +327,8 @@ export const en = {
     people: {
       heading: 'Select Guests',
       subtitle: 'How many people are joining?',
-      adults: 'Adults',
-      adultsAge: 'Age 13+',
+      adults: 'Guests',
+      adultsAge: 'One price per guest',
       children: 'Children',
       childrenAge: 'Age 4–12 (50% discount)',
       privateTitle: 'Private Experience',
@@ -355,6 +355,8 @@ export const en = {
       emailPlaceholder: 'john@example.com',
       phone: 'Phone Number *',
       phonePlaceholder: '+90 555 000 0000',
+      hotelName: 'Hotel Name *',
+      hotelNamePlaceholder: 'Enter your hotel name',
       notes: 'Special Requests (Optional)',
       notesPlaceholder: 'Any special requirements or requests...',
       requiredNote:
@@ -367,6 +369,7 @@ export const en = {
       errorName: 'Please enter your full name',
       errorEmail: 'Please enter a valid email address',
       errorPhone: 'Please enter a valid phone number',
+      errorHotelName: 'Please enter your hotel name',
       errorConsent: 'Please confirm the privacy notice and booking terms',
       continueToPayment: 'Continue to Payment →',
     },
@@ -421,13 +424,13 @@ export const en = {
       privateUpgrade: 'Private tour upgrade',
       total: 'Total',
       taxesIncluded: 'Taxes included',
-      adultsLine: '{count}x Adult × {price}',
+      adultsLine: '{count}x Guest × {price}',
       childrenLine: '{count}x Child × {price}',
     },
 
     guests: {
-      adults: '{count} Adult',
-      adultsPlural: '{count} Adults',
+      adults: '{count} Guest',
+      adultsPlural: '{count} Guests',
       children: '{count} Child',
       childrenPlural: '{count} Children',
       private: '(Private)',

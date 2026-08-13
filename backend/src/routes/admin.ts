@@ -5,7 +5,7 @@ import { prisma } from '../lib/prisma';
 import { authenticate, requireAdmin, type AuthRequest } from '../middleware/auth';
 import { AppError } from '../middleware/errorHandler';
 import { invalidateCache } from '../lib/redis';
-import { SUPPORTED_LOCALES, normalizeLocale, presentTour, publicTourInclude } from '../lib/catalog';
+import { SUPPORTED_LOCALES, currentCatalogDate, normalizeLocale, presentTour, publicTourIncludeForDate } from '../lib/catalog';
 import { assertSlugAvailable, normalizeSlug } from '../lib/slug';
 import { transitionBookingStatus } from '../services/bookingStatus';
 import { writeAudit } from '../lib/audit';
@@ -262,10 +262,106 @@ adminRouter.get('/tours/:id', async (req, res, next) => {
 adminRouter.get('/tours/:id/preview', async (req, res, next) => {
   try {
     const locale = normalizeLocale(req.query.locale);
-    const tour = await prisma.tour.findUnique({ where: { id: req.params.id }, include: publicTourInclude });
+    const tour = await prisma.tour.findUnique({ where: { id: req.params.id }, include: publicTourIncludeForDate() });
     if (!tour) throw new AppError('Tour not found', 404);
     res.json({ success: true, data: presentTour(tour, locale) });
   } catch (error) {
+    next(error);
+  }
+});
+
+const scheduledPriceDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+function scheduledDate(value: string): Date {
+  return new Date(`${value}T00:00:00.000Z`);
+}
+
+function assertFuturePriceDate(date: Date) {
+  if (date < currentCatalogDate()) throw new AppError('Past dates cannot be repriced', 400);
+}
+
+adminRouter.get('/tours/:id/scheduled-prices', async (req, res, next) => {
+  try {
+    const tourId = z.string().uuid().parse(req.params.id);
+    const query = z.object({ from: scheduledPriceDateSchema, to: scheduledPriceDateSchema }).parse(req.query);
+    const from = scheduledDate(query.from);
+    const to = scheduledDate(query.to);
+    if (to < from) throw new AppError('End date must be on or after start date', 400);
+    if ((to.getTime() - from.getTime()) / 86400000 > 366) throw new AppError('Date range cannot exceed 366 days', 400);
+    const prices = await prisma.tourScheduledPrice.findMany({
+      where: { tourId, date: { gte: from, lte: to } },
+      orderBy: { date: 'asc' },
+    });
+    res.json({ success: true, data: prices.map((item) => ({ ...item, date: dateKey(item.date) })) });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError('A valid tour and date range are required', 400));
+    next(error);
+  }
+});
+
+adminRouter.put('/tours/:id/scheduled-prices/:date', async (req: AuthRequest, res, next) => {
+  try {
+    const tourId = z.string().uuid().parse(req.params.id);
+    const dateKeyValue = scheduledPriceDateSchema.parse(req.params.date);
+    const { price } = z.object({ price: z.number().positive() }).parse(req.body);
+    const date = scheduledDate(dateKeyValue);
+    assertFuturePriceDate(date);
+    const row = await prisma.tourScheduledPrice.upsert({
+      where: { tourId_date: { tourId, date } },
+      create: { tourId, date, price },
+      update: { price },
+    });
+    await invalidateCache('tours:*');
+    await writeAudit(req, 'TOUR_SCHEDULED_PRICE_UPDATED', 'Tour', tourId, { date: dateKeyValue, price });
+    res.json({ success: true, data: { ...row, date: dateKeyValue } });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
+});
+
+adminRouter.delete('/tours/:id/scheduled-prices/:date', async (req: AuthRequest, res, next) => {
+  try {
+    const tourId = z.string().uuid().parse(req.params.id);
+    const dateKeyValue = scheduledPriceDateSchema.parse(req.params.date);
+    const date = scheduledDate(dateKeyValue);
+    assertFuturePriceDate(date);
+    await prisma.tourScheduledPrice.deleteMany({ where: { tourId, date } });
+    await invalidateCache('tours:*');
+    await writeAudit(req, 'TOUR_SCHEDULED_PRICE_DELETED', 'Tour', tourId, { date: dateKeyValue });
+    res.json({ success: true });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
+});
+
+adminRouter.post('/tours/:id/scheduled-prices/bulk', async (req: AuthRequest, res, next) => {
+  try {
+    const tourId = z.string().uuid().parse(req.params.id);
+    const data = z.object({
+      startDate: scheduledPriceDateSchema,
+      endDate: scheduledPriceDateSchema,
+      price: z.number().positive(),
+      weekdays: z.array(z.number().int().min(0).max(6)).min(1).max(7),
+    }).parse(req.body);
+    const start = scheduledDate(data.startDate);
+    const end = scheduledDate(data.endDate);
+    assertFuturePriceDate(start);
+    if (end < start) throw new AppError('End date must be on or after start date', 400);
+    if ((end.getTime() - start.getTime()) / 86400000 > 365) throw new AppError('Date range cannot exceed 365 days', 400);
+    const weekdays = new Set(data.weekdays);
+    const dates = eachDay(start, end).filter((date) => weekdays.has(date.getUTCDay()));
+    await prisma.$transaction(dates.map((date) => prisma.tourScheduledPrice.upsert({
+      where: { tourId_date: { tourId, date } },
+      create: { tourId, date, price: data.price },
+      update: { price: data.price },
+    })));
+    await invalidateCache('tours:*');
+    await writeAudit(req, 'TOUR_SCHEDULED_PRICE_BULK_UPDATED', 'Tour', tourId, { ...data, count: dates.length });
+    res.json({ success: true, data: { count: dates.length } });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
     next(error);
   }
 });
@@ -483,6 +579,7 @@ function bookingWhere(query: z.infer<typeof bookingListQuery>): Prisma.BookingWh
       { guestName: { contains: query.search, mode: 'insensitive' } },
       { guestEmail: { contains: query.search, mode: 'insensitive' } },
       { guestPhone: { contains: query.search, mode: 'insensitive' } },
+      { hotelName: { contains: query.search, mode: 'insensitive' } },
       { tour: { title: { contains: query.search, mode: 'insensitive' } } },
     ] } : {}),
   };
@@ -515,8 +612,8 @@ adminRouter.get('/bookings/export.csv', async (req, res, next) => {
   try {
     const query = bookingListQuery.omit({ page: true, limit: true }).parse(req.query);
     const bookings = await prisma.booking.findMany({ where: bookingWhere({ ...query, page: 1, limit: 100 } as any), include: bookingInclude, orderBy: { createdAt: query.sort === 'newest' ? 'desc' : 'asc' }, take: 10000 });
-    const header = ['Booking number', 'Created', 'Tour', 'Tour date', 'Guest', 'Email', 'Phone', 'Adults', 'Children', 'Private', 'Subtotal', 'Discount', 'Total', 'Currency', 'Promo', 'Payment provider', 'Payment status', 'Booking status', 'Notes', 'Admin note'];
-    const lines = [header, ...bookings.map((booking) => [booking.bookingNumber, booking.createdAt.toISOString(), booking.tour.title, booking.date.toISOString().slice(0, 10), booking.guestName, booking.guestEmail, booking.guestPhone, booking.adults, booking.children, booking.isPrivate, booking.subtotal, booking.discountAmount, booking.totalPrice, booking.currency, booking.promoCode?.code, booking.payment?.provider, booking.payment?.status, booking.status, booking.notes, booking.adminNote])];
+    const header = ['Booking number', 'Created', 'Tour', 'Tour date', 'Guest', 'Email', 'Phone', 'Hotel name', 'Guests', 'Private', 'Subtotal', 'Discount', 'Total', 'Currency', 'Promo', 'Payment provider', 'Payment status', 'Booking status', 'Notes', 'Admin note'];
+    const lines = [header, ...bookings.map((booking) => [booking.bookingNumber, booking.createdAt.toISOString(), booking.tour.title, booking.date.toISOString().slice(0, 10), booking.guestName, booking.guestEmail, booking.guestPhone, booking.hotelName, booking.adults + booking.children, booking.isPrivate, booking.subtotal, booking.discountAmount, booking.totalPrice, booking.currency, booking.promoCode?.code, booking.payment?.provider, booking.payment?.status, booking.status, booking.notes, booking.adminNote])];
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="bookings-${new Date().toISOString().slice(0, 10)}.csv"`);
     res.send('\uFEFF' + lines.map((line) => line.map(csvCell).join(',')).join('\r\n'));

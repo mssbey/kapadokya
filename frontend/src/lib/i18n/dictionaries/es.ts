@@ -36,7 +36,7 @@ export const es: Dictionary = {
   },
 
   hero: {
-    badge: 'Agencia de viajes local autorizada · Capadocia',
+    badge: 'Cappadocia Kaphera Travel Agency',
     titleLead: 'Descubre la magia de',
     titleAccent: 'Capadocia',
     subtitle:
@@ -324,8 +324,8 @@ export const es: Dictionary = {
     people: {
       heading: 'Selecciona los viajeros',
       subtitle: '¿Cuántas personas participan?',
-      adults: 'Adultos',
-      adultsAge: 'A partir de 13 años',
+      adults: 'Viajeros',
+      adultsAge: 'Un precio por viajero',
       children: 'Niños',
       childrenAge: 'De 4 a 12 años (50% de descuento)',
       privateTitle: 'Experiencia privada',
@@ -352,6 +352,8 @@ export const es: Dictionary = {
       emailPlaceholder: 'juan@ejemplo.com',
       phone: 'Número de teléfono *',
       phonePlaceholder: '+34 600 000 000',
+      hotelName: 'Nombre del hotel *',
+      hotelNamePlaceholder: 'Introduce el nombre de tu hotel',
       notes: 'Peticiones especiales (opcional)',
       notesPlaceholder: 'Cualquier necesidad o petición especial...',
       requiredNote:
@@ -364,6 +366,7 @@ export const es: Dictionary = {
       errorName: 'Introduce tu nombre completo',
       errorEmail: 'Introduce una dirección de correo válida',
       errorPhone: 'Introduce un número de teléfono válido',
+      errorHotelName: 'Introduce el nombre de tu hotel',
       errorConsent: 'Confirma el aviso de privacidad y las condiciones de reserva',
       continueToPayment: 'Continuar al pago →',
     },
@@ -418,13 +421,13 @@ export const es: Dictionary = {
       privateUpgrade: 'Mejora a tour privado',
       total: 'Total',
       taxesIncluded: 'Impuestos incluidos',
-      adultsLine: '{count}x Adulto × {price}',
+      adultsLine: '{count}x Viajero × {price}',
       childrenLine: '{count}x Niño × {price}',
     },
 
     guests: {
-      adults: '{count} adulto',
-      adultsPlural: '{count} adultos',
+      adults: '{count} viajero',
+      adultsPlural: '{count} viajeros',
       children: '{count} niño',
       childrenPlural: '{count} niños',
       private: '(Privado)',

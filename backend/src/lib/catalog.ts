@@ -17,6 +17,30 @@ export const publicTourInclude = Prisma.validator<Prisma.TourInclude>()({
   upsells: { where: { isActive: true }, orderBy: { createdAt: 'asc' } },
 });
 
+const CATALOG_TIME_ZONE = 'Europe/Istanbul';
+
+export function currentCatalogDate(now = new Date()): Date {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: CATALOG_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(now);
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return new Date(`${value.year}-${value.month}-${value.day}T00:00:00.000Z`);
+}
+
+export function publicTourIncludeForDate(date = currentCatalogDate()) {
+  return Prisma.validator<Prisma.TourInclude>()({
+    ...publicTourInclude,
+    scheduledPrices: {
+      where: { date },
+      take: 1,
+      select: { date: true, price: true },
+    },
+  });
+}
+
 /**
  * Converts the relational tour record into the stable public API shape. The
  * selected locale falls back to English and then to the migrated legacy copy.
@@ -33,8 +57,10 @@ export function presentTour(tour: any, locale: SupportedLocale) {
   });
   const legacyImages: string[] = Array.isArray(tour.images) ? tour.images : [];
   const images = media.length ? media.map((item: any) => item.secureUrl) : legacyImages;
-  const regularPrice = tour.basePrice;
-  const effectivePrice = tour.discountedPrice ?? regularPrice;
+  const scheduledPrice = tour.scheduledPrices?.[0]?.price ?? null;
+  const regularPrice = scheduledPrice ?? tour.basePrice;
+  const discountedPrice = scheduledPrice == null ? tour.discountedPrice : null;
+  const effectivePrice = scheduledPrice ?? discountedPrice ?? regularPrice;
 
   return {
     id: tour.id,
@@ -55,7 +81,8 @@ export function presentTour(tour: any, locale: SupportedLocale) {
     contentLocale: translation?.locale ?? DEFAULT_LOCALE,
     basePrice: effectivePrice,
     regularPrice,
-    discountedPrice: tour.discountedPrice,
+    discountedPrice,
+    scheduledPriceDate: scheduledPrice == null ? null : tour.scheduledPrices[0].date.toISOString().slice(0, 10),
     currency: tour.currency,
     childPriceRate: tour.childPriceRate,
     privatePriceMultiplier: tour.privatePriceMultiplier,
@@ -79,15 +106,16 @@ export function presentTour(tour: any, locale: SupportedLocale) {
 }
 
 export async function findTourBySlug(slug: string) {
+  const include = publicTourIncludeForDate();
   const current = await prisma.tour.findFirst({
     where: { slug, deletedAt: null },
-    include: publicTourInclude,
+    include,
   });
   if (current) return { tour: current, redirectedFrom: null as string | null };
 
   const alias = await prisma.tourSlugAlias.findUnique({
     where: { slug },
-    include: { tour: { include: publicTourInclude } },
+    include: { tour: { include } },
   });
   if (!alias || alias.tour.deletedAt) return null;
   return { tour: alias.tour, redirectedFrom: slug };

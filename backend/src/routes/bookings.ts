@@ -13,12 +13,13 @@ const createBookingSchema = z.object({
   tourId: z.string().uuid(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   adults: z.number().int().min(1).max(50),
-  children: z.number().int().min(0).max(50),
+  children: z.literal(0).optional().default(0),
   isPrivate: z.boolean().optional().default(false),
   upsells: z.array(z.object({ id: z.string().uuid(), name: z.string(), price: z.number() })).max(30).optional(),
   guestName: z.string().min(2).max(100),
   guestEmail: z.string().email().max(255),
   guestPhone: z.string().min(5).max(30),
+  hotelName: z.string().trim().min(2).max(160),
   notes: z.string().max(500).optional(),
   promoCode: z.string().trim().toUpperCase().max(40).optional(),
 });
@@ -44,7 +45,7 @@ bookingRouter.post('/', optionalAuth, async (req: AuthRequest, res, next) => {
     if (availability.seatsAvailable < totalPeople) throw new AppError(`Only ${availability.seatsAvailable} seats available`, 400);
 
     const unitPrice = availability.priceOverride ?? tour.discountedPrice ?? tour.basePrice;
-    let subtotal = data.adults * unitPrice + data.children * unitPrice * tour.childPriceRate;
+    let subtotal = totalPeople * unitPrice;
     if (data.isPrivate) subtotal *= tour.privatePriceMultiplier;
 
     let selectedUpsells: { id: string; name: string; price: number }[] = [];
@@ -117,6 +118,7 @@ bookingRouter.post('/', optionalAuth, async (req: AuthRequest, res, next) => {
           guestName: data.guestName,
           guestEmail: data.guestEmail,
           guestPhone: data.guestPhone,
+          hotelName: data.hotelName,
           notes: data.notes,
           paymentAccessTokenHash: paymentAccess.hash,
           paymentAccessExpiresAt: paymentAccess.expiresAt,

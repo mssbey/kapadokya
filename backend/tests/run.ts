@@ -52,7 +52,11 @@ async function main() {
   const availability = await request(app).post('/api/admin/availability').set('Authorization', `Bearer ${adminToken}`).send({ tourId, date, seatsAvailable: 2, seatsTotal: 2, priceOverride: 70, isBlocked: false });
   assert.equal(availability.status, 200, availability.body?.message);
 
-  const bookingBody = { tourId, date, adults: 2, children: 0, isPrivate: false, guestName: 'Test Guest', guestEmail: 'guest@test.local', guestPhone: '+905551112233' };
+  const bookingBody = { tourId, date, adults: 2, children: 0, isPrivate: false, guestName: 'Test Guest', guestEmail: 'guest@test.local', guestPhone: '+905551112233', hotelName: 'Test Cave Hotel' };
+  const childrenRejected = await request(app).post('/api/bookings').send({ ...bookingBody, adults: 1, children: 1 });
+  assert.equal(childrenRejected.status, 400, 'new bookings must use one guest count and one price');
+  const hotelRequired = await request(app).post('/api/bookings').send({ ...bookingBody, hotelName: undefined });
+  assert.equal(hotelRequired.status, 400, 'hotel name must be required for new bookings');
   const attempts = await Promise.all([request(app).post('/api/bookings').send(bookingBody), request(app).post('/api/bookings').send({ ...bookingBody, guestEmail: 'guest2@test.local' })]);
   assert.deepEqual(attempts.map((result) => result.status).sort(), [201, 409], 'concurrent requests must not oversell capacity');
   const successful = attempts.find((result) => result.status === 201)!;

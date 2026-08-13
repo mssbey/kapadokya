@@ -4,14 +4,13 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Clock3, Heart, MapPin, Star } from 'lucide-react';
 import { ResponsivePhoto } from '@/components/ResponsivePhoto';
-import { useSitePreferences } from '@/components/SitePreferences';
+import { TourCardPrice } from '@/components/tours/TourCardPrice';
 import { useI18n } from '@/components/I18nProvider';
 import { api } from '@/lib/api';
 import { categoryLabel } from '@/lib/catalogApi';
 import type { Tour } from '@/types';
 
 export function PopularExperiences() {
-  const { price } = useSitePreferences();
   const { t, href, locale } = useI18n();
   const [saved, setSaved] = useState<string[]>([]);
   const [tours, setTours] = useState<Tour[]>([]);
@@ -53,7 +52,7 @@ export function PopularExperiences() {
                 <button onClick={() => toggle(tour.slug)} aria-label={saved.includes(tour.slug) ? t.popular.removeWishlist : t.popular.addWishlist} className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/95 text-stone-700 shadow"><Heart className={`h-5 w-5 ${saved.includes(tour.slug) ? 'fill-rose-500 text-rose-500' : ''}`} /></button>
                 <p className="absolute bottom-4 left-4 text-sm font-semibold text-white">{categoryLabel(tour.category, locale)}</p>
               </div>
-              <div className="p-5"><h3 className="min-h-14 font-display text-xl font-bold">{tour.title}</h3><div className="mt-3 flex flex-wrap gap-4 text-xs text-stone-500"><span className="flex gap-1"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{t.popular.newListing}</span><span className="flex gap-1"><Clock3 className="h-4 w-4" />{tour.duration}</span><span className="flex gap-1"><MapPin className="h-4 w-4" />{t.popular.hotelPickup}</span></div><div className="mt-5 flex items-end justify-between border-t pt-4 dark:border-white/10"><div><p className="text-xs text-stone-400">{t.popular.from}</p><p className="text-2xl font-extrabold">{price(tour.basePrice, tour.currency)}</p></div><Link href={href(`/tours/${tour.slug}`)} className="rounded-xl bg-[#123f35] px-4 py-2.5 text-sm font-bold text-white">{t.popular.viewAndBook}</Link></div></div>
+              <div className="p-5"><h3 className="min-h-14 font-body text-xl font-extrabold leading-7 text-stone-900 dark:text-white">{tour.title}</h3><div className="mt-3 flex flex-wrap gap-4 text-xs text-stone-500"><span className="flex gap-1"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{t.popular.newListing}</span><span className="flex gap-1"><Clock3 className="h-4 w-4" />{tour.duration}</span><span className="flex gap-1"><MapPin className="h-4 w-4" />{t.popular.hotelPickup}</span></div><div className="mt-5 flex items-end justify-between border-t pt-4 dark:border-white/10"><TourCardPrice tour={tour} fromLabel={t.popular.from} /><Link href={href(`/tours/${tour.slug}`)} className="rounded-xl bg-[#123f35] px-4 py-2.5 text-sm font-bold text-white">{t.popular.viewAndBook}</Link></div></div>
             </article>
           ))}
         </div>

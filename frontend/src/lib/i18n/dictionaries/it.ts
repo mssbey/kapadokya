@@ -36,7 +36,7 @@ export const it: Dictionary = {
   },
 
   hero: {
-    badge: 'Agenzia di viaggi locale autorizzata · Cappadocia',
+    badge: 'Cappadocia Kaphera Travel Agency',
     titleLead: 'Scopri la magia della',
     titleAccent: 'Cappadocia',
     subtitle:
@@ -324,8 +324,8 @@ export const it: Dictionary = {
     people: {
       heading: 'Seleziona i partecipanti',
       subtitle: 'Quante persone partecipano?',
-      adults: 'Adulti',
-      adultsAge: 'Dai 13 anni',
+      adults: 'Partecipanti',
+      adultsAge: 'Un prezzo per partecipante',
       children: 'Bambini',
       childrenAge: 'Da 4 a 12 anni (sconto del 50%)',
       privateTitle: 'Esperienza privata',
@@ -352,6 +352,8 @@ export const it: Dictionary = {
       emailPlaceholder: 'mario@esempio.com',
       phone: 'Numero di telefono *',
       phonePlaceholder: '+39 320 000 0000',
+      hotelName: 'Nome dell’hotel *',
+      hotelNamePlaceholder: 'Inserisci il nome del tuo hotel',
       notes: 'Richieste particolari (facoltativo)',
       notesPlaceholder: 'Eventuali esigenze o richieste particolari...',
       requiredNote:
@@ -364,6 +366,7 @@ export const it: Dictionary = {
       errorName: 'Inserisci nome e cognome',
       errorEmail: 'Inserisci un indirizzo email valido',
       errorPhone: 'Inserisci un numero di telefono valido',
+      errorHotelName: 'Inserisci il nome del tuo hotel',
       errorConsent: 'Conferma l’informativa sulla privacy e le condizioni di prenotazione',
       continueToPayment: 'Continua al pagamento →',
     },
@@ -418,13 +421,13 @@ export const it: Dictionary = {
       privateUpgrade: 'Upgrade a tour privato',
       total: 'Totale',
       taxesIncluded: 'Tasse incluse',
-      adultsLine: '{count}x Adulto × {price}',
+      adultsLine: '{count}x Partecipante × {price}',
       childrenLine: '{count}x Bambino × {price}',
     },
 
     guests: {
-      adults: '{count} adulto',
-      adultsPlural: '{count} adulti',
+      adults: '{count} partecipante',
+      adultsPlural: '{count} partecipanti',
       children: '{count} bambino',
       childrenPlural: '{count} bambini',
       private: '(Privato)',

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { getCached } from '../lib/redis';
 import { AppError } from '../middleware/errorHandler';
-import { findTourBySlug, normalizeLocale, presentTour, publicTourInclude } from '../lib/catalog';
+import { currentCatalogDate, findTourBySlug, normalizeLocale, presentTour, publicTourIncludeForDate } from '../lib/catalog';
 
 export const tourRouter = Router();
 
@@ -17,7 +17,9 @@ tourRouter.get('/', async (req, res, next) => {
   try {
     const query = listQuerySchema.parse(req.query);
     const locale = normalizeLocale(query.locale);
-    const cacheKey = `tours:public:${locale}:${query.category || 'all'}:${query.featured || 'all'}:${query.q || ''}`;
+    const catalogDate = currentCatalogDate();
+    const priceDay = catalogDate.toISOString().slice(0, 10);
+    const cacheKey = `tours:public:${priceDay}:${locale}:${query.category || 'all'}:${query.featured || 'all'}:${query.q || ''}`;
     const tours = await getCached(cacheKey, 60, () =>
       prisma.tour.findMany({
         where: {
@@ -38,7 +40,7 @@ tourRouter.get('/', async (req, res, next) => {
               }
             : {}),
         },
-        include: publicTourInclude,
+        include: publicTourIncludeForDate(catalogDate),
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
       }),
     );
@@ -54,10 +56,12 @@ tourRouter.get('/category/:category', async (req, res, next) => {
   try {
     const category = z.enum(['BALLOON', 'DAILY_TOUR', 'ADVENTURE', 'TRANSFER']).parse(req.params.category.toUpperCase());
     const locale = normalizeLocale(req.query.locale);
-    const tours = await getCached(`tours:category:${category}:${locale}`, 60, () =>
+    const catalogDate = currentCatalogDate();
+    const priceDay = catalogDate.toISOString().slice(0, 10);
+    const tours = await getCached(`tours:category:${priceDay}:${category}:${locale}`, 60, () =>
       prisma.tour.findMany({
         where: { isActive: true, deletedAt: null, category },
-        include: publicTourInclude,
+        include: publicTourIncludeForDate(catalogDate),
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
       }),
     );

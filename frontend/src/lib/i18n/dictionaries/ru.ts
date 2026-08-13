@@ -36,7 +36,7 @@ export const ru: Dictionary = {
   },
 
   hero: {
-    badge: 'Лицензированное местное турагентство · Каппадокия',
+    badge: 'Cappadocia Kaphera Travel Agency',
     titleLead: 'Откройте волшебство',
     titleAccent: 'Каппадокии',
     subtitle:
@@ -323,8 +323,8 @@ export const ru: Dictionary = {
     people: {
       heading: 'Количество гостей',
       subtitle: 'Сколько человек участвует?',
-      adults: 'Взрослые',
-      adultsAge: 'От 13 лет',
+      adults: 'Гости',
+      adultsAge: 'Единая цена за гостя',
       children: 'Дети',
       childrenAge: '4–12 лет (скидка 50%)',
       privateTitle: 'Индивидуальная программа',
@@ -351,6 +351,8 @@ export const ru: Dictionary = {
       emailPlaceholder: 'ivan@example.com',
       phone: 'Номер телефона *',
       phonePlaceholder: '+7 900 000 00 00',
+      hotelName: 'Название отеля *',
+      hotelNamePlaceholder: 'Укажите название вашего отеля',
       notes: 'Особые пожелания (необязательно)',
       notesPlaceholder: 'Любые особые требования или пожелания...',
       requiredNote:
@@ -363,6 +365,7 @@ export const ru: Dictionary = {
       errorName: 'Укажите имя и фамилию',
       errorEmail: 'Укажите корректный адрес электронной почты',
       errorPhone: 'Укажите корректный номер телефона',
+      errorHotelName: 'Укажите название вашего отеля',
       errorConsent: 'Подтвердите уведомление о конфиденциальности и условия бронирования',
       continueToPayment: 'Перейти к оплате →',
     },
@@ -417,13 +420,13 @@ export const ru: Dictionary = {
       privateUpgrade: 'Повышение до индивидуального тура',
       total: 'Итого',
       taxesIncluded: 'Налоги включены',
-      adultsLine: '{count}x взрослый × {price}',
+      adultsLine: '{count}x гость × {price}',
       childrenLine: '{count}x ребёнок × {price}',
     },
 
     guests: {
-      adults: '{count} взрослый',
-      adultsPlural: '{count} взрослых',
+      adults: '{count} гость',
+      adultsPlural: '{count} гостей',
       children: '{count} ребёнок',
       childrenPlural: '{count} детей',
       private: '(индивидуально)',

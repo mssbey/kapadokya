@@ -4,16 +4,17 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useBookingStore } from '@/store/bookingStore';
 import { cn } from '@/lib/utils';
-import { User, Mail, Phone, MessageSquare } from 'lucide-react';
+import { Building2, User, Mail, Phone, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import { useI18n } from '@/components/I18nProvider';
 
 export function StepUserInfo() {
-  const { guestName, guestEmail, guestPhone, notes, setGuestInfo, nextStep, prevStep } = useBookingStore();
+  const { guestName, guestEmail, guestPhone, hotelName, notes, setGuestInfo, nextStep, prevStep } = useBookingStore();
   const { t, href } = useI18n();
   const [localName, setLocalName] = useState(guestName);
   const [localEmail, setLocalEmail] = useState(guestEmail);
   const [localPhone, setLocalPhone] = useState(guestPhone);
+  const [localHotelName, setLocalHotelName] = useState(hotelName);
   const [localNotes, setLocalNotes] = useState(notes);
   const [consent, setConsent] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -30,6 +31,9 @@ export function StepUserInfo() {
     if (!localPhone.trim() || localPhone.trim().length < 5) {
       errs.phone = t.booking.userInfo.errorPhone;
     }
+    if (!localHotelName.trim() || localHotelName.trim().length < 2) {
+      errs.hotelName = t.booking.userInfo.errorHotelName;
+    }
     if (!consent) errs.consent = t.booking.userInfo.errorConsent;
 
     setErrors(errs);
@@ -38,7 +42,7 @@ export function StepUserInfo() {
 
   function handleContinue() {
     if (validate()) {
-      setGuestInfo(localName.trim(), localEmail.trim(), localPhone.trim(), localNotes.trim());
+      setGuestInfo(localName.trim(), localEmail.trim(), localPhone.trim(), localHotelName.trim(), localNotes.trim());
       nextStep();
     }
   }
@@ -112,6 +116,27 @@ export function StepUserInfo() {
           {errors.phone && (
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-400 text-xs mt-1">
               {errors.phone}
+            </motion.p>
+          )}
+        </div>
+
+        {/* Hotel */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-white/70 mb-2">
+            <Building2 className="w-4 h-4 text-emerald-400" />
+            {t.booking.userInfo.hotelName}
+          </label>
+          <input
+            type="text"
+            value={localHotelName}
+            onChange={(e) => setLocalHotelName(e.target.value)}
+            placeholder={t.booking.userInfo.hotelNamePlaceholder}
+            autoComplete="organization"
+            className={cn('input-glass', errors.hotelName && 'border-red-500/50 focus:border-red-500/50')}
+          />
+          {errors.hotelName && (
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-400 text-xs mt-1">
+              {errors.hotelName}
             </motion.p>
           )}
         </div>

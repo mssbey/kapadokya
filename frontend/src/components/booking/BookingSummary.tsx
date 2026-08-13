@@ -13,7 +13,6 @@ export function BookingSummary() {
     selectedDate,
     selectedAvailability,
     adults,
-    children,
     isPrivate,
     selectedUpsells,
     totalPrice,
@@ -57,10 +56,10 @@ export function BookingSummary() {
       )}
 
       {/* People */}
-      {(adults > 0 || children > 0) && (
+      {adults > 0 && (
         <div className="flex items-center gap-3 text-sm">
           <Users className="w-4 h-4 text-emerald-400" />
-          <span className="text-gray-600 dark:text-white/70">{guestLabel(adults, children, isPrivate)}</span>
+          <span className="text-gray-600 dark:text-white/70">{guestLabel(adults, isPrivate)}</span>
         </div>
       )}
 
@@ -72,16 +71,6 @@ export function BookingSummary() {
           </span>
           <span className="text-gray-600 dark:text-white/70">{formatPrice(adults * unitPrice, currency, tag)}</span>
         </div>
-        {children > 0 && (
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-400 dark:text-white/50">
-              {fill(t.booking.summary.childrenLine, { count: children, price: formatPrice(unitPrice * (selectedTour.childPriceRate ?? 0.5), currency, tag) })}
-            </span>
-            <span className="text-gray-600 dark:text-white/70">
-              {formatPrice(children * unitPrice * (selectedTour.childPriceRate ?? 0.5), currency, tag)}
-            </span>
-          </div>
-        )}
         {isPrivate && (
           <div className="flex justify-between text-sm">
             <span className="text-gray-400 dark:text-white/50">{t.booking.summary.privateUpgrade}</span>

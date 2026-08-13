@@ -7,24 +7,17 @@ import { Minus, Plus, Crown } from 'lucide-react';
 import { useI18n } from '@/components/I18nProvider';
 
 export function StepSelectPeople() {
-  const { adults, children, isPrivate, setPeople, nextStep, prevStep, selectedTour } = useBookingStore();
+  const { adults, isPrivate, setPeople, nextStep, prevStep, selectedTour } = useBookingStore();
   const { t, fill } = useI18n();
 
   const maxCapacity = selectedTour?.maxCapacity || 20;
-  const totalPeople = adults + children;
-
-  function adjustAdults(delta: number) {
-    const newVal = Math.max(1, Math.min(adults + delta, maxCapacity - children));
-    setPeople(newVal, children, isPrivate);
-  }
-
-  function adjustChildren(delta: number) {
-    const newVal = Math.max(0, Math.min(children + delta, maxCapacity - adults));
-    setPeople(adults, newVal, isPrivate);
+  function adjustGuests(delta: number) {
+    const newVal = Math.max(1, Math.min(adults + delta, maxCapacity));
+    setPeople(newVal, isPrivate);
   }
 
   function togglePrivate() {
-    setPeople(adults, children, !isPrivate);
+    setPeople(adults, !isPrivate);
   }
 
   return (
@@ -40,7 +33,7 @@ export function StepSelectPeople() {
       </div>
 
       <div className="space-y-4">
-        {/* Adults */}
+        {/* Guests */}
         <div className="glass-card p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -49,7 +42,7 @@ export function StepSelectPeople() {
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => adjustAdults(-1)}
+                onClick={() => adjustGuests(-1)}
                 disabled={adults <= 1}
                 className={cn(
                   'w-10 h-10 rounded-full flex items-center justify-center border transition-all',
@@ -69,55 +62,11 @@ export function StepSelectPeople() {
                 {adults}
               </motion.span>
               <button
-                onClick={() => adjustAdults(1)}
-                disabled={totalPeople >= maxCapacity}
+                onClick={() => adjustGuests(1)}
+                disabled={adults >= maxCapacity}
                 className={cn(
                   'w-10 h-10 rounded-full flex items-center justify-center border transition-all',
-                  totalPeople >= maxCapacity
-                    ? 'border-gray-200 dark:border-white/10 text-gray-300 dark:text-white/20 cursor-not-allowed'
-                    : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
-                )}
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Children */}
-        <div className="glass-card p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white text-lg">{t.booking.people.children}</h3>
-              <p className="text-gray-400 dark:text-white/40 text-sm">{t.booking.people.childrenAge}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => adjustChildren(-1)}
-                disabled={children <= 0}
-                className={cn(
-                  'w-10 h-10 rounded-full flex items-center justify-center border transition-all',
-                  children <= 0
-                    ? 'border-gray-200 dark:border-white/10 text-gray-300 dark:text-white/20 cursor-not-allowed'
-                    : 'border-gray-300 dark:border-white/20 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-white/10'
-                )}
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <motion.span
-                key={children}
-                initial={{ scale: 1.3 }}
-                animate={{ scale: 1 }}
-                className="text-2xl font-bold text-gray-900 dark:text-white w-8 text-center"
-              >
-                {children}
-              </motion.span>
-              <button
-                onClick={() => adjustChildren(1)}
-                disabled={totalPeople >= maxCapacity}
-                className={cn(
-                  'w-10 h-10 rounded-full flex items-center justify-center border transition-all',
-                  totalPeople >= maxCapacity
+                  adults >= maxCapacity
                     ? 'border-gray-200 dark:border-white/10 text-gray-300 dark:text-white/20 cursor-not-allowed'
                     : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
                 )}
