@@ -325,6 +325,47 @@ model LegalPage {
   createdAt DateTime @default(now())
 }
 
+model Faq {
+  id        String   @id @default(uuid())
+  locale    String
+  question  String
+  answer    String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([locale, sortOrder])
+}
+
+model Partner {
+  id         String   @id @default(uuid())
+  name       String
+  logoUrl    String
+  websiteUrl String?
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model Testimonial {
+  id             String   @id @default(uuid())
+  authorName     String
+  authorLocation String?
+  rating         Int      @default(5)
+  quote          String
+  tourName       String?
+  sortOrder      Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
 model AuditLog {
   id         String   @id @default(uuid())
   actorId    String?

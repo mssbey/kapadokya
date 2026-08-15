@@ -29,6 +29,7 @@ export const en = {
     balloonFlights: 'Balloon Flights',
     tours: 'Tours',
     faq: 'FAQ',
+    partners: 'Partners',
     contact: 'Contact',
     bookNow: 'Book now',
     languageLabel: 'Site language',
@@ -140,6 +141,18 @@ export const en = {
         'Your exact pickup time is confirmed after booking, normally by the evening before your experience.',
       ],
     ] as [string, string][],
+  },
+
+  partnersSection: {
+    eyebrow: 'Who we work with',
+    heading: 'Our partners',
+    subtitle: 'Trusted hotels, operators and platforms we work with across Cappadocia.',
+  },
+
+  testimonialsSection: {
+    eyebrow: 'What our guests say',
+    heading: 'Guest reviews',
+    subtitle: 'Real feedback from travelers we’ve hosted in Cappadocia.',
   },
 
   map: {

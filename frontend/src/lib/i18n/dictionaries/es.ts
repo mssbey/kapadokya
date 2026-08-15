@@ -26,6 +26,7 @@ export const es: Dictionary = {
     balloonFlights: 'Vuelos en globo',
     tours: 'Tours',
     faq: 'Preguntas',
+    partners: 'Socios',
     contact: 'Contacto',
     bookNow: 'Reservar',
     languageLabel: 'Idioma del sitio',
@@ -137,6 +138,18 @@ export const es: Dictionary = {
         'La hora exacta de recogida se confirma tras la reserva, normalmente la tarde anterior a tu experiencia.',
       ],
     ],
+  },
+
+  partnersSection: {
+    eyebrow: 'Con quién trabajamos',
+    heading: 'Nuestros socios',
+    subtitle: 'Hoteles, operadores y plataformas de confianza con los que trabajamos en Capadocia.',
+  },
+
+  testimonialsSection: {
+    eyebrow: 'Lo que dicen nuestros huéspedes',
+    heading: 'Opiniones de huéspedes',
+    subtitle: 'Comentarios reales de viajeros que hemos recibido en Capadocia.',
   },
 
   map: {

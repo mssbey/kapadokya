@@ -26,6 +26,7 @@ export const it: Dictionary = {
     balloonFlights: 'Voli in mongolfiera',
     tours: 'Tour',
     faq: 'FAQ',
+    partners: 'Partner',
     contact: 'Contatti',
     bookNow: 'Prenota ora',
     languageLabel: 'Lingua del sito',
@@ -137,6 +138,18 @@ export const it: Dictionary = {
         'L’orario esatto di prelievo viene confermato dopo la prenotazione, di norma la sera prima dell’esperienza.',
       ],
     ],
+  },
+
+  partnersSection: {
+    eyebrow: 'Con chi collaboriamo',
+    heading: 'I nostri partner',
+    subtitle: 'Hotel, operatori e piattaforme di fiducia con cui collaboriamo in Cappadocia.',
+  },
+
+  testimonialsSection: {
+    eyebrow: 'Cosa dicono i nostri ospiti',
+    heading: 'Recensioni degli ospiti',
+    subtitle: 'Feedback reali dei viaggiatori che abbiamo ospitato in Cappadocia.',
   },
 
   map: {

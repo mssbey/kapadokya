@@ -4,19 +4,14 @@ import { DEFAULT_LOCALE, isLocale, type Locale } from '@/lib/i18n/config';
 /**
  * Every page lives under /<locale>/…, so anything arriving without a locale
  * prefix (old links, bare domain, shared URLs) is redirected to a real one.
- * Preference order: the visitor's saved choice, then Accept-Language, then English.
+ * First-time visitors always land on English; once someone explicitly picks
+ * a language (the switcher sets `dc_locale`), that choice sticks on return
+ * visits. Browser Accept-Language is intentionally not used to auto-pick a
+ * locale — English is the deliberate default landing experience.
  */
 function preferredLocale(request: NextRequest): Locale {
   const saved = request.cookies.get('dc_locale')?.value;
   if (isLocale(saved)) return saved;
-
-  const header = request.headers.get('accept-language');
-  if (header) {
-    for (const part of header.split(',')) {
-      const tag = part.split(';')[0].trim().toLowerCase().split('-')[0];
-      if (isLocale(tag)) return tag;
-    }
-  }
 
   return DEFAULT_LOCALE;
 }

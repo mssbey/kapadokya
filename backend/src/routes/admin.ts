@@ -158,7 +158,7 @@ const translationSchema = z.object({
   includes: z.array(z.string().trim().min(1)).max(50).default([]),
   excludes: z.array(z.string().trim().min(1)).max(50).default([]),
   meetingPoint: z.string().trim().max(1000).nullable().optional(),
-  cancellationPolicy: z.string().trim().max(3000).nullable().optional(),
+  cancellationPolicy: z.string().trim().nullable().optional(),
   seoTitle: z.string().trim().max(70).nullable().optional(),
   seoDescription: z.string().trim().max(170).nullable().optional(),
 });
@@ -898,20 +898,20 @@ adminRouter.patch('/promo-codes/:id', async (req: AuthRequest, res, next) => {
 
 const legalSectionSchema = z.object({
   title: z.string().trim().min(1).max(200),
-  body: z.string().trim().max(6000).nullable().optional(),
-  list: z.array(z.string().trim().min(1).max(1000)).max(50).optional(),
+  body: z.string().trim().nullable().optional(),
+  list: z.array(z.string().trim().min(1)).max(50).optional(),
   table: z
     .object({
       head: z.array(z.string().trim().max(200)).max(10),
       rows: z.array(z.array(z.string().trim().max(500)).max(10)).max(100),
     })
     .optional(),
-  footnote: z.string().trim().max(2000).nullable().optional(),
+  footnote: z.string().trim().nullable().optional(),
 });
 
 const legalPageMutationSchema = z.object({
   title: z.string().trim().min(1).max(200),
-  intro: z.string().trim().min(1).max(2000),
+  intro: z.string().trim().min(1),
   sections: z.array(legalSectionSchema).min(1).max(50),
 });
 
@@ -945,6 +945,165 @@ adminRouter.put('/legal/:slug', async (req: AuthRequest, res, next) => {
     if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
     next(error);
   }
+});
+
+// =================== FAQ ===================
+
+const faqMutationSchema = z.object({
+  locale: z.enum(SUPPORTED_LOCALES),
+  question: z.string().trim().min(1).max(300),
+  answer: z.string().trim().min(1),
+  sortOrder: z.coerce.number().int().default(0),
+  isActive: z.coerce.boolean().default(true),
+});
+
+adminRouter.get('/faqs', async (req, res, next) => {
+  try {
+    const locale = normalizeLocale(req.query.locale as string | undefined);
+    const items = await prisma.faq.findMany({ where: { locale }, orderBy: { sortOrder: 'asc' } });
+    res.json({ success: true, data: items });
+  } catch (error) { next(error); }
+});
+
+adminRouter.post('/faqs', async (req: AuthRequest, res, next) => {
+  try {
+    const data = faqMutationSchema.parse(req.body);
+    const faq = await prisma.faq.create({ data });
+    await invalidateCache(`faqs:${data.locale}`);
+    await writeAudit(req, 'FAQ_CREATED', 'Faq', faq.id, { locale: faq.locale });
+    res.status(201).json({ success: true, data: faq });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
+});
+
+adminRouter.patch('/faqs/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const data = faqMutationSchema.partial().parse(req.body);
+    const faq = await prisma.faq.update({ where: { id: req.params.id }, data });
+    await invalidateCache(`faqs:${faq.locale}`);
+    await writeAudit(req, 'FAQ_UPDATED', 'Faq', faq.id, { locale: faq.locale });
+    res.json({ success: true, data: faq });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
+});
+
+adminRouter.delete('/faqs/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const faq = await prisma.faq.delete({ where: { id: req.params.id } });
+    await invalidateCache(`faqs:${faq.locale}`);
+    await writeAudit(req, 'FAQ_DELETED', 'Faq', faq.id, { locale: faq.locale });
+    res.json({ success: true, data: faq });
+  } catch (error) { next(error); }
+});
+
+// =================== PARTNERS ===================
+
+const partnerMutationSchema = z.object({
+  name: z.string().trim().min(1).max(150),
+  logoUrl: z.string().trim().url(),
+  websiteUrl: z.string().trim().url().nullable().optional(),
+  sortOrder: z.coerce.number().int().default(0),
+  isActive: z.coerce.boolean().default(true),
+});
+
+adminRouter.get('/partners', async (_req, res, next) => {
+  try {
+    const items = await prisma.partner.findMany({ orderBy: { sortOrder: 'asc' } });
+    res.json({ success: true, data: items });
+  } catch (error) { next(error); }
+});
+
+adminRouter.post('/partners', async (req: AuthRequest, res, next) => {
+  try {
+    const data = partnerMutationSchema.parse(req.body);
+    const partner = await prisma.partner.create({ data });
+    await invalidateCache('partners');
+    await writeAudit(req, 'PARTNER_CREATED', 'Partner', partner.id, { name: partner.name });
+    res.status(201).json({ success: true, data: partner });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
+});
+
+adminRouter.patch('/partners/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const data = partnerMutationSchema.partial().parse(req.body);
+    const partner = await prisma.partner.update({ where: { id: req.params.id }, data });
+    await invalidateCache('partners');
+    await writeAudit(req, 'PARTNER_UPDATED', 'Partner', partner.id, { name: partner.name });
+    res.json({ success: true, data: partner });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
+});
+
+adminRouter.delete('/partners/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const partner = await prisma.partner.delete({ where: { id: req.params.id } });
+    await invalidateCache('partners');
+    await writeAudit(req, 'PARTNER_DELETED', 'Partner', partner.id, { name: partner.name });
+    res.json({ success: true, data: partner });
+  } catch (error) { next(error); }
+});
+
+// =================== TESTIMONIALS ===================
+
+const testimonialMutationSchema = z.object({
+  authorName: z.string().trim().min(1).max(150),
+  authorLocation: z.string().trim().max(150).nullable().optional(),
+  rating: z.coerce.number().int().min(1).max(5).default(5),
+  quote: z.string().trim().min(1).max(2000),
+  tourName: z.string().trim().max(150).nullable().optional(),
+  sortOrder: z.coerce.number().int().default(0),
+  isActive: z.coerce.boolean().default(true),
+});
+
+adminRouter.get('/testimonials', async (_req, res, next) => {
+  try {
+    const items = await prisma.testimonial.findMany({ orderBy: { sortOrder: 'asc' } });
+    res.json({ success: true, data: items });
+  } catch (error) { next(error); }
+});
+
+adminRouter.post('/testimonials', async (req: AuthRequest, res, next) => {
+  try {
+    const data = testimonialMutationSchema.parse(req.body);
+    const testimonial = await prisma.testimonial.create({ data });
+    await invalidateCache('testimonials');
+    await writeAudit(req, 'TESTIMONIAL_CREATED', 'Testimonial', testimonial.id, { authorName: testimonial.authorName });
+    res.status(201).json({ success: true, data: testimonial });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
+});
+
+adminRouter.patch('/testimonials/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const data = testimonialMutationSchema.partial().parse(req.body);
+    const testimonial = await prisma.testimonial.update({ where: { id: req.params.id }, data });
+    await invalidateCache('testimonials');
+    await writeAudit(req, 'TESTIMONIAL_UPDATED', 'Testimonial', testimonial.id, { authorName: testimonial.authorName });
+    res.json({ success: true, data: testimonial });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
+});
+
+adminRouter.delete('/testimonials/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const testimonial = await prisma.testimonial.delete({ where: { id: req.params.id } });
+    await invalidateCache('testimonials');
+    await writeAudit(req, 'TESTIMONIAL_DELETED', 'Testimonial', testimonial.id, { authorName: testimonial.authorName });
+    res.json({ success: true, data: testimonial });
+  } catch (error) { next(error); }
 });
 
 adminRouter.get('/audit-logs', async (req, res, next) => {

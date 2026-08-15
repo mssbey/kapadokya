@@ -26,6 +26,7 @@ export const tr: Dictionary = {
     balloonFlights: 'Balon Uçuşları',
     tours: 'Turlar',
     faq: 'SSS',
+    partners: 'Partnerler',
     contact: 'İletişim',
     bookNow: 'Rezervasyon yap',
     languageLabel: 'Site dili',
@@ -137,6 +138,18 @@ export const tr: Dictionary = {
         'Kesin alım saatiniz rezervasyondan sonra, genellikle deneyiminizden bir önceki akşam teyit edilir.',
       ],
     ],
+  },
+
+  partnersSection: {
+    eyebrow: 'İş birliği yaptıklarımız',
+    heading: 'Partnerlerimiz',
+    subtitle: 'Kapadokya genelinde birlikte çalıştığımız güvenilir oteller, operatörler ve platformlar.',
+  },
+
+  testimonialsSection: {
+    eyebrow: 'Misafirlerimiz ne diyor',
+    heading: 'Misafir yorumları',
+    subtitle: 'Kapadokya\'da ağırladığımız gezginlerden gerçek geri bildirimler.',
   },
 
   map: {

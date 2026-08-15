@@ -12,6 +12,9 @@ import { TourEditor } from '@/components/admin/TourEditor';
 import { BookingsManager } from '@/components/admin/BookingsManager';
 import { PromoManager } from '@/components/admin/PromoManager';
 import { LegalPagesManager } from '@/components/admin/LegalPagesManager';
+import { FaqManager } from '@/components/admin/FaqManager';
+import { PartnerManager } from '@/components/admin/PartnerManager';
+import { TestimonialManager } from '@/components/admin/TestimonialManager';
 import { api } from '@/lib/api';
 import { formatPrice, cn, getStatusColor, getCategoryLabel } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -19,10 +22,10 @@ import {
   BarChart3, Users, Calendar, DollarSign, TrendingUp, MapPin,
   Package, ChevronRight, ChevronLeft, Eye, EyeOff, Edit2, Trash2,
   Plus, Loader2, CreditCard, Check, ExternalLink,
-  CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw, Tag, Search, FileText
+  CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw, Tag, Search, FileText, MessageCircleQuestion, Handshake, Star
 } from 'lucide-react';
 
-type Tab = 'dashboard' | 'tours' | 'bookings' | 'payments' | 'availability' | 'customers' | 'promos' | 'revenue' | 'legal';
+type Tab = 'dashboard' | 'tours' | 'bookings' | 'payments' | 'availability' | 'customers' | 'promos' | 'revenue' | 'legal' | 'faq' | 'partners' | 'testimonials';
 
 function extractError(err: any, fallback: string): string {
   return err?.response?.data?.message || fallback;
@@ -143,6 +146,9 @@ export default function AdminPage() {
     { id: 'promos', label: tr ? 'Promosyonlar' : 'Promo Codes', icon: Tag },
     { id: 'revenue', label: tr ? 'Gelir' : 'Revenue', icon: DollarSign },
     { id: 'legal', label: tr ? 'Yasal Sayfalar' : 'Legal Pages', icon: FileText },
+    { id: 'faq', label: tr ? 'SSS' : 'FAQ', icon: MessageCircleQuestion },
+    { id: 'partners', label: tr ? 'Partnerler' : 'Partners', icon: Handshake },
+    { id: 'testimonials', label: tr ? 'Yorumlar' : 'Reviews', icon: Star },
   ];
 
   if (!checkedAuth) {
@@ -236,6 +242,9 @@ export default function AdminPage() {
           {activeTab === 'promos' && <PromoManager />}
           {activeTab === 'revenue' && <RevenueTab />}
           {activeTab === 'legal' && <LegalPagesManager />}
+          {activeTab === 'faq' && <FaqManager />}
+          {activeTab === 'partners' && <PartnerManager />}
+          {activeTab === 'testimonials' && <TestimonialManager />}
         </main>
       </div>
     </div>

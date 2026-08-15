@@ -4,10 +4,17 @@ import { useState } from 'react';
 import { ChevronDown, MessageCircle, Star } from 'lucide-react';
 import { whatsappUrl } from '@/lib/site';
 import { useI18n } from '@/components/I18nProvider';
+import type { FaqItem } from '@/lib/catalogApi';
 
-export function SocialProofSection() {
+type Props = { faqs?: FaqItem[] };
+
+export function SocialProofSection({ faqs }: Props) {
   const [active, setActive] = useState(0);
   const { t } = useI18n();
+
+  // Admin-managed FAQ content, with the static dictionary copy as a fallback
+  // when the API returned nothing (e.g. no rows yet for this locale).
+  const items: [string, string][] = faqs?.length ? faqs.map((faq) => [faq.question, faq.answer]) : t.faqSection.items;
 
   return (
     <section id="faq" className="relative overflow-hidden bg-[#0d241f] py-20 text-white md:py-28">
@@ -21,7 +28,7 @@ export function SocialProofSection() {
           <div className="mt-10 flex gap-3 text-sm text-white/55"><Star className="h-5 w-5 text-amber-300" /><p>{t.faqSection.reviewNote}</p></div>
         </div>
         <div className="divide-y divide-white/10 rounded-3xl border border-white/10 bg-white/5 px-6 backdrop-blur-sm sm:px-8">
-          {t.faqSection.items.map(([question, answer], index) => (
+          {items.map(([question, answer], index) => (
             <div key={question}>
               <button onClick={() => setActive(active === index ? -1 : index)} className="flex w-full items-center justify-between gap-4 py-6 text-left font-bold"><span>{question}</span><ChevronDown className={`h-5 w-5 shrink-0 transition ${active === index ? 'rotate-180 text-amber-300' : 'text-white/40'}`} /></button>
               {active === index && <p className="pb-6 pr-8 text-sm leading-7 text-white/62">{answer}</p>}

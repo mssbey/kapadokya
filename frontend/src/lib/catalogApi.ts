@@ -71,6 +71,48 @@ export async function getLegalPage(slug: string): Promise<LegalPage> {
   return envelope.data;
 }
 
+export type FaqItem = { id: string; question: string; answer: string };
+
+// FAQ content is edited live from the admin panel, same reasoning as the
+// legal pages fetch above — bypass ISR caching so edits show up immediately.
+export async function getPublicFaqs(locale: Locale): Promise<FaqItem[]> {
+  const response = await fetch(`${apiBaseUrl()}/faqs?locale=${locale}`, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error(`FAQ API returned ${response.status}`);
+  const envelope: ApiEnvelope<FaqItem[]> = await response.json();
+  return envelope.data;
+}
+
+export type Partner = { id: string; name: string; logoUrl: string; websiteUrl?: string | null };
+
+// Partner logos are edited live from the admin panel, same reasoning as the
+// legal pages and FAQ fetches above — bypass ISR caching.
+export async function getPublicPartners(): Promise<Partner[]> {
+  const response = await fetch(`${apiBaseUrl()}/partners`, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error(`Partners API returned ${response.status}`);
+  const envelope: ApiEnvelope<Partner[]> = await response.json();
+  return envelope.data;
+}
+
+export type Testimonial = { id: string; authorName: string; authorLocation?: string | null; rating: number; quote: string; tourName?: string | null };
+
+// Testimonials are edited live from the admin panel, same reasoning as the
+// legal pages, FAQ and partners fetches above — bypass ISR caching.
+export async function getPublicTestimonials(): Promise<Testimonial[]> {
+  const response = await fetch(`${apiBaseUrl()}/testimonials`, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error(`Testimonials API returned ${response.status}`);
+  const envelope: ApiEnvelope<Testimonial[]> = await response.json();
+  return envelope.data;
+}
+
 export function categoryLabel(category: Tour['category'], locale: Locale): string {
   const labels: Record<Locale, Record<Tour['category'], string>> = {
     en: { BALLOON: 'Balloon', DAILY_TOUR: 'Daily Tour', ADVENTURE: 'Adventure', TRANSFER: 'Transfer' },

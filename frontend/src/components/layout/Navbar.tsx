@@ -36,6 +36,7 @@ export function Navbar() {
     [t.nav.balloonFlights, href('/tours/cappadocia-hot-air-balloon')],
     [t.nav.tours, href('/tours')],
     [t.nav.faq, href('/#faq')],
+    [t.nav.partners, href('/#partners')],
     [t.nav.contact, href('/#contact')],
   ];
 
