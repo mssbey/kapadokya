@@ -112,23 +112,13 @@ export default function CappadociaMap({ stops, activeId, onSelect, fitAllToken, 
     return () => observer.disconnect();
   }, []);
 
-  // Markers, popups and the dashed route line.
+  // Markers and popups.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
     const layers: L.Layer[] = [];
     markersRef.current.clear();
-
-    const connected = stops.filter((stop) => stop.connect);
-    if (connected.length > 1) {
-      layers.push(
-        L.polyline(
-          connected.map((stop) => [stop.lat, stop.lng] as [number, number]),
-          { color: '#10b981', weight: 2, opacity: 0.75, dashArray: '6 8', lineCap: 'round' },
-        ).addTo(map),
-      );
-    }
 
     const markers = markersRef.current;
     stops.forEach((stop, index) => {
