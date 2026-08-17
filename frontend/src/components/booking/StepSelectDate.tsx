@@ -19,6 +19,7 @@ export function StepSelectDate() {
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
 
   useEffect(() => {
     if (!selectedTour) return;
@@ -40,7 +41,7 @@ export function StepSelectDate() {
     }
 
     fetchAvailability();
-  }, [selectedTour, currentMonth, currentYear]);
+  }, [selectedTour, currentMonth, currentYear, retryToken]);
 
   const availabilityMap = useMemo(() => {
     const map = new Map<string, Availability>();
@@ -129,7 +130,7 @@ export function StepSelectDate() {
         {/* Day Headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {DAYS.map((day) => (
-            <div key={day} className="text-center text-xs font-medium text-gray-400 dark:text-white/30 py-2">
+            <div key={day} className="text-center text-sm font-semibold text-gray-500 dark:text-white/50 py-2">
               {day}
             </div>
           ))}
@@ -137,7 +138,17 @@ export function StepSelectDate() {
 
         {/* Calendar Grid */}
         {error ? (
-          <div className="flex flex-col items-center gap-3 py-16 text-center text-amber-700 dark:text-amber-300"><AlertTriangle className="h-8 w-8" /><p>Live availability could not be loaded. No estimated dates are shown.</p></div>
+          <div className="flex flex-col items-center gap-3 py-16 text-center text-amber-700 dark:text-amber-300">
+            <AlertTriangle className="h-8 w-8" />
+            <p>{t.booking.date.loadError}</p>
+            <button
+              type="button"
+              onClick={() => setRetryToken((token) => token + 1)}
+              className="mt-1 rounded-lg border border-amber-300 px-4 py-2 text-sm font-medium text-amber-800 transition hover:bg-amber-50 dark:border-amber-300/30 dark:text-amber-200 dark:hover:bg-amber-300/10"
+            >
+              {t.booking.date.retry}
+            </button>
+          </div>
         ) : loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
@@ -164,23 +175,23 @@ export function StepSelectDate() {
                   onClick={() => isAvailable && handleDateSelect(day)}
                   disabled={!isAvailable}
                   className={cn(
-                    'aspect-square rounded-xl flex flex-col items-center justify-center transition-all duration-200 relative text-sm',
+                    'aspect-square rounded-xl flex flex-col items-center justify-center transition-all duration-200 relative text-base',
                     isSelected
                       ? 'bg-emerald-500 text-white shadow-glow-emerald'
                       : isAvailable
                       ? 'hover:bg-gray-100 dark:hover:bg-white/10 text-gray-900 dark:text-white cursor-pointer'
-                      : 'text-gray-300 dark:text-white/15 cursor-not-allowed',
+                      : 'text-gray-400 dark:text-white/25 cursor-not-allowed',
                     isPast && 'opacity-30'
                   )}
                 >
-                  <span className="font-medium">{day}</span>
+                  <span className="font-semibold">{day}</span>
                   {isAvailable && !isSelected && (
-                    <span className="text-[9px] text-emerald-400/70 mt-0.5">
+                    <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 mt-0.5">
                       {formatPrice(price, selectedTour?.currency || 'EUR', tag)}
                     </span>
                   )}
                   {isLow && !isSelected && (
-                    <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-400" />
+                    <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-dark" />
                   )}
                 </button>
               );
@@ -189,13 +200,13 @@ export function StepSelectDate() {
         )}
 
         {/* Legend */}
-        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-white/10 text-xs text-gray-400 dark:text-white/40">
+        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-white/10 text-sm font-medium text-gray-500 dark:text-white/60">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded bg-emerald-500" />
             {t.booking.date.selected}
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-red-400" />
+            <div className="w-2 h-2 rounded-full bg-red-500" />
             {t.booking.date.lowAvailability}
           </div>
         </div>
