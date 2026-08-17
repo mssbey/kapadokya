@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MessageCircle, X } from 'lucide-react';
+import { Instagram, MessageCircle, X } from 'lucide-react';
 import { whatsappUrl } from '@/lib/site';
 import { useI18n } from '@/components/I18nProvider';
+import { useInstagramUrl } from '@/lib/useSiteSettings';
 import { stripLocale } from '@/lib/i18n';
 
 // Icons and targets are language-independent; labels come from `chat.choices`.
@@ -22,6 +23,7 @@ export function FloatingContact() {
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const { t, href } = useI18n();
+  const instagramUrl = useInstagramUrl();
   const pathname = usePathname();
   // Never pop the panel open over the booking funnel — the button stays available.
   const inBookingFlow = stripLocale(pathname || '/').startsWith('/booking');
@@ -55,6 +57,11 @@ export function FloatingContact() {
               <Link key={target} href={href(target)} onClick={() => setOpen(false)} className="rounded-xl border border-stone-200 p-3 text-sm font-semibold text-stone-700 transition hover:border-emerald-400 hover:bg-emerald-50 dark:border-white/10 dark:text-white/75 dark:hover:bg-white/5">{icon} {t.chat.choices[index]}</Link>
             ))}
             <a href={whatsappUrl(t.chat.otherMessage)} target="_blank" rel="noreferrer" data-event="whatsapp_click" className="col-span-2 rounded-xl bg-[#25D366] p-3 text-center text-sm font-extrabold text-white">💬 {t.chat.other}</a>
+            {instagramUrl && (
+              <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-stone-200 p-3 text-sm font-semibold text-stone-700 dark:border-white/10 dark:text-white/75">
+                <Instagram className="h-4 w-4" /> {t.balloon.instagramCta}
+              </a>
+            )}
           </div>
         </div>
       )}

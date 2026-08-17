@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SiteLogo } from '@/components/SiteLogo';
-import { Menu, MessageCircle, X } from 'lucide-react';
+import { Instagram, Menu, MessageCircle, X } from 'lucide-react';
 import { SITE, whatsappUrl } from '@/lib/site';
 import { useSitePreferences } from '@/components/SitePreferences';
 import { useI18n } from '@/components/I18nProvider';
+import { useInstagramUrl } from '@/lib/useSiteSettings';
 import { LOCALES, LOCALE_NAMES, type Locale } from '@/lib/i18n';
 
 /** Locale prefix (`/tr`, `/ru`…) so route checks work in every language. */
@@ -28,6 +29,7 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const { currency, setCurrency } = useSitePreferences();
   const { t, locale, href, switchLocale } = useI18n();
+  const instagramUrl = useInstagramUrl();
   const pathname = usePathname() || '/';
   const transparent = hasDarkHero(pathname) && !scrolled && !open;
 
@@ -67,6 +69,7 @@ export function Navbar() {
           <select id="site-currency" value={currency} onChange={(e) => setCurrency(e.target.value as typeof currency)} className="rounded-lg border border-current/15 bg-transparent px-2 py-2 text-xs font-bold outline-none [&>option]:text-stone-900">
             <option value="EUR">EUR €</option><option value="USD">USD $</option><option value="GBP">GBP £</option><option value="TRY">TRY ₺</option>
           </select>
+          {instagramUrl && <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-xl border border-current/15" aria-label={t.balloon.instagramCta}><Instagram className="h-5 w-5" /></a>}
           <a href={whatsappUrl(t.whatsapp.defaultMessage)} target="_blank" rel="noreferrer" data-event="whatsapp_click" className="grid h-10 w-10 place-items-center rounded-xl border border-current/15" aria-label={`WhatsApp ${SITE.phoneDisplay}`}><MessageCircle className="h-5 w-5" /></a>
           <Link href={href('/booking')} className="rounded-xl bg-amber-300 px-5 py-3 text-sm font-extrabold text-stone-900 hover:bg-amber-200">{t.nav.bookNow}</Link>
         </div>
@@ -81,6 +84,11 @@ export function Navbar() {
             </select>
             <select aria-label={t.nav.currencyLabel} value={currency} onChange={(e) => setCurrency(e.target.value as typeof currency)} className="rounded-xl border border-stone-200 bg-transparent p-3 text-sm dark:border-white/10"><option value="EUR">EUR €</option><option value="USD">USD $</option><option value="GBP">GBP £</option><option value="TRY">TRY ₺</option></select>
             <Link href={href('/booking')} onClick={() => setOpen(false)} className="col-span-2 rounded-xl bg-amber-300 p-4 text-center font-extrabold text-stone-900">{t.nav.bookNow}</Link>
+            {instagramUrl && (
+              <a href={instagramUrl} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)} className="col-span-2 flex items-center justify-center gap-2 rounded-xl border border-stone-200 p-3 text-sm font-semibold dark:border-white/10">
+                <Instagram className="h-4 w-4" /> {t.balloon.instagramCta}
+              </a>
+            )}
           </div>
         </div>
       )}

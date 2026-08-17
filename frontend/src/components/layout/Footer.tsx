@@ -3,14 +3,16 @@
 import { SiteLogo } from '@/components/SiteLogo';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BadgeCheck, LockKeyhole, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
+import { BadgeCheck, Instagram, LockKeyhole, Mail, MapPin, MessageCircle, Phone } from 'lucide-react';
 import { SITE, whatsappUrl } from '@/lib/site';
 import { useI18n } from '@/components/I18nProvider';
+import { useInstagramUrl } from '@/lib/useSiteSettings';
 import { stripLocale } from '@/lib/i18n';
 
 export function Footer() {
   const pathname = usePathname();
   const { t, href, fill } = useI18n();
+  const instagramUrl = useInstagramUrl();
   // The guest is already in the funnel — no "come book with us" banner on top of it.
   const inBookingFlow = stripLocale(pathname || '/').startsWith('/booking');
 
@@ -54,6 +56,7 @@ export function Footer() {
             <li className="flex gap-3"><Phone className="h-5 w-5 shrink-0 text-emerald-400" /><a href={`tel:${SITE.phone}`}>{SITE.phoneDisplay}</a></li>
             <li className="flex gap-3"><Mail className="h-5 w-5 shrink-0 text-emerald-400" /><a href={`mailto:${SITE.email}`} className="break-all">{SITE.email}</a></li>
             <li className="flex gap-3"><MapPin className="h-5 w-5 shrink-0 text-emerald-400" /><span>{SITE.address}</span></li>
+            {instagramUrl && <li className="flex gap-3"><Instagram className="h-5 w-5 shrink-0 text-emerald-400" /><a href={instagramUrl} target="_blank" rel="noopener noreferrer">{t.balloon.instagramCta}</a></li>}
           </ul></div>
         </div>
         <div className="mt-12 flex flex-col justify-between gap-5 border-t border-white/10 pt-7 text-xs text-white/38 md:flex-row md:items-center">

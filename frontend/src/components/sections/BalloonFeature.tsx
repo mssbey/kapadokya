@@ -5,12 +5,13 @@ import Link from 'next/link';
 import { ArrowUpRight, CheckCircle2, Instagram, Sunrise } from 'lucide-react';
 import { useI18n } from '@/components/I18nProvider';
 import { useEffect, useState } from 'react';
-import { getPublicTours, getSiteSettings } from '@/lib/catalogApi';
+import { getPublicTours } from '@/lib/catalogApi';
+import { useInstagramUrl } from '@/lib/useSiteSettings';
 
 export function BalloonFeature() {
   const { t, href, locale } = useI18n();
   const [bookingSlug, setBookingSlug] = useState<string>();
-  const [instagramUrl, setInstagramUrl] = useState<string | null>(null);
+  const instagramUrl = useInstagramUrl();
 
   useEffect(() => {
     let active = true;
@@ -19,14 +20,6 @@ export function BalloonFeature() {
       .catch(() => { if (active) setBookingSlug(undefined); });
     return () => { active = false; };
   }, [locale]);
-
-  useEffect(() => {
-    let active = true;
-    getSiteSettings()
-      .then((settings) => { if (active) setInstagramUrl(settings.instagramUrl); })
-      .catch(() => { if (active) setInstagramUrl(null); });
-    return () => { active = false; };
-  }, []);
 
   return (
     <section className="bg-white py-20 dark:bg-dark md:py-28">
