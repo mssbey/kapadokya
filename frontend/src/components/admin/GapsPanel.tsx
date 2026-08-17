@@ -3,12 +3,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AlertTriangle, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { getCategoryLabel } from '@/lib/utils';
 
 type TourGaps = {
   id: string;
   title: string;
-  category: string;
+  category: { name: string };
   missing: number;
   blocked: number;
   soldOut: number;
@@ -103,7 +102,7 @@ export function GapsPanel({ onOpenAvailability }: { onOpenAvailability: () => vo
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-gray-900 dark:text-white">{tour.title}</p>
-                <p className="text-xs text-gray-400 dark:text-white/40">{getCategoryLabel(tour.category)}</p>
+                <p className="text-xs text-gray-400 dark:text-white/40">{tour.category.name}</p>
               </div>
               <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-white/50">
                 {tour.missing > 0 && <span className="whitespace-nowrap">{tour.missing} unset</span>}

@@ -113,13 +113,16 @@ export async function getPublicTestimonials(): Promise<Testimonial[]> {
   return envelope.data;
 }
 
-export function categoryLabel(category: Tour['category'], locale: Locale): string {
-  const labels: Record<Locale, Record<Tour['category'], string>> = {
-    en: { BALLOON: 'Balloon', DAILY_TOUR: 'Daily Tour', ADVENTURE: 'Adventure', TRANSFER: 'Transfer' },
-    tr: { BALLOON: 'Balon', DAILY_TOUR: 'Günlük Tur', ADVENTURE: 'Macera', TRANSFER: 'Transfer' },
-    es: { BALLOON: 'Globo', DAILY_TOUR: 'Tour diario', ADVENTURE: 'Aventura', TRANSFER: 'Traslado' },
-    it: { BALLOON: 'Mongolfiera', DAILY_TOUR: 'Tour giornaliero', ADVENTURE: 'Avventura', TRANSFER: 'Transfer' },
-    ru: { BALLOON: 'Воздушный шар', DAILY_TOUR: 'Однодневный тур', ADVENTURE: 'Приключение', TRANSFER: 'Трансфер' },
-  };
-  return labels[locale][category] || category;
+export type Category = { id: string; slug: string; name: string; imageUrl: string | null };
+
+// Categories are edited live from the admin panel, same reasoning as the
+// legal pages, FAQ, partners and testimonials fetches above — bypass ISR caching.
+export async function getPublicCategories(): Promise<Category[]> {
+  const response = await fetch(`${apiBaseUrl()}/tours/categories`, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error(`Categories API returned ${response.status}`);
+  const envelope: ApiEnvelope<Category[]> = await response.json();
+  return envelope.data;
 }

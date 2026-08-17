@@ -31,13 +31,6 @@ enum PaymentProvider {
   IYZICO
 }
 
-enum TourCategory {
-  BALLOON
-  DAILY_TOUR
-  ADVENTURE
-  TRANSFER
-}
-
 enum DiscountType {
   PERCENT
   FIXED
@@ -65,7 +58,8 @@ model Tour {
   slug                   String            @unique
   description            String
   shortDesc              String
-  category               TourCategory
+  categoryId             String
+  category               Category          @relation(fields: [categoryId], references: [id])
   basePrice              Float
   discountedPrice        Float?
   currency               String            @default("EUR")
@@ -92,6 +86,7 @@ model Tour {
   scheduledPrices        TourScheduledPrice[]
   bookings               Booking[]
   upsells                TourUpsell[]
+  variants               TourVariant[]
   translations           TourTranslation[]
   media                  TourImage[]
   slugAliases            TourSlugAlias[]
@@ -100,10 +95,25 @@ model Tour {
   updatedAt              DateTime          @updatedAt
 
   @@index([slug])
-  @@index([category])
+  @@index([categoryId])
   @@index([isActive])
   @@index([isFeatured])
   @@index([deletedAt])
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  name      String
+  imageUrl  String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  tours     Tour[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+  @@index([isActive])
 }
 
 model TourScheduledPrice {
@@ -189,6 +199,22 @@ model TourUpsell {
   @@index([tourId])
 }
 
+model TourVariant {
+  id          String   @id @default(uuid())
+  tourId      String
+  tour        Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  priceDelta  Float    @default(0)
+  icon        String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tourId, sortOrder])
+}
+
 model Availability {
   id             String   @id @default(uuid())
   tourId         String
@@ -218,6 +244,7 @@ model Booking {
   children               Int                    @default(0)
   isPrivate              Boolean                @default(false)
   upsells                Json?
+  variant                Json?
   totalPrice             Float
   subtotal               Float                  @default(0)
   discountAmount         Float                  @default(0)

@@ -14,7 +14,7 @@ const choiceTargets = [
   ['🏍️', '/tours/cappadocia-sunset-atv-tour'],
   ['🐎', '/tours/cappadocia-horse-riding'],
   ['🚙', '/tours/cappadocia-jeep-safari'],
-  ['🗺️', '/tours?category=daily'],
+  ['🗺️', '/tours?category=daily-tours'],
   ['✈️', '/tours/cappadocia-airport-transfer'],
 ] as const;
 

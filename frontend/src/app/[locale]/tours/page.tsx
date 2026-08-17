@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { ToursBrowser } from '@/components/tours/ToursBrowser';
 import {
   DEFAULT_LOCALE,
@@ -26,5 +27,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default function ToursPage() {
-  return <ToursBrowser />;
+  return (
+    <Suspense fallback={null}>
+      <ToursBrowser />
+    </Suspense>
+  );
 }

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { BookingStatus, Prisma, TourCategory } from '@prisma/client';
+import { BookingStatus, Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { authenticate, requireAdmin, type AuthRequest } from '../middleware/auth';
@@ -132,14 +132,14 @@ adminRouter.get('/analytics/revenue', async (req, res, next) => {
       WHERE p."status" = 'COMPLETED' AND COALESCE(p."processedAt", p."createdAt") >= ${startDate}
       GROUP BY DATE(COALESCE(p."processedAt", p."createdAt")) ORDER BY date ASC
     `;
-    const categoryRows = await prisma.$queryRaw<Array<{ category: TourCategory; revenue: number }>>`
-      SELECT t."category", SUM(p."amount")::float AS revenue
-      FROM "Payment" p JOIN "Booking" b ON b."id" = p."bookingId" JOIN "Tour" t ON t."id" = b."tourId"
+    const categoryRows = await prisma.$queryRaw<Array<{ categoryName: string; revenue: number }>>`
+      SELECT c."name" AS "categoryName", SUM(p."amount")::float AS revenue
+      FROM "Payment" p JOIN "Booking" b ON b."id" = p."bookingId" JOIN "Tour" t ON t."id" = b."tourId" JOIN "Category" c ON c."id" = t."categoryId"
       WHERE p."status" = 'COMPLETED' AND COALESCE(p."processedAt", p."createdAt") >= ${startDate}
-      GROUP BY t."category"
+      GROUP BY c."name"
     `;
     const dailyRevenue = Object.fromEntries(rows.map((row) => [new Date(row.date).toISOString().slice(0, 10), row.revenue]));
-    const categoryRevenue = Object.fromEntries(categoryRows.map((row) => [row.category, row.revenue]));
+    const categoryRevenue = Object.fromEntries(categoryRows.map((row) => [row.categoryName, row.revenue]));
     res.json({ success: true, data: { dailyRevenue, categoryRevenue, totalPayments: rows.reduce((sum, row) => sum + Number(row.payments), 0) } });
   } catch (error) {
     if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
@@ -172,9 +172,19 @@ const upsellSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
+const variantSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().trim().min(1).max(150),
+  description: z.string().trim().max(500).nullable().optional(),
+  priceDelta: z.number().default(0),
+  icon: z.string().max(20).nullable().optional(),
+  isActive: z.boolean().default(true),
+  sortOrder: z.number().int().default(0),
+});
+
 const tourMutationSchema = z.object({
   slug: z.string().trim().min(2).max(180),
-  category: z.nativeEnum(TourCategory),
+  categoryId: z.string().uuid(),
   tourType: z.enum(['GROUP', 'PRIVATE', 'PACKAGE', 'TRANSFER', 'ACTIVITY']).default('GROUP'),
   basePrice: z.number().positive(),
   discountedPrice: z.number().positive().nullable().optional(),
@@ -194,6 +204,7 @@ const tourMutationSchema = z.object({
   sortOrder: z.number().int().default(0),
   translations: z.array(translationSchema).min(1).max(SUPPORTED_LOCALES.length),
   upsells: z.array(upsellSchema).max(50).default([]),
+  variants: z.array(variantSchema).max(20).default([]),
 }).superRefine((data, ctx) => {
   if (!data.translations.some((translation) => translation.locale === 'en')) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['translations'], message: 'English translation is required' });
@@ -209,11 +220,18 @@ const tourMutationSchema = z.object({
   }
 });
 
+async function assertCategoryExists(categoryId: string) {
+  const category = await prisma.category.findUnique({ where: { id: categoryId }, select: { id: true } });
+  if (!category) throw new AppError('Category not found', 400);
+}
+
 const adminTourInclude = Prisma.validator<Prisma.TourInclude>()({
   translations: { orderBy: { locale: 'asc' } },
   media: { orderBy: [{ isCover: 'desc' }, { sortOrder: 'asc' }] },
   upsells: { orderBy: { createdAt: 'asc' } },
+  variants: { orderBy: { sortOrder: 'asc' } },
   slugAliases: { orderBy: { createdAt: 'desc' } },
+  category: { select: { id: true, slug: true, name: true, imageUrl: true } },
   _count: { select: { bookings: true, availabilities: true } },
 });
 
@@ -222,12 +240,12 @@ adminRouter.get('/tours', async (req, res, next) => {
     const hasPagination = req.query.page !== undefined || req.query.limit !== undefined;
     const { page, limit } = paginationSchema.parse(req.query);
     const search = z.string().trim().max(100).optional().parse(req.query.search);
-    const category = req.query.category ? z.nativeEnum(TourCategory).parse(req.query.category) : undefined;
+    const categoryId = req.query.categoryId ? z.string().uuid().parse(req.query.categoryId) : undefined;
     const status = z.enum(['ACTIVE', 'INACTIVE', 'DELETED']).optional().parse(req.query.status);
     const where: Prisma.TourWhereInput = {
       ...(status === 'DELETED' ? { deletedAt: { not: null } } : { deletedAt: null }),
       ...(status === 'ACTIVE' ? { isActive: true } : status === 'INACTIVE' ? { isActive: false } : {}),
-      ...(category ? { category } : {}),
+      ...(categoryId ? { categoryId } : {}),
       ...(search ? { OR: [
         { slug: { contains: search, mode: 'insensitive' } },
         { translations: { some: { title: { contains: search, mode: 'insensitive' } } } },
@@ -312,6 +330,7 @@ adminRouter.put('/tours/:id/scheduled-prices/:date', async (req: AuthRequest, re
       update: { price },
     });
     await invalidateCache('tours:*');
+    await invalidateCache(`availability:${tourId}:*`);
     await writeAudit(req, 'TOUR_SCHEDULED_PRICE_UPDATED', 'Tour', tourId, { date: dateKeyValue, price });
     res.json({ success: true, data: { ...row, date: dateKeyValue } });
   } catch (error) {
@@ -328,6 +347,7 @@ adminRouter.delete('/tours/:id/scheduled-prices/:date', async (req: AuthRequest,
     assertFuturePriceDate(date);
     await prisma.tourScheduledPrice.deleteMany({ where: { tourId, date } });
     await invalidateCache('tours:*');
+    await invalidateCache(`availability:${tourId}:*`);
     await writeAudit(req, 'TOUR_SCHEDULED_PRICE_DELETED', 'Tour', tourId, { date: dateKeyValue });
     res.json({ success: true });
   } catch (error) {
@@ -358,6 +378,7 @@ adminRouter.post('/tours/:id/scheduled-prices/bulk', async (req: AuthRequest, re
       update: { price: data.price },
     })));
     await invalidateCache('tours:*');
+    await invalidateCache(`availability:${tourId}:*`);
     await writeAudit(req, 'TOUR_SCHEDULED_PRICE_BULK_UPDATED', 'Tour', tourId, { ...data, count: dates.length });
     res.json({ success: true, data: { count: dates.length } });
   } catch (error) {
@@ -371,6 +392,7 @@ adminRouter.post('/tours', async (req: AuthRequest, res, next) => {
     const data = tourMutationSchema.parse(req.body);
     const slug = normalizeSlug(data.slug);
     await assertSlugAvailable(slug);
+    await assertCategoryExists(data.categoryId);
     const english = data.translations.find((translation) => translation.locale === 'en')!;
     const tour = await prisma.tour.create({
       data: {
@@ -382,7 +404,7 @@ adminRouter.post('/tours', async (req: AuthRequest, res, next) => {
         includes: english.includes,
         excludes: english.excludes,
         images: [],
-        category: data.category,
+        categoryId: data.categoryId,
         tourType: data.tourType,
         basePrice: data.basePrice,
         discountedPrice: data.discountedPrice,
@@ -402,6 +424,7 @@ adminRouter.post('/tours', async (req: AuthRequest, res, next) => {
         sortOrder: data.sortOrder,
         translations: { create: data.translations },
         upsells: { create: data.upsells.map(({ id: _id, ...upsell }) => upsell) },
+        variants: { create: data.variants.map(({ id: _id, ...variant }) => variant) },
       },
       include: adminTourInclude,
     });
@@ -421,6 +444,7 @@ adminRouter.put('/tours/:id', async (req: AuthRequest, res, next) => {
     if (!current) throw new AppError('Tour not found', 404);
     const slug = normalizeSlug(data.slug);
     await assertSlugAvailable(slug, current.id);
+    await assertCategoryExists(data.categoryId);
     const english = data.translations.find((translation) => translation.locale === 'en')!;
 
     const tour = await prisma.$transaction(async (tx) => {
@@ -429,6 +453,7 @@ adminRouter.put('/tours/:id', async (req: AuthRequest, res, next) => {
       }
       await tx.tourTranslation.deleteMany({ where: { tourId: current.id } });
       await tx.tourUpsell.deleteMany({ where: { tourId: current.id } });
+      await tx.tourVariant.deleteMany({ where: { tourId: current.id } });
       return tx.tour.update({
         where: { id: current.id },
         data: {
@@ -439,7 +464,7 @@ adminRouter.put('/tours/:id', async (req: AuthRequest, res, next) => {
           highlights: english.highlights,
           includes: english.includes,
           excludes: english.excludes,
-          category: data.category,
+          categoryId: data.categoryId,
           tourType: data.tourType,
           basePrice: data.basePrice,
           discountedPrice: data.discountedPrice,
@@ -459,6 +484,7 @@ adminRouter.put('/tours/:id', async (req: AuthRequest, res, next) => {
           sortOrder: data.sortOrder,
           translations: { create: data.translations },
           upsells: { create: data.upsells.map(({ id: _id, ...upsell }) => upsell) },
+          variants: { create: data.variants.map(({ id: _id, ...variant }) => variant) },
         },
         include: adminTourInclude,
       });
@@ -523,7 +549,7 @@ adminRouter.post('/tours/:id/duplicate', async (req: AuthRequest, res, next) => 
     const copy = await prisma.tour.create({
       data: {
         title: `${source.title} (Copy)`, slug, description: source.description, shortDesc: source.shortDesc,
-        category: source.category, tourType: source.tourType, basePrice: source.basePrice,
+        categoryId: source.categoryId, tourType: source.tourType, basePrice: source.basePrice,
         discountedPrice: source.discountedPrice, currency: source.currency, childPriceRate: source.childPriceRate,
         privatePriceMultiplier: source.privatePriceMultiplier, duration: source.duration, startTime: source.startTime,
         endTime: source.endTime, maxCapacity: source.maxCapacity, minParticipants: source.minParticipants,
@@ -554,6 +580,72 @@ adminRouter.delete('/tours/:id', async (req: AuthRequest, res, next) => {
     if (error?.code === 'P2025') return next(new AppError('Tour not found', 404));
     next(error);
   }
+});
+
+// =================== CATEGORIES ===================
+
+const categoryMutationSchema = z.object({
+  name: z.string().trim().min(1).max(150),
+  slug: z.string().trim().min(1).max(150).optional(),
+  imageUrl: z.string().trim().url().nullable().optional(),
+  sortOrder: z.coerce.number().int().default(0),
+  isActive: z.coerce.boolean().default(true),
+});
+
+async function assertCategorySlugAvailable(slug: string, exceptId?: string) {
+  const existing = await prisma.category.findUnique({ where: { slug }, select: { id: true } });
+  if (existing && existing.id !== exceptId) throw new AppError('A category with this slug already exists', 409);
+}
+
+adminRouter.get('/categories', async (_req, res, next) => {
+  try {
+    const items = await prisma.category.findMany({ orderBy: { sortOrder: 'asc' }, include: { _count: { select: { tours: true } } } });
+    res.json({ success: true, data: items });
+  } catch (error) { next(error); }
+});
+
+adminRouter.post('/categories', async (req: AuthRequest, res, next) => {
+  try {
+    const data = categoryMutationSchema.parse(req.body);
+    const slug = normalizeSlug(data.slug || data.name);
+    await assertCategorySlugAvailable(slug);
+    const category = await prisma.category.create({ data: { ...data, slug } });
+    await invalidateCache('tours:*');
+    await writeAudit(req, 'CATEGORY_CREATED', 'Category', category.id, { name: category.name });
+    res.status(201).json({ success: true, data: category });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
+});
+
+adminRouter.patch('/categories/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const data = categoryMutationSchema.partial().parse(req.body);
+    const slug = data.slug != null ? normalizeSlug(data.slug) : undefined;
+    if (slug) await assertCategorySlugAvailable(slug, req.params.id);
+    const category = await prisma.category.update({ where: { id: req.params.id }, data: { ...data, ...(slug ? { slug } : {}) } });
+    await invalidateCache('tours:*');
+    await writeAudit(req, 'CATEGORY_UPDATED', 'Category', category.id, { name: category.name });
+    res.json({ success: true, data: category });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
+});
+
+adminRouter.delete('/categories/:id', async (req: AuthRequest, res, next) => {
+  try {
+    const category = await prisma.category.findUnique({ where: { id: req.params.id }, include: { _count: { select: { tours: true } } } });
+    if (!category) throw new AppError('Category not found', 404);
+    if (category._count.tours > 0) {
+      throw new AppError(`This category still has ${category._count.tours} tour(s). Reassign or delete them first.`, 409);
+    }
+    await prisma.category.delete({ where: { id: category.id } });
+    await invalidateCache('tours:*');
+    await writeAudit(req, 'CATEGORY_DELETED', 'Category', category.id, { name: category.name });
+    res.json({ success: true, data: category });
+  } catch (error) { next(error); }
 });
 
 // =================== BOOKINGS ===================

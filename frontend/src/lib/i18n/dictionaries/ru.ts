@@ -67,11 +67,15 @@ export const ru: Dictionary = {
     ],
   },
 
+  categories: {
+    eyebrow: 'Выбор по категориям',
+    heading: 'Найдите свои впечатления в Каппадокии',
+  },
+
   popular: {
     eyebrow: 'Выбор гостей',
     heading: 'Самые популярные впечатления Каппадокии',
     viewAll: 'Все впечатления →',
-    newListing: 'Новое предложение',
     hotelPickup: 'Трансфер от отеля',
     from: 'От',
     viewAndBook: 'Подробнее и бронь',
@@ -241,7 +245,6 @@ export const ru: Dictionary = {
     metaDescriptionSuffix:
       '{description} Проверьте наличие мест, что входит в стоимость и условия трансфера, забронируйте с местной поддержкой.',
     breadcrumbTours: 'Туры',
-    newListing: 'Новое предложение',
     overview: 'Описание',
     highlights: 'Главное',
     included: 'Что включено',
@@ -295,6 +298,7 @@ export const ru: Dictionary = {
     askWhatsapp: 'Спросить в WhatsApp',
     whatsappMessage: 'Здравствуйте, хочу узнать подробнее про «{title}».',
     freeCancellation: 'Бесплатная отмена, где указано',
+    freeRescheduling: 'Гарантированный перенос даты при плохой погоде',
     secureCheckout: 'Безопасная оплата',
     bookNow: 'ЗАБРОНИРОВАТЬ',
   },
@@ -345,6 +349,11 @@ export const ru: Dictionary = {
       privateTitle: 'Индивидуальная программа',
       privateSubtitle: 'Тур только для вашей группы (+50%)',
       capacity: 'Максимум {count} гостей на тур',
+    },
+
+    variants: {
+      heading: 'Выберите маршрут',
+      subtitle: 'Подберите вариант, который подходит вам на эту дату',
     },
 
     upsells: {

@@ -9,7 +9,7 @@ export const tourRouter = Router();
 
 const listQuerySchema = z.object({
   locale: z.string().optional(),
-  category: z.enum(['BALLOON', 'DAILY_TOUR', 'ADVENTURE', 'TRANSFER']).optional(),
+  category: z.string().trim().max(100).optional(),
   featured: z.enum(['true', 'false']).optional(),
   q: z.string().trim().max(100).optional(),
 });
@@ -25,7 +25,7 @@ tourRouter.get('/', async (req, res, next) => {
         where: {
           isActive: true,
           deletedAt: null,
-          ...(query.category ? { category: query.category } : {}),
+          ...(query.category ? { category: { slug: query.category } } : {}),
           ...(query.featured === 'true' ? { isFeatured: true } : {}),
           ...(query.q
             ? {
@@ -51,16 +51,34 @@ tourRouter.get('/', async (req, res, next) => {
   }
 });
 
-// Static routes must stay above /:slug so Express cannot treat "category" as a slug.
+// Static routes must stay above /:slug so Express cannot treat "category" or
+// "categories" as a slug.
+tourRouter.get('/categories', async (_req, res, next) => {
+  try {
+    const categories = await getCached('tours:categories', 60, () =>
+      prisma.category.findMany({
+        where: { isActive: true, tours: { some: { isActive: true, deletedAt: null } } },
+        orderBy: { sortOrder: 'asc' },
+        select: { id: true, slug: true, name: true, imageUrl: true },
+      }),
+    );
+    res.json({ success: true, data: categories });
+  } catch (error) {
+    next(error);
+  }
+});
+
 tourRouter.get('/category/:category', async (req, res, next) => {
   try {
-    const category = z.enum(['BALLOON', 'DAILY_TOUR', 'ADVENTURE', 'TRANSFER']).parse(req.params.category.toUpperCase());
+    const categorySlug = z.string().trim().min(1).max(100).parse(req.params.category.toLowerCase());
+    const category = await prisma.category.findUnique({ where: { slug: categorySlug } });
+    if (!category) throw new AppError('Category not found', 404);
     const locale = normalizeLocale(req.query.locale);
     const catalogDate = currentCatalogDate();
     const priceDay = catalogDate.toISOString().slice(0, 10);
-    const tours = await getCached(`tours:category:${priceDay}:${category}:${locale}`, 60, () =>
+    const tours = await getCached(`tours:category:${priceDay}:${categorySlug}:${locale}`, 60, () =>
       prisma.tour.findMany({
-        where: { isActive: true, deletedAt: null, category },
+        where: { isActive: true, deletedAt: null, categoryId: category.id },
         include: publicTourIncludeForDate(catalogDate),
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
       }),

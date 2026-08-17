@@ -2,6 +2,7 @@ import { HeroSection } from '@/components/sections/HeroSection';
 import { SocialProofSection } from '@/components/sections/SocialProofSection';
 import { MapSection } from '@/components/sections/MapSection';
 import { TrustSection } from '@/components/sections/TrustSection';
+import { CategoryShowcase } from '@/components/sections/CategoryShowcase';
 import { PopularExperiences } from '@/components/sections/PopularExperiences';
 import { BalloonFeature } from '@/components/sections/BalloonFeature';
 import { LastMinuteAvailability } from '@/components/sections/LastMinuteAvailability';
@@ -27,6 +28,7 @@ export default async function Home({ params }: Props) {
     <>
       <HeroSection />
       <TrustSection />
+      <CategoryShowcase />
       <PopularExperiences />
       <BalloonFeature />
       <LastMinuteAvailability />

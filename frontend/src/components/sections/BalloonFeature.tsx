@@ -13,7 +13,7 @@ export function BalloonFeature() {
 
   useEffect(() => {
     let active = true;
-    getPublicTours(locale, { category: 'BALLOON', featured: true })
+    getPublicTours(locale, { category: 'hot-air-balloon', featured: true })
       .then((tours) => { if (active) setBookingSlug(tours[0]?.slug); })
       .catch(() => { if (active) setBookingSlug(undefined); });
     return () => { active = false; };

@@ -67,11 +67,15 @@ export const es: Dictionary = {
     ],
   },
 
+  categories: {
+    eyebrow: 'Explorar por categoría',
+    heading: 'Encuentra tu experiencia en Capadocia',
+  },
+
   popular: {
     eyebrow: 'Favoritos de los viajeros',
     heading: 'Las experiencias más populares de Capadocia',
     viewAll: 'Ver todas las experiencias →',
-    newListing: 'Nueva publicación',
     hotelPickup: 'Recogida en hotel',
     from: 'Desde',
     viewAndBook: 'Ver y reservar',
@@ -242,7 +246,6 @@ export const es: Dictionary = {
     metaDescriptionSuffix:
       '{description} Consulta disponibilidad, qué incluye e información de recogida, y reserva con apoyo local.',
     breadcrumbTours: 'Tours',
-    newListing: 'Nueva publicación',
     overview: 'Descripción general',
     highlights: 'Lo más destacado',
     included: 'Qué incluye',
@@ -296,6 +299,7 @@ export const es: Dictionary = {
     askWhatsapp: 'Preguntar por WhatsApp',
     whatsappMessage: 'Hola, me gustaría información sobre {title}.',
     freeCancellation: 'Cancelación gratuita donde se indica',
+    freeRescheduling: 'Reprogramación garantizada por mal tiempo',
     secureCheckout: 'Pago seguro',
     bookNow: 'RESERVAR',
   },
@@ -346,6 +350,11 @@ export const es: Dictionary = {
       privateTitle: 'Experiencia privada',
       privateSubtitle: 'Tour exclusivo solo para tu grupo (+50%)',
       capacity: 'Máximo {count} viajeros por tour',
+    },
+
+    variants: {
+      heading: 'Elige tu ruta',
+      subtitle: 'Elige la opción que mejor se adapte a esta fecha',
     },
 
     upsells: {

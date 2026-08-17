@@ -67,11 +67,15 @@ export const tr: Dictionary = {
     ],
   },
 
+  categories: {
+    eyebrow: 'Kategoriye göre keşfet',
+    heading: 'Size uygun Kapadokya deneyimini bulun',
+  },
+
   popular: {
     eyebrow: 'Misafir favorileri',
     heading: 'En Popüler Kapadokya Deneyimleri',
     viewAll: 'Tüm deneyimleri gör →',
-    newListing: 'Yeni ilan',
     hotelPickup: 'Otelden alım',
     from: 'Başlangıç',
     viewAndBook: 'İncele & rezerve et',
@@ -241,7 +245,6 @@ export const tr: Dictionary = {
     metaDescriptionSuffix:
       '{description} Müsaitliği, dahil olanları ve alım bilgilerini inceleyin, yerel destekle rezerve edin.',
     breadcrumbTours: 'Turlar',
-    newListing: 'Yeni ilan',
     overview: 'Genel bakış',
     highlights: 'Öne çıkanlar',
     included: 'Fiyata dahil',
@@ -295,6 +298,7 @@ export const tr: Dictionary = {
     askWhatsapp: 'WhatsApp’tan sorun',
     whatsappMessage: 'Merhaba, {title} hakkında bilgi almak istiyorum.',
     freeCancellation: 'Belirtilen turlarda ücretsiz iptal',
+    freeRescheduling: 'Hava koşullarına bağlı ertelemelerde yeniden planlama garantisi',
     secureCheckout: 'Güvenli ödeme',
     bookNow: 'REZERVE ET',
   },
@@ -345,6 +349,11 @@ export const tr: Dictionary = {
       privateTitle: 'Özel Deneyim',
       privateSubtitle: 'Yalnızca sizin grubunuza özel tur (+%50)',
       capacity: 'Tur başına en fazla {count} kişi',
+    },
+
+    variants: {
+      heading: 'Rotanızı seçin',
+      subtitle: 'Bu tarih için size en uygun seçeneği belirleyin',
     },
 
     upsells: {

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { BookingFormData, SelectedUpsell, Tour, Availability } from '@/types';
+import type { BookingFormData, SelectedUpsell, SelectedVariant, Tour, Availability } from '@/types';
 
 interface BookingState {
   step: number;
@@ -10,6 +10,7 @@ interface BookingState {
   children: number;
   isPrivate: boolean;
   selectedUpsells: SelectedUpsell[];
+  selectedVariant: SelectedVariant | null;
   guestName: string;
   guestEmail: string;
   guestPhone: string;
@@ -24,6 +25,7 @@ interface BookingState {
   setDate: (date: string, availability: Availability) => void;
   setPeople: (guests: number, isPrivate: boolean) => void;
   toggleUpsell: (upsell: SelectedUpsell) => void;
+  setVariant: (variant: SelectedVariant | null) => void;
   setGuestInfo: (name: string, email: string, phone: string, hotelName: string, notes?: string) => void;
   calculateTotal: () => void;
   setTotalPrice: (totalPrice: number) => void;
@@ -40,6 +42,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   children: 0,
   isPrivate: false,
   selectedUpsells: [],
+  selectedVariant: null,
   guestName: '',
   guestEmail: '',
   guestPhone: '',
@@ -52,7 +55,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
   prevStep: () => set((s) => ({ step: Math.max(s.step - 1, 1) })),
 
   setTour: (tour) => {
-    set({ selectedTour: tour, selectedDate: '', selectedAvailability: null, selectedUpsells: [] });
+    set({ selectedTour: tour, selectedDate: '', selectedAvailability: null, selectedUpsells: [], selectedVariant: null });
     get().calculateTotal();
   },
 
@@ -77,6 +80,11 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     get().calculateTotal();
   },
 
+  setVariant: (variant) => {
+    set({ selectedVariant: variant });
+    get().calculateTotal();
+  },
+
   setGuestInfo: (guestName, guestEmail, guestPhone, hotelName, notes = '') => {
     set({ guestName, guestEmail, guestPhone, hotelName, notes });
   },
@@ -95,6 +103,8 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     const upsellTotal = state.selectedUpsells.reduce((sum, u) => sum + u.price, 0);
     total += upsellTotal * state.adults;
 
+    total += (state.selectedVariant?.priceDelta ?? 0) * state.adults;
+
     set({ totalPrice: Math.round(total * 100) / 100 });
   },
   setTotalPrice: (totalPrice) => set({ totalPrice }),
@@ -109,6 +119,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
       children: 0,
       isPrivate: false,
       selectedUpsells: [],
+      selectedVariant: null,
       guestName: '',
       guestEmail: '',
       guestPhone: '',
@@ -126,6 +137,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
       children: s.children,
       isPrivate: s.isPrivate,
       upsells: s.selectedUpsells,
+      variantId: s.selectedVariant?.id,
       guestName: s.guestName,
       guestEmail: s.guestEmail,
       guestPhone: s.guestPhone,

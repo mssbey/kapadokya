@@ -70,11 +70,15 @@ export const en = {
     ],
   },
 
+  categories: {
+    eyebrow: 'Browse by category',
+    heading: 'Find your Cappadocia experience',
+  },
+
   popular: {
     eyebrow: 'Guest favourites',
     heading: 'Most Popular Cappadocia Experiences',
     viewAll: 'View all experiences →',
-    newListing: 'New listing',
     hotelPickup: 'Hotel pickup',
     from: 'From',
     viewAndBook: 'View & book',
@@ -245,7 +249,6 @@ export const en = {
     metaDescriptionSuffix:
       '{description} Check availability, inclusions, pickup information and book with local support.',
     breadcrumbTours: 'Tours',
-    newListing: 'New listing',
     overview: 'Overview',
     highlights: 'Highlights',
     included: 'What’s included',
@@ -299,6 +302,7 @@ export const en = {
     askWhatsapp: 'Ask on WhatsApp',
     whatsappMessage: 'Hello, I would like information about {title}.',
     freeCancellation: 'Free cancellation where stated',
+    freeRescheduling: 'Rescheduling guaranteed for weather delays',
     secureCheckout: 'Secure checkout',
     bookNow: 'BOOK NOW',
   },
@@ -349,6 +353,11 @@ export const en = {
       privateTitle: 'Private Experience',
       privateSubtitle: 'Exclusive tour just for your group (+50%)',
       capacity: 'Maximum {count} guests per tour',
+    },
+
+    variants: {
+      heading: 'Choose your route',
+      subtitle: 'Pick the option that suits you best for this date',
     },
 
     upsells: {

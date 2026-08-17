@@ -15,6 +15,8 @@ export const publicTourInclude = Prisma.validator<Prisma.TourInclude>()({
   translations: true,
   media: { orderBy: [{ isCover: 'desc' }, { sortOrder: 'asc' }] },
   upsells: { where: { isActive: true }, orderBy: { createdAt: 'asc' } },
+  variants: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } },
+  category: { select: { id: true, slug: true, name: true, imageUrl: true } },
 });
 
 const CATALOG_TIME_ZONE = 'Europe/Istanbul';
@@ -101,6 +103,7 @@ export function presentTour(tour: any, locale: SupportedLocale) {
     isBookingEnabled: tour.isBookingEnabled,
     sortOrder: tour.sortOrder,
     upsells: tour.upsells ?? [],
+    variants: tour.variants ?? [],
     updatedAt: tour.updatedAt,
   };
 }

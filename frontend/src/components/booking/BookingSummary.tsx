@@ -15,6 +15,7 @@ export function BookingSummary() {
     adults,
     isPrivate,
     selectedUpsells,
+    selectedVariant,
     totalPrice,
   } = useBookingStore();
   const { t, tag, fill } = useI18n();
@@ -39,11 +40,12 @@ export function BookingSummary() {
       {/* Tour */}
       <div className="flex items-start gap-3 pb-4 border-b border-gray-200 dark:border-white/10">
         <div className="w-16 h-16 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center text-2xl flex-shrink-0">
-          {getCategoryIcon(selectedTour.category)}
+          {getCategoryIcon(selectedTour.category.slug)}
         </div>
         <div>
           <h4 className="font-semibold text-gray-900 dark:text-white text-sm">{selectedTour.title}</h4>
           <p className="text-gray-400 dark:text-white/40 text-xs mt-1">{selectedTour.duration}</p>
+          {selectedVariant && <p className="text-emerald-600 dark:text-emerald-400 text-xs mt-1 font-medium">{selectedVariant.name}</p>}
         </div>
       </div>
 
@@ -75,6 +77,12 @@ export function BookingSummary() {
           <div className="flex justify-between text-sm">
             <span className="text-gray-400 dark:text-white/50">{t.booking.summary.privateUpgrade}</span>
             <span className="text-gray-600 dark:text-white/70">×{selectedTour.privatePriceMultiplier ?? 1.5}</span>
+          </div>
+        )}
+        {selectedVariant && selectedVariant.priceDelta !== 0 && (
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-400 dark:text-white/50">{selectedVariant.name}</span>
+            <span className="text-gray-600 dark:text-white/70">{formatPrice(selectedVariant.priceDelta * adults, currency, tag)}</span>
           </div>
         )}
         {selectedUpsells.map((u) => (

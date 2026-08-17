@@ -14,18 +14,19 @@ import { PromoManager } from '@/components/admin/PromoManager';
 import { LegalPagesManager } from '@/components/admin/LegalPagesManager';
 import { FaqManager } from '@/components/admin/FaqManager';
 import { PartnerManager } from '@/components/admin/PartnerManager';
+import { CategoryManager } from '@/components/admin/CategoryManager';
 import { TestimonialManager } from '@/components/admin/TestimonialManager';
 import { api } from '@/lib/api';
-import { formatPrice, cn, getStatusColor, getCategoryLabel } from '@/lib/utils';
+import { formatPrice, cn, getStatusColor } from '@/lib/utils';
 import toast from 'react-hot-toast';
 import {
   BarChart3, Users, Calendar, DollarSign, TrendingUp, MapPin,
   Package, ChevronRight, ChevronLeft, Eye, EyeOff, Edit2, Trash2,
   Plus, Loader2, CreditCard, Check, ExternalLink,
-  CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw, Tag, Search, FileText, MessageCircleQuestion, Handshake, Star
+  CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw, Tag, Search, FileText, MessageCircleQuestion, Handshake, Star, Layers
 } from 'lucide-react';
 
-type Tab = 'dashboard' | 'tours' | 'bookings' | 'payments' | 'availability' | 'customers' | 'promos' | 'revenue' | 'legal' | 'faq' | 'partners' | 'testimonials';
+type Tab = 'dashboard' | 'tours' | 'categories' | 'bookings' | 'payments' | 'availability' | 'customers' | 'promos' | 'revenue' | 'legal' | 'faq' | 'partners' | 'testimonials';
 
 function extractError(err: any, fallback: string): string {
   return err?.response?.data?.message || fallback;
@@ -139,6 +140,7 @@ export default function AdminPage() {
   const tabs: { id: Tab; label: string; icon: any }[] = [
     { id: 'dashboard', label: tr ? 'Genel Bakış' : 'Dashboard', icon: BarChart3 },
     { id: 'tours', label: tr ? 'Turlar' : 'Tours', icon: MapPin },
+    { id: 'categories', label: tr ? 'Kategoriler' : 'Categories', icon: Layers },
     { id: 'bookings', label: tr ? 'Rezervasyonlar' : 'Bookings', icon: Calendar },
     { id: 'payments', label: tr ? 'Ödemeler' : 'Payments', icon: CreditCard },
     { id: 'availability', label: tr ? 'Müsaitlik' : 'Availability', icon: Package },
@@ -235,6 +237,7 @@ export default function AdminPage() {
         <main className="flex-1 p-4 md:p-8 pb-20 lg:pb-8 min-w-0">
           {activeTab === 'dashboard' && <DashboardTab onOpenAvailability={() => setActiveTab('availability')} />}
           {activeTab === 'tours' && <ToursTab />}
+          {activeTab === 'categories' && <CategoryManager />}
           {activeTab === 'bookings' && <BookingsManager />}
           {activeTab === 'payments' && <PaymentsTab />}
           {activeTab === 'availability' && <AvailabilityBoard />}
@@ -356,7 +359,7 @@ function DashboardTab({ onOpenAvailability }: { onOpenAvailability: () => void }
               {categoryEntries.map(([cat, revenue]) => (
                 <div key={cat}>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-500 dark:text-white/60">{getCategoryLabel(cat)}</span>
+                    <span className="text-gray-500 dark:text-white/60">{cat}</span>
                     <span className="text-gray-700 dark:text-white/80">{formatPrice(revenue)}</span>
                   </div>
                   <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
@@ -683,7 +686,7 @@ function ToursTab() {
 
   const query = search.trim().toLowerCase();
   const visibleTours = query
-    ? tours.filter((tour) => `${tour.title} ${tour.slug} ${tour.category}`.toLowerCase().includes(query))
+    ? tours.filter((tour) => `${tour.title} ${tour.slug} ${tour.category?.name}`.toLowerCase().includes(query))
     : tours;
 
   async function toggleTour(tourId: string) {
@@ -755,7 +758,7 @@ function ToursTab() {
                   </span>
                 </div>
                 <div className="flex items-center gap-3 mt-1 text-sm text-gray-400 dark:text-white/40">
-                  <span>{getCategoryLabel(tour.category)}</span>
+                  <span>{tour.category?.name}</span>
                   <InlinePrice
                     tour={tour}
                     onSaved={(basePrice) =>
@@ -1321,7 +1324,7 @@ function RevenueTab() {
               .sort((a, b) => b[1] - a[1])
               .map(([cat, revenue]) => (
                 <div key={cat} className="flex justify-between text-sm py-2 border-b border-gray-100 dark:border-white/5 last:border-0">
-                  <span className="text-gray-500 dark:text-white/60">{getCategoryLabel(cat)}</span>
+                  <span className="text-gray-500 dark:text-white/60">{cat}</span>
                   <span className="text-gray-900 dark:text-white font-medium">{formatPrice(revenue)}</span>
                 </div>
               ))}

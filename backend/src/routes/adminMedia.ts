@@ -36,6 +36,21 @@ function runUpload(req: any, res: any) {
   });
 }
 
+// Generic single-image upload, not tied to a tour — used by admin sections
+// (e.g. category cover images) that just need a hosted URL back.
+adminMediaRouter.post('/media/upload', async (req: AuthRequest, res, next) => {
+  try {
+    await runUpload(req, res);
+    const files = (req.files as Express.Multer.File[]) || [];
+    if (!files.length) throw new AppError('Select an image', 400);
+    const image = await mediaStorage.uploadImage(files[0].buffer, files[0].originalname);
+    await writeAudit(req, 'MEDIA_UPLOADED', 'Media', image.storageKey);
+    res.status(201).json({ success: true, data: { secureUrl: image.secureUrl, storageKey: image.storageKey } });
+  } catch (error) {
+    next(error);
+  }
+});
+
 adminMediaRouter.post('/tours/:tourId/images', async (req: AuthRequest, res, next) => {
   const uploaded: { storageKey: string }[] = [];
   try {

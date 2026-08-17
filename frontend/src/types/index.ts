@@ -4,7 +4,7 @@ export interface Tour {
   slug: string;
   description: string;
   shortDesc: string;
-  category: TourCategory;
+  category: Category;
   basePrice: number;
   regularPrice?: number;
   discountedPrice?: number | null;
@@ -36,6 +36,7 @@ export interface Tour {
   contentLocale?: string;
   sortOrder: number;
   upsells: TourUpsell[];
+  variants: TourVariant[];
   availabilities?: Availability[];
 }
 
@@ -57,6 +58,17 @@ export interface TourUpsell {
   price: number;
   icon?: string;
   isActive: boolean;
+}
+
+export interface TourVariant {
+  id: string;
+  tourId: string;
+  name: string;
+  description?: string | null;
+  priceDelta: number;
+  icon?: string | null;
+  isActive: boolean;
+  sortOrder: number;
 }
 
 export interface Availability {
@@ -116,7 +128,13 @@ export interface SelectedUpsell {
   price: number;
 }
 
-export type TourCategory = 'BALLOON' | 'DAILY_TOUR' | 'ADVENTURE' | 'TRANSFER';
+export interface SelectedVariant {
+  id: string;
+  name: string;
+  priceDelta: number;
+}
+
+export type Category = { id: string; slug: string; name: string; imageUrl: string | null };
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
 export type PaymentProvider = 'STRIPE' | 'IYZICO';
@@ -128,6 +146,7 @@ export interface BookingFormData {
   children: number;
   isPrivate: boolean;
   upsells: SelectedUpsell[];
+  variantId?: string;
   guestName: string;
   guestEmail: string;
   guestPhone: string;

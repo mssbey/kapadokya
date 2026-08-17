@@ -5,6 +5,30 @@ import { AppError } from '../middleware/errorHandler';
 
 export const availabilityRouter = Router();
 
+/**
+ * TourScheduledPrice ("Gelecek fiyatları" in admin) is a capacity-independent
+ * seasonal price layer. It only takes effect where no explicit per-day
+ * Availability.priceOverride has been set — the override always wins.
+ */
+async function fillScheduledPrices<T extends { tourId: string; date: Date; priceOverride: number | null }>(
+  rows: T[],
+): Promise<T[]> {
+  const missing = rows.filter((row) => row.priceOverride == null);
+  if (!missing.length) return rows;
+  const tourIds = [...new Set(missing.map((row) => row.tourId))];
+  const dates = missing.map((row) => row.date);
+  const scheduled = await prisma.tourScheduledPrice.findMany({
+    where: { tourId: { in: tourIds }, date: { in: dates } },
+  });
+  if (!scheduled.length) return rows;
+  const byKey = new Map(scheduled.map((item) => [`${item.tourId}:${item.date.toISOString()}`, item.price]));
+  return rows.map((row) => {
+    if (row.priceOverride != null) return row;
+    const price = byKey.get(`${row.tourId}:${row.date.toISOString()}`);
+    return price != null ? { ...row, priceOverride: price } : row;
+  });
+}
+
 // Real today/tomorrow availability only. Admins control this through availability records.
 availabilityRouter.get('/last-minute/list', async (_req, res, next) => {
   try {
@@ -18,7 +42,7 @@ availabilityRouter.get('/last-minute/list', async (_req, res, next) => {
       orderBy: [{ date: 'asc' }, { seatsAvailable: 'asc' }],
       take: 6,
     });
-    res.json({ success: true, data: rows });
+    res.json({ success: true, data: await fillScheduledPrices(rows) });
   } catch (err) { next(err); }
 });
 
@@ -41,8 +65,8 @@ availabilityRouter.get('/:tourId', async (req, res, next) => {
 
     const cacheKey = `availability:${tourId}:${startDate.toISOString()}:${endDate.toISOString()}`;
 
-    const availability = await getCached(cacheKey, 60, () =>
-      prisma.availability.findMany({
+    const availability = await getCached(cacheKey, 60, async () => {
+      const rows = await prisma.availability.findMany({
         where: {
           tourId,
           date: {
@@ -52,8 +76,9 @@ availabilityRouter.get('/:tourId', async (req, res, next) => {
           isBlocked: false,
         },
         orderBy: { date: 'asc' },
-      })
-    );
+      });
+      return fillScheduledPrices(rows);
+    });
 
     res.json({ success: true, data: availability });
   } catch (err) {
@@ -87,13 +112,15 @@ availabilityRouter.get('/:tourId/:date', async (req, res, next) => {
       });
     }
 
+    const [withScheduledPrice] = await fillScheduledPrices([availability]);
+
     res.json({
       success: true,
       data: {
         available: availability.seatsAvailable > 0,
         seatsAvailable: availability.seatsAvailable,
         seatsTotal: availability.seatsTotal,
-        priceOverride: availability.priceOverride,
+        priceOverride: withScheduledPrice.priceOverride,
       },
     });
   } catch (err) {

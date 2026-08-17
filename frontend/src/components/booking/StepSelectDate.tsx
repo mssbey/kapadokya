@@ -4,13 +4,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useBookingStore } from '@/store/bookingStore';
 import { api } from '@/lib/api';
 import { formatPrice, cn } from '@/lib/utils';
-import { AlertTriangle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { AlertTriangle, Check, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useI18n } from '@/components/I18nProvider';
 import type { Availability } from '@/types';
 
 export function StepSelectDate() {
-  const { selectedTour, selectedDate, setDate, nextStep, prevStep } = useBookingStore();
+  const { selectedTour, selectedDate, setDate, selectedVariant, setVariant, nextStep, prevStep } = useBookingStore();
   const { t, tag } = useI18n();
+  const variants = useMemo(() => (selectedTour?.variants ?? []).filter((v) => v.isActive), [selectedTour]);
   const DAYS = t.booking.date.days;
   const MONTHS = t.booking.date.months;
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
@@ -73,8 +74,10 @@ export function StepSelectDate() {
     setDate(dateStr, avail);
   }
 
+  const canContinue = Boolean(selectedDate) && (variants.length === 0 || Boolean(selectedVariant));
+
   function handleContinue() {
-    if (selectedDate) nextStep();
+    if (canContinue) nextStep();
   }
 
   return (
@@ -198,14 +201,63 @@ export function StepSelectDate() {
         </div>
       </div>
 
+      {/* Route / class options — only shown once a date is picked, mirroring
+          how these appear on the reference site: they surface alongside the
+          availability check rather than as their own wizard step. */}
+      {selectedDate && variants.length > 0 && (
+        <div className="glass-card mt-6 p-6">
+          <h3 className="font-display text-lg font-semibold text-gray-900 dark:text-white">{t.booking.variants.heading}</h3>
+          <p className="text-gray-500 dark:text-white/50 text-sm mt-1">{t.booking.variants.subtitle}</p>
+          <div className="mt-4 space-y-3">
+            {variants.map((variant) => {
+              const isSelected = selectedVariant?.id === variant.id;
+              return (
+                <button
+                  key={variant.id}
+                  type="button"
+                  onClick={() => setVariant({ id: variant.id, name: variant.name, priceDelta: variant.priceDelta })}
+                  className={cn(
+                    'w-full text-left glass-card p-4 flex items-start gap-4 transition-all duration-300',
+                    isSelected
+                      ? 'border-emerald-500/50 bg-emerald-500/10 shadow-glow-emerald'
+                      : 'hover:border-gray-300 dark:hover:border-white/20'
+                  )}
+                >
+                  {variant.icon && <span className="text-2xl leading-none flex-shrink-0">{variant.icon}</span>}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{variant.name}</h4>
+                    {variant.description && <p className="text-gray-400 dark:text-white/40 text-sm mt-1">{variant.description}</p>}
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    {variant.priceDelta !== 0 && (
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">
+                        {variant.priceDelta > 0 ? '+' : ''}{formatPrice(variant.priceDelta, selectedTour?.currency || 'EUR', tag)}
+                      </span>
+                    )}
+                    <div
+                      className={cn(
+                        'w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all',
+                        isSelected ? 'bg-emerald-500 border-emerald-500' : 'border-gray-300 dark:border-white/20'
+                      )}
+                    >
+                      {isSelected && <Check className="w-4 h-4 text-white" />}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Continue Button */}
       <div className="mt-6 flex justify-end">
         <button
           onClick={handleContinue}
-          disabled={!selectedDate}
+          disabled={!canContinue}
           className={cn(
             'btn-primary',
-            !selectedDate && 'opacity-50 cursor-not-allowed'
+            !canContinue && 'opacity-50 cursor-not-allowed'
           )}
         >
           {t.booking.continue}

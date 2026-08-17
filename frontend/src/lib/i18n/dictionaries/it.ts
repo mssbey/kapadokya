@@ -67,11 +67,15 @@ export const it: Dictionary = {
     ],
   },
 
+  categories: {
+    eyebrow: 'Esplora per categoria',
+    heading: 'Trova la tua esperienza in Cappadocia',
+  },
+
   popular: {
     eyebrow: 'I preferiti dei viaggiatori',
     heading: 'Le esperienze più popolari della Cappadocia',
     viewAll: 'Vedi tutte le esperienze →',
-    newListing: 'Nuovo annuncio',
     hotelPickup: 'Prelievo in hotel',
     from: 'Da',
     viewAndBook: 'Vedi e prenota',
@@ -242,7 +246,6 @@ export const it: Dictionary = {
     metaDescriptionSuffix:
       '{description} Verifica disponibilità, cosa è incluso e le informazioni sul prelievo, poi prenota con supporto locale.',
     breadcrumbTours: 'Tour',
-    newListing: 'Nuovo annuncio',
     overview: 'Panoramica',
     highlights: 'Punti salienti',
     included: 'Cosa è incluso',
@@ -296,6 +299,7 @@ export const it: Dictionary = {
     askWhatsapp: 'Chiedi su WhatsApp',
     whatsappMessage: 'Salve, vorrei informazioni su {title}.',
     freeCancellation: 'Cancellazione gratuita dove indicato',
+    freeRescheduling: 'Riprogrammazione garantita in caso di maltempo',
     secureCheckout: 'Pagamento sicuro',
     bookNow: 'PRENOTA',
   },
@@ -346,6 +350,11 @@ export const it: Dictionary = {
       privateTitle: 'Esperienza privata',
       privateSubtitle: 'Tour esclusivo solo per il tuo gruppo (+50%)',
       capacity: 'Massimo {count} partecipanti per tour',
+    },
+
+    variants: {
+      heading: 'Scegli il tuo percorso',
+      subtitle: "Scegli l'opzione più adatta per questa data",
     },
 
     upsells: {

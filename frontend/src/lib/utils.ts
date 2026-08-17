@@ -32,24 +32,16 @@ export function formatDateShort(date: string | Date, locale: string = 'en-GB'): 
   }).format(new Date(date));
 }
 
-export function getCategoryLabel(category: string): string {
-  const labels: Record<string, string> = {
-    BALLOON: 'Balloon Tour',
-    DAILY_TOUR: 'Daily Tour',
-    ADVENTURE: 'Adventure',
-    TRANSFER: 'Private Transfer',
-  };
-  return labels[category] || category;
-}
-
-export function getCategoryIcon(category: string): string {
+// Keyed by category slug. New admin-created categories fall back to a
+// generic sparkle rather than needing an icon assigned up front.
+export function getCategoryIcon(categorySlug: string): string {
   const icons: Record<string, string> = {
-    BALLOON: '🎈',
-    DAILY_TOUR: '🏛️',
-    ADVENTURE: '🏔️',
-    TRANSFER: '🚗',
+    'hot-air-balloon': '🎈',
+    'daily-tours': '🏛️',
+    adventure: '🏔️',
+    'airport-transfer': '🚗',
   };
-  return icons[category] || '✨';
+  return icons[categorySlug] || '✨';
 }
 
 export function getStatusColor(status: string): string {

@@ -16,6 +16,7 @@ const createBookingSchema = z.object({
   children: z.literal(0).optional().default(0),
   isPrivate: z.boolean().optional().default(false),
   upsells: z.array(z.object({ id: z.string().uuid(), name: z.string(), price: z.number() })).max(30).optional(),
+  variantId: z.string().uuid().optional(),
   guestName: z.string().min(2).max(100),
   guestEmail: z.string().email().max(255),
   guestPhone: z.string().min(5).max(30),
@@ -31,20 +32,27 @@ bookingRouter.post('/', optionalAuth, async (req: AuthRequest, res, next) => {
 
     const tour = await prisma.tour.findFirst({
       where: { id: data.tourId, isActive: true, isBookingEnabled: true, deletedAt: null },
-      include: { upsells: true },
+      include: { upsells: true, variants: true },
     });
     if (!tour) throw new AppError('Tour not found or booking is closed', 404);
 
-    const availability = await prisma.availability.findUnique({
-      where: { tourId_date: { tourId: data.tourId, date: bookingDate } },
-    });
+    const [availability, scheduledPrice] = await Promise.all([
+      prisma.availability.findUnique({
+        where: { tourId_date: { tourId: data.tourId, date: bookingDate } },
+      }),
+      prisma.tourScheduledPrice.findUnique({
+        where: { tourId_date: { tourId: data.tourId, date: bookingDate } },
+      }),
+    ]);
     if (!availability || availability.isBlocked) throw new AppError('No availability for this date', 400);
 
     const totalPeople = data.adults + data.children;
     if (totalPeople < tour.minParticipants) throw new AppError(`This tour requires at least ${tour.minParticipants} guests`, 400);
     if (availability.seatsAvailable < totalPeople) throw new AppError(`Only ${availability.seatsAvailable} seats available`, 400);
 
-    const unitPrice = availability.priceOverride ?? tour.discountedPrice ?? tour.basePrice;
+    // TourScheduledPrice is the admin's capacity-independent seasonal price;
+    // an explicit per-day Availability.priceOverride still wins over it.
+    const unitPrice = availability.priceOverride ?? scheduledPrice?.price ?? tour.discountedPrice ?? tour.basePrice;
     let subtotal = totalPeople * unitPrice;
     if (data.isPrivate) subtotal *= tour.privatePriceMultiplier;
 
@@ -55,6 +63,14 @@ bookingRouter.post('/', optionalAuth, async (req: AuthRequest, res, next) => {
       if (validUpsells.length !== requestedIds.length) throw new AppError('One or more add-ons are invalid', 400);
       selectedUpsells = validUpsells.map(({ id, name, price }) => ({ id, name, price }));
       subtotal += validUpsells.reduce((sum, item) => sum + item.price, 0) * totalPeople;
+    }
+
+    let selectedVariant: { id: string; name: string; priceDelta: number } | null = null;
+    if (data.variantId) {
+      const validVariant = tour.variants.find((item) => item.isActive && item.id === data.variantId);
+      if (!validVariant) throw new AppError('The selected route/option is invalid', 400);
+      selectedVariant = { id: validVariant.id, name: validVariant.name, priceDelta: validVariant.priceDelta };
+      subtotal += validVariant.priceDelta * totalPeople;
     }
     subtotal = Math.round(subtotal * 100) / 100;
 
@@ -109,6 +125,7 @@ bookingRouter.post('/', optionalAuth, async (req: AuthRequest, res, next) => {
           children: data.children,
           isPrivate: data.isPrivate,
           upsells: selectedUpsells.length ? JSON.parse(JSON.stringify(selectedUpsells)) : undefined,
+          variant: selectedVariant ? JSON.parse(JSON.stringify(selectedVariant)) : undefined,
           subtotal,
           discountAmount,
           totalPrice,

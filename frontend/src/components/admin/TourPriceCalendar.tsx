@@ -150,7 +150,7 @@ export function TourPriceCalendar({ tour }: { tour: TourSummary }) {
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="flex items-center gap-2 font-bold"><CalendarDays className="h-5 w-5 text-emerald-600" /> Gelecek fiyatları</h3>
-          <p className="mt-1 text-xs leading-5 text-gray-500">Buradaki fiyatlar doluluk takviminden bağımsızdır. Tarih geldiğinde tur kartlarında otomatik yayınlanır.</p>
+          <p className="mt-1 text-xs leading-5 text-gray-500">Buradaki fiyatları koltuk açmadan önceden girebilirsiniz. Müsaitlik takviminde o gün için ayrıca özel bir fiyat girilmediyse, buradaki fiyat rezervasyon takviminde ve ödemede hemen kullanılır.</p>
         </div>
         <button type="button" onClick={() => setBulkOpen((value) => !value)} className="rounded-lg border px-3 py-2 text-xs font-semibold dark:border-white/10">
           {bulkOpen ? 'Toplu işlemi kapat' : 'Günlere toplu fiyat ver'}
