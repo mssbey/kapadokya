@@ -84,7 +84,10 @@ export function presentTour(tour: any, locale: SupportedLocale) {
     basePrice: effectivePrice,
     regularPrice,
     discountedPrice,
-    scheduledPriceDate: scheduledPrice == null ? null : tour.scheduledPrices[0].date.toISOString().slice(0, 10),
+    // tour.scheduledPrices[0].date is a real Date on a cache miss (straight
+    // from Prisma) but a plain ISO string on a cache hit (getCached round-trips
+    // through JSON.stringify/parse) — wrap in `new Date()` so both work.
+    scheduledPriceDate: scheduledPrice == null ? null : new Date(tour.scheduledPrices[0].date).toISOString().slice(0, 10),
     currency: tour.currency,
     childPriceRate: tour.childPriceRate,
     privatePriceMultiplier: tour.privatePriceMultiplier,
