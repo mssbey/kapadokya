@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { ChevronDown, ChevronUp, Eye, EyeOff, Loader2, Plus, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ChevronDown, ChevronUp, Eye, EyeOff, ImagePlus, Loader2, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '@/lib/api';
 
@@ -146,22 +146,55 @@ function PartnerRow({
   const [name, setName] = useState(partner.name);
   const [logoUrl, setLogoUrl] = useState(partner.logoUrl);
   const [websiteUrl, setWebsiteUrl] = useState(partner.websiteUrl || '');
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const dirty = name !== partner.name || logoUrl !== partner.logoUrl || websiteUrl !== (partner.websiteUrl || '');
+
+  async function uploadLogo(file: File) {
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append('images', file);
+      const response = await api.post('/admin/media/upload', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const secureUrl = response.data.data.secureUrl;
+      setLogoUrl(secureUrl);
+      onSave({ logoUrl: secureUrl });
+    } catch (error: any) {
+      toast.error(extractError(error, 'Logo could not be uploaded.'));
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <div className="glass-card flex items-center gap-4 p-5">
-      <div className="grid h-16 w-16 shrink-0 place-items-center rounded-xl border bg-white dark:border-white/10">
-        {/* Plain <img>, not next/image: admin-pasted URLs from any host, previewed at a fixed small size. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={partner.logoUrl} alt={partner.name} className="max-h-12 max-w-12 object-contain" />
-      </div>
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+        className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl border bg-white dark:border-white/10"
+        title="Click to upload a logo image"
+      >
+        {uploading ? (
+          <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
+        ) : logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={partner.name} className="max-h-12 max-w-12 object-contain" />
+        ) : (
+          <ImagePlus className="h-5 w-5 text-gray-400" />
+        )}
+      </button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => { const file = e.target.files?.[0]; if (file) uploadLogo(file); e.target.value = ''; }}
+      />
 
-      <div className="min-w-0 flex-1 grid gap-2 sm:grid-cols-3">
+      <div className="min-w-0 flex-1 grid gap-2 sm:grid-cols-2">
         <label className="text-xs text-gray-500">Name
           <input value={name} onChange={(e) => setName(e.target.value)} className="input-glass mt-1" />
-        </label>
-        <label className="text-xs text-gray-500">Logo URL
-          <input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} className="input-glass mt-1" />
         </label>
         <label className="text-xs text-gray-500">Website URL (optional)
           <input value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} className="input-glass mt-1" placeholder="https://" />

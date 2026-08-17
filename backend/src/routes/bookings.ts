@@ -6,6 +6,7 @@ import { AppError } from '../middleware/errorHandler';
 import { invalidateCache } from '../lib/redis';
 import { broadcastAvailabilityUpdate, broadcastBookingNotification } from '../websocket';
 import { createBookingNumber, createPaymentAccessToken } from '../lib/paymentAccess';
+import { sendNewBookingAdminNotification } from '../services/email';
 
 export const bookingRouter = Router();
 
@@ -155,6 +156,21 @@ bookingRouter.post('/', optionalAuth, async (req: AuthRequest, res, next) => {
     });
     if (updatedAvailability) broadcastAvailabilityUpdate(data.tourId, data.date, updatedAvailability.seatsAvailable);
     broadcastBookingNotification({ tourTitle: tour.title, guestName: data.guestName, date: data.date });
+    sendNewBookingAdminNotification({
+      bookingNumber: booking.bookingNumber,
+      tourTitle: tour.title,
+      date: data.date,
+      adults: data.adults,
+      children: data.children,
+      isPrivate: data.isPrivate,
+      guestName: data.guestName,
+      guestEmail: data.guestEmail,
+      guestPhone: data.guestPhone,
+      hotelName: data.hotelName,
+      notes: data.notes,
+      totalPrice,
+      currency: tour.currency,
+    }).catch((error) => console.error('Booking admin notification email failed:', error));
 
     res.status(201).json({
       success: true,

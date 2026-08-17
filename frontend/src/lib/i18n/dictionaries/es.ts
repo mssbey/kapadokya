@@ -87,12 +87,18 @@ export const es: Dictionary = {
     scrollRight: 'Desplazar a la derecha',
   },
 
+  badges: {
+    bestSeller: 'Más vendido',
+    likelyToSellOut: 'Puede agotarse',
+  },
+
   balloon: {
     badge: 'Imprescindible en Capadocia',
     heading: 'Vuela sobre Capadocia al amanecer',
     subtitle:
       'Elige el tipo de vuelo que prefieras. Confirmamos el operador, la disponibilidad y los detalles exactos de recogida antes del pago.',
     cta: 'Consultar disponibilidad',
+    instagramCta: 'Síguenos en Instagram',
     imageAlt: 'Globos aerostáticos volando sobre Capadocia al amanecer',
     options: [
       { name: 'Vuelo estándar', detail: 'Un clásico vuelo al amanecer en cesta compartida.' },
@@ -323,6 +329,8 @@ export const es: Dictionary = {
       subtitle: 'Elige tu fecha preferida',
       selected: 'Seleccionada',
       lowAvailability: 'Pocas plazas',
+      loadError: 'No se pudo cargar la disponibilidad en vivo. No se muestran fechas estimadas.',
+      retry: 'Reintentar',
       days: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
       months: [
         'Enero',

@@ -87,12 +87,18 @@ export const tr: Dictionary = {
     scrollRight: 'Sağa kaydır',
   },
 
+  badges: {
+    bestSeller: 'Çok Satan',
+    likelyToSellOut: 'Tükenmek Üzere',
+  },
+
   balloon: {
     badge: 'Kapadokya klasiği',
     heading: 'Gün Doğumunda Kapadokya’nın Üzerinde Uçun',
     subtitle:
       'Size uygun uçuş tipini seçin. Operatörü, müsaitliği ve tam alım detaylarını ödemeden önce teyit ediyoruz.',
     cta: 'Müsaitliği kontrol et',
+    instagramCta: "Instagram'da takip edin",
     imageAlt: 'Gün doğumunda Kapadokya üzerinde uçan sıcak hava balonları',
     options: [
       { name: 'Standart Uçuş', detail: 'Ortak sepette klasik bir gün doğumu uçuşu.' },
@@ -322,6 +328,8 @@ export const tr: Dictionary = {
       subtitle: 'Tercih ettiğiniz gezi tarihini seçin',
       selected: 'Seçili',
       lowAvailability: 'Az yer kaldı',
+      loadError: 'Müsaitlik bilgisi şu anda yüklenemedi. Tahmini tarih gösterilmiyor.',
+      retry: 'Tekrar dene',
       days: ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'],
       months: [
         'Ocak',

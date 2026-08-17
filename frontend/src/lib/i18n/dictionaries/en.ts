@@ -90,12 +90,18 @@ export const en = {
     scrollRight: 'Scroll right',
   },
 
+  badges: {
+    bestSeller: 'Best Seller',
+    likelyToSellOut: 'Likely to Sell Out',
+  },
+
   balloon: {
     badge: 'Cappadocia essential',
     heading: 'Fly Over Cappadocia at Sunrise',
     subtitle:
       'Choose the flight style that suits you. We’ll confirm the operator, availability and exact pickup details before payment.',
     cta: 'Check availability',
+    instagramCta: 'Follow us on Instagram',
     imageAlt: 'Hot air balloons flying over Cappadocia at sunrise',
     options: [
       { name: 'Standard Flight', detail: 'A classic sunrise flight in a shared basket.' },
@@ -326,6 +332,8 @@ export const en = {
       subtitle: 'Choose your preferred travel date',
       selected: 'Selected',
       lowAvailability: 'Low availability',
+      loadError: 'Live availability could not be loaded. No estimated dates are shown.',
+      retry: 'Try again',
       days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
       months: [
         'January',

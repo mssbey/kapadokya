@@ -100,6 +100,7 @@ export function PopularExperiences() {
                   <div className="relative h-52 overflow-hidden">
                     {tour.image ? <ResponsivePhoto src={tour.image} alt={tour.media?.[0]?.altText || tour.title} className="transition duration-700 group-hover:scale-105" /> : <div className="absolute inset-0 bg-stone-200 dark:bg-white/10" />}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10" />
+                    {tour.badge && <span className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold text-white shadow ${tour.badge === 'BEST_SELLER' ? 'bg-amber-500' : 'bg-rose-600'}`}>{tour.badge === 'BEST_SELLER' ? t.badges.bestSeller : t.badges.likelyToSellOut}</span>}
                     <button onClick={() => toggle(tour.slug)} aria-label={saved.includes(tour.slug) ? t.popular.removeWishlist : t.popular.addWishlist} className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-full bg-white/95 text-stone-700 shadow"><Heart className={`h-5 w-5 ${saved.includes(tour.slug) ? 'fill-rose-500 text-rose-500' : ''}`} /></button>
                     <p className="absolute bottom-4 left-4 text-sm font-semibold text-white">{tour.category.name}</p>
                   </div>

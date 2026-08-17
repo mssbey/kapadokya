@@ -113,6 +113,20 @@ export async function getPublicTestimonials(): Promise<Testimonial[]> {
   return envelope.data;
 }
 
+export type SiteSettings = { instagramUrl: string | null };
+
+// Settings are edited live from the admin panel, same reasoning as the
+// legal pages, FAQ, partners and testimonials fetches above — bypass ISR caching.
+export async function getSiteSettings(): Promise<SiteSettings> {
+  const response = await fetch(`${apiBaseUrl()}/settings`, {
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error(`Settings API returned ${response.status}`);
+  const envelope: ApiEnvelope<SiteSettings> = await response.json();
+  return envelope.data;
+}
+
 export type Category = { id: string; slug: string; name: string; imageUrl: string | null };
 
 // Categories are edited live from the admin panel, same reasoning as the

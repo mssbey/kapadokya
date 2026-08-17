@@ -24,6 +24,7 @@ import { legalRouter } from './routes/legal';
 import { faqRouter } from './routes/faqs';
 import { partnerRouter } from './routes/partners';
 import { testimonialRouter } from './routes/testimonials';
+import { settingsRouter } from './routes/settings';
 import { adminRouter } from './routes/admin';
 import { adminMediaRouter } from './routes/adminMedia';
 import { errorHandler } from './middleware/errorHandler';
@@ -50,10 +51,18 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate limiting
+// Rate limiting. This is a blanket abuse net for the whole API — sensitive
+// routes (e.g. login) layer their own stricter limiter on top. It needs to
+// stay generous because it's keyed per IP and a single browsing session
+// against this catalog-heavy SPA (tours, categories, partners, FAQs,
+// availability re-fetched on every calendar month change, ...) can easily
+// fire 100+ GET requests on its own — before accounting for many visitors
+// sharing one IP behind a mobile carrier or office NAT. A too-tight limit
+// here previously surfaced as the booking calendar's "Live availability
+// could not be loaded" error for real, non-abusive visitors.
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: process.env.NODE_ENV === 'production' ? 100 : 5000,
+  max: process.env.NODE_ENV === 'production' ? 1200 : 5000,
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -83,6 +92,7 @@ app.use('/api/legal', legalRouter);
 app.use('/api/faqs', faqRouter);
 app.use('/api/partners', partnerRouter);
 app.use('/api/testimonials', testimonialRouter);
+app.use('/api/settings', settingsRouter);
 app.use('/api/admin', adminMediaRouter);
 app.use('/api/admin', adminRouter);
 

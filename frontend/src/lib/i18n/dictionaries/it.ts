@@ -87,12 +87,18 @@ export const it: Dictionary = {
     scrollRight: 'Scorri a destra',
   },
 
+  badges: {
+    bestSeller: 'Più venduto',
+    likelyToSellOut: 'In esaurimento',
+  },
+
   balloon: {
     badge: 'Imperdibile in Cappadocia',
     heading: 'Vola sulla Cappadocia all’alba',
     subtitle:
       'Scegli il tipo di volo che preferisci. Confermiamo operatore, disponibilità e dettagli esatti del prelievo prima del pagamento.',
     cta: 'Verifica disponibilità',
+    instagramCta: 'Seguici su Instagram',
     imageAlt: 'Mongolfiere in volo sulla Cappadocia all’alba',
     options: [
       { name: 'Volo standard', detail: 'Un classico volo all’alba in cesta condivisa.' },
@@ -323,6 +329,8 @@ export const it: Dictionary = {
       subtitle: 'Scegli la data che preferisci',
       selected: 'Selezionata',
       lowAvailability: 'Pochi posti',
+      loadError: 'Impossibile caricare la disponibilità in tempo reale. Nessuna data stimata mostrata.',
+      retry: 'Riprova',
       days: ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'],
       months: [
         'Gennaio',

@@ -2,14 +2,15 @@
 
 import { ResponsivePhoto } from '@/components/ResponsivePhoto';
 import Link from 'next/link';
-import { ArrowUpRight, CheckCircle2, Sunrise } from 'lucide-react';
+import { ArrowUpRight, CheckCircle2, Instagram, Sunrise } from 'lucide-react';
 import { useI18n } from '@/components/I18nProvider';
 import { useEffect, useState } from 'react';
-import { getPublicTours } from '@/lib/catalogApi';
+import { getPublicTours, getSiteSettings } from '@/lib/catalogApi';
 
 export function BalloonFeature() {
   const { t, href, locale } = useI18n();
   const [bookingSlug, setBookingSlug] = useState<string>();
+  const [instagramUrl, setInstagramUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -19,6 +20,14 @@ export function BalloonFeature() {
     return () => { active = false; };
   }, [locale]);
 
+  useEffect(() => {
+    let active = true;
+    getSiteSettings()
+      .then((settings) => { if (active) setInstagramUrl(settings.instagramUrl); })
+      .catch(() => { if (active) setInstagramUrl(null); });
+    return () => { active = false; };
+  }, []);
+
   return (
     <section className="bg-white py-20 dark:bg-dark md:py-28">
       <div className="mx-auto grid max-w-7xl overflow-hidden rounded-[2rem] bg-[#112f2a] text-white shadow-2xl lg:grid-cols-2">
@@ -26,6 +35,18 @@ export function BalloonFeature() {
           <ResponsivePhoto src="/images/cappadocia-sunrise-section.webp" alt={t.balloon.imageAlt} />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#112f2a]/30" />
           <span className="absolute left-6 top-6 rounded-full bg-amber-300 px-4 py-2 text-xs font-extrabold uppercase tracking-wider text-stone-900">{t.balloon.badge}</span>
+          {instagramUrl && (
+            <a
+              href={instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t.balloon.instagramCta}
+              title={t.balloon.instagramCta}
+              className="absolute right-6 top-6 grid h-10 w-10 place-items-center rounded-full bg-white/95 text-stone-800 shadow transition hover:scale-105"
+            >
+              <Instagram className="h-5 w-5" />
+            </a>
+          )}
         </div>
         <div className="p-7 sm:p-10 lg:p-14">
           <Sunrise className="mb-6 h-10 w-10 text-amber-300" />

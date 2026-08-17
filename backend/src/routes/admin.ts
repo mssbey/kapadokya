@@ -201,6 +201,7 @@ const tourMutationSchema = z.object({
   isActive: z.boolean().default(false),
   isFeatured: z.boolean().default(false),
   isBookingEnabled: z.boolean().default(true),
+  badge: z.enum(['BEST_SELLER', 'LIKELY_TO_SELL_OUT']).nullable().optional(),
   sortOrder: z.number().int().default(0),
   translations: z.array(translationSchema).min(1).max(SUPPORTED_LOCALES.length),
   upsells: z.array(upsellSchema).max(50).default([]),
@@ -421,6 +422,7 @@ adminRouter.post('/tours', async (req: AuthRequest, res, next) => {
         isActive: data.isActive,
         isFeatured: data.isFeatured,
         isBookingEnabled: data.isBookingEnabled,
+        badge: data.badge ?? null,
         sortOrder: data.sortOrder,
         translations: { create: data.translations },
         upsells: { create: data.upsells.map(({ id: _id, ...upsell }) => upsell) },
@@ -481,6 +483,7 @@ adminRouter.put('/tours/:id', async (req: AuthRequest, res, next) => {
           isActive: data.isActive,
           isFeatured: data.isFeatured,
           isBookingEnabled: data.isBookingEnabled,
+          badge: data.badge ?? null,
           sortOrder: data.sortOrder,
           translations: { create: data.translations },
           upsells: { create: data.upsells.map(({ id: _id, ...upsell }) => upsell) },
@@ -1196,6 +1199,36 @@ adminRouter.delete('/testimonials/:id', async (req: AuthRequest, res, next) => {
     await writeAudit(req, 'TESTIMONIAL_DELETED', 'Testimonial', testimonial.id, { authorName: testimonial.authorName });
     res.json({ success: true, data: testimonial });
   } catch (error) { next(error); }
+});
+
+// =================== SITE SETTINGS ===================
+
+const settingsMutationSchema = z.object({
+  instagramUrl: z.string().trim().url().nullable().optional(),
+});
+
+adminRouter.get('/settings', async (_req, res, next) => {
+  try {
+    const settings = await prisma.siteSettings.upsert({ where: { id: 'singleton' }, create: { id: 'singleton' }, update: {} });
+    res.json({ success: true, data: settings });
+  } catch (error) { next(error); }
+});
+
+adminRouter.patch('/settings', async (req: AuthRequest, res, next) => {
+  try {
+    const data = settingsMutationSchema.parse(req.body);
+    const settings = await prisma.siteSettings.upsert({
+      where: { id: 'singleton' },
+      create: { id: 'singleton', ...data },
+      update: data,
+    });
+    await invalidateCache('settings:public');
+    await writeAudit(req, 'SETTINGS_UPDATED', 'SiteSettings', settings.id, data);
+    res.json({ success: true, data: settings });
+  } catch (error) {
+    if (error instanceof z.ZodError) return next(new AppError(error.errors[0].message, 400));
+    next(error);
+  }
 });
 
 adminRouter.get('/audit-logs', async (req, res, next) => {

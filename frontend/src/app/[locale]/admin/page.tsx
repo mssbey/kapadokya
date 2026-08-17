@@ -16,6 +16,7 @@ import { FaqManager } from '@/components/admin/FaqManager';
 import { PartnerManager } from '@/components/admin/PartnerManager';
 import { CategoryManager } from '@/components/admin/CategoryManager';
 import { TestimonialManager } from '@/components/admin/TestimonialManager';
+import { SettingsManager } from '@/components/admin/SettingsManager';
 import { api } from '@/lib/api';
 import { formatPrice, cn, getStatusColor } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -23,10 +24,10 @@ import {
   BarChart3, Users, Calendar, DollarSign, TrendingUp, MapPin,
   Package, ChevronRight, ChevronLeft, Eye, EyeOff, Edit2, Trash2,
   Plus, Loader2, CreditCard, Check, ExternalLink,
-  CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw, Tag, Search, FileText, MessageCircleQuestion, Handshake, Star, Layers
+  CheckCircle, XCircle, Clock, AlertTriangle, LogOut, X, RefreshCw, Tag, Search, FileText, MessageCircleQuestion, Handshake, Star, Layers, Settings as SettingsIcon
 } from 'lucide-react';
 
-type Tab = 'dashboard' | 'tours' | 'categories' | 'bookings' | 'payments' | 'availability' | 'customers' | 'promos' | 'revenue' | 'legal' | 'faq' | 'partners' | 'testimonials';
+type Tab = 'dashboard' | 'tours' | 'categories' | 'bookings' | 'payments' | 'availability' | 'customers' | 'promos' | 'revenue' | 'legal' | 'faq' | 'partners' | 'testimonials' | 'settings';
 
 function extractError(err: any, fallback: string): string {
   return err?.response?.data?.message || fallback;
@@ -151,6 +152,7 @@ export default function AdminPage() {
     { id: 'faq', label: tr ? 'SSS' : 'FAQ', icon: MessageCircleQuestion },
     { id: 'partners', label: tr ? 'Partnerler' : 'Partners', icon: Handshake },
     { id: 'testimonials', label: tr ? 'Yorumlar' : 'Reviews', icon: Star },
+    { id: 'settings', label: tr ? 'Ayarlar' : 'Settings', icon: SettingsIcon },
   ];
 
   if (!checkedAuth) {
@@ -248,6 +250,7 @@ export default function AdminPage() {
           {activeTab === 'faq' && <FaqManager />}
           {activeTab === 'partners' && <PartnerManager />}
           {activeTab === 'testimonials' && <TestimonialManager />}
+          {activeTab === 'settings' && <SettingsManager />}
         </main>
       </div>
     </div>

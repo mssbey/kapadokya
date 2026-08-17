@@ -101,6 +101,7 @@ export function presentTour(tour: any, locale: SupportedLocale) {
     isActive: tour.isActive,
     isFeatured: tour.isFeatured,
     isBookingEnabled: tour.isBookingEnabled,
+    badge: tour.badge ?? null,
     sortOrder: tour.sortOrder,
     upsells: tour.upsells ?? [],
     variants: tour.variants ?? [],

@@ -29,6 +29,7 @@ export interface Tour {
   isActive: boolean;
   isFeatured?: boolean;
   isBookingEnabled?: boolean;
+  badge?: 'BEST_SELLER' | 'LIKELY_TO_SELL_OUT' | null;
   meetingPoint?: string | null;
   cancellationPolicy?: string | null;
   seoTitle?: string | null;
