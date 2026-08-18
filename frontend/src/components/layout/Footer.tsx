@@ -63,6 +63,7 @@ export function Footer() {
           <p>{fill(t.footer.rights, { year: new Date().getFullYear(), name: SITE.name })}</p>
           <div className="flex flex-wrap items-center gap-4"><span className="flex items-center gap-1"><LockKeyhole className="h-4 w-4" /> {t.footer.ssl}</span><span>Visa</span><span>Mastercard</span><span>{t.footer.secure3d}</span></div>
         </div>
+        <p className="mt-6 bg-gradient-to-r from-emerald-400 via-amber-300 to-emerald-400 bg-clip-text text-center text-base font-extrabold text-transparent sm:text-lg">All design and infrastructure provided by Zeynart Web Bilişim.</p>
       </div>
     </footer>
   );

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useBookingStore } from '@/store/bookingStore';
-import { api } from '@/lib/api';
+import { fetchAvailability } from '@/lib/availabilityCache';
 import { formatPrice, cn } from '@/lib/utils';
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useI18n } from '@/components/I18nProvider';
@@ -24,23 +24,30 @@ export function StepSelectDate() {
   useEffect(() => {
     if (!selectedTour) return;
 
-    async function fetchAvailability() {
-      setLoading(true);
-      setError(false);
-      try {
-        const res = await api.get(`/availability/${selectedTour!.id}`, {
-          params: { month: currentMonth + 1, year: currentYear },
-        });
-        setAvailabilities(res.data.data);
-      } catch {
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+
+    // Reads the cache the tour-select step already primed via
+    // prefetchAvailability() — on the common path this resolves
+    // immediately instead of starting a fresh round trip here.
+    fetchAvailability(selectedTour.id, currentMonth + 1, currentYear)
+      .then((data) => {
+        if (cancelled) return;
+        setAvailabilities(data);
+      })
+      .catch(() => {
+        if (cancelled) return;
         setAvailabilities([]);
         setError(true);
-      } finally {
-        setLoading(false);
-      }
-    }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-    fetchAvailability();
+    return () => {
+      cancelled = true;
+    };
   }, [selectedTour, currentMonth, currentYear, retryToken]);
 
   const availabilityMap = useMemo(() => {
