@@ -26,6 +26,21 @@ const nextConfig = {
         source: '/videos/:path*',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }],
       },
+      // The logo/favicon load on every single page but sit at the public/
+      // root, so they fall outside both rules above and were serving with
+      // no explicit long-lived Cache-Control at all.
+      {
+        source: '/logo.png',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }],
+      },
+      {
+        source: '/logo.webp',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }],
+      },
+      {
+        source: '/favicon.ico',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }],
+      },
     ];
   },
 };

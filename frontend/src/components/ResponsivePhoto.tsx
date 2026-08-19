@@ -18,19 +18,31 @@ type Props = {
   className?: string;
   /** Matches Tailwind's object-position utilities, e.g. `object-[60%_center]`. */
   positionClassName?: string;
+  /**
+   * Overrides the default full-bleed `100vw` hint. Fixed-width contexts
+   * (carousel cards, grid tiles) should pass their real CSS width so the
+   * browser doesn't assume the image spans the viewport and fetch a
+   * bigger source than it needs.
+   */
+  sizes?: string;
 };
 
-export function ResponsivePhoto({ src, alt, priority = false, className = '', positionClassName = '' }: Props) {
+export function ResponsivePhoto({ src, alt, priority = false, className = '', positionClassName = '', sizes = '100vw' }: Props) {
   const cloudinary = src.includes('/image/upload/');
   const cloudinaryUrl = (width: number) => src.replace('/image/upload/', `/image/upload/c_limit,w_${width}/f_auto/q_auto/`);
+  const xsmall = cloudinary ? cloudinaryUrl(400) : undefined;
   const small = cloudinary ? cloudinaryUrl(800) : src.replace(/\.webp$/, '-800.webp');
   const large = cloudinary ? cloudinaryUrl(1600) : src;
+  // Cloudinary transforms are just URL params, so a card-sized tier costs
+  // nothing extra to offer; local assets only have the two pre-generated
+  // widths from scripts/optimize-images.js.
+  const srcSet = xsmall ? `${xsmall} 400w, ${small} 800w, ${large} 1600w` : `${small} 800w, ${large} 1600w`;
 
   return (
     <img
       src={large}
-      srcSet={`${small} 800w, ${large} 1600w`}
-      sizes="100vw"
+      srcSet={srcSet}
+      sizes={sizes}
       alt={alt}
       loading={priority ? 'eager' : 'lazy'}
       fetchPriority={priority ? 'high' : 'auto'}

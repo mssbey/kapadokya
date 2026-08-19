@@ -24,9 +24,14 @@ export function HeroSection() {
         {/* The poster doubles as the LCP paint: the preload scanner reads a
             <video poster> attribute just like an <img src>, so the frame is
             visible immediately while the clip itself streams in behind it.
-            Two encodes (1920w desktop, 960w mobile) picked via <source media>
-            keep phones off the heavier file. The plain <img> fallback only
-            renders in browsers that can't play <video> at all. */}
+            WebP at 1280w/q60 (~148KB, was a 594KB raw JPEG) keeps that LCP
+            resource light on mobile. `<source media>` below still picks the
+            lighter clip for phones; `preload="metadata"` stops the browser
+            from eagerly buffering the full video and competing with the
+            poster/critical JS for mobile bandwidth during first paint — it
+            still starts playing as soon as autoplay kicks in. The plain
+            <img> fallback only renders in browsers that can't play <video>
+            at all. */}
         <motion.div initial={{ scale: 1.08 }} animate={{ scale: 1 }} transition={{ duration: 10 }} className="absolute inset-0">
           <video
             ref={videoRef}
@@ -34,8 +39,8 @@ export function HeroSection() {
             muted
             loop
             playsInline
-            preload="auto"
-            poster="/images/hero-banner-poster.jpg"
+            preload="metadata"
+            poster="/images/hero-banner-poster.webp"
             className="absolute inset-0 h-full w-full object-cover object-[60%_center] md:object-center"
           >
             <source media="(max-width: 767px)" src="/videos/hero-banner-mobile.mp4" type="video/mp4" />
